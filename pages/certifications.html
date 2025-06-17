@@ -1,0 +1,315 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certifications | Sanjayraj N</title>
+    
+    <link rel="stylesheet" href="../css/critical.css">
+    <link rel="stylesheet" href="../css/styles.css?v=3.0">
+    <link rel="stylesheet" href="../css/fix-logo.css">
+    <link rel="stylesheet" href="../css/fix-styles.css">
+    <link rel="stylesheet" href="../css/nav-fix.css">
+    <link rel="stylesheet" href="../css/login-modal.css">
+
+    <link rel="stylesheet" href="../css/certifications.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
+
+                    <!-- FOUC Prevention and Page Transition -->
+    <script>
+        // Prevent FOUC with improved font loading
+        document.documentElement.style.visibility='visible';
+        document.documentElement.classList.add('loaded');
+        
+        // Ensure smooth font transition
+        window.addEventListener('load', function() {
+            // Force font display after a short delay if WebFont API fails
+            setTimeout(function() {
+                if (document.documentElement.classList.contains('wf-loading')) {
+                    document.documentElement.classList.remove('wf-loading');
+                    document.documentElement.classList.add('wf-inactive');
+                    console.log('Font loading timed out, using fallbacks');
+                }
+            }, 2500);
+        });
+        
+        // Ensure Font Awesome is loaded
+        (function() {
+            // Create a link checker
+            const linkChecker = document.createElement('i');
+            linkChecker.className = 'fas fa-home';
+            linkChecker.style.position = 'absolute';
+            linkChecker.style.opacity = '0';
+            document.head.appendChild(linkChecker);
+            
+            // Check if Font Awesome is loaded
+            const isFontAwesomeLoaded = () => {
+                return window.getComputedStyle(linkChecker).fontFamily.includes('Font Awesome');
+            };
+            
+            // If not loaded, add inline styles for common icons
+            if (!isFontAwesomeLoaded()) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .fas.fa-home:before { content: "\\f015"; }
+                    .fas.fa-user:before { content: "\\f007"; }
+                    .fas.fa-cogs:before { content: "\\f085"; }
+                    .fas.fa-envelope:before { content: "\\f0e0"; }
+                    .fab.fa-linkedin:before { content: "\\f08c"; }
+                    .fab.fa-github:before { content: "\\f09b"; }
+                    .fab.fa-facebook:before { content: "\\f09a"; }
+                    .fab.fa-instagram:before { content: "\\f16d"; }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Clean up
+            document.head.removeChild(linkChecker);
+        })();
+        
+        // Show page transition on unload
+        window.addEventListener('beforeunload', function() {
+            const pageTransition = document.querySelector('.page-transition');
+            if (pageTransition && !pageTransition.classList.contains('active')) {
+                pageTransition.classList.add('active');
+            }
+        });
+    </script>
+</head>
+<body class="dark-theme subpage">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="../index.html">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>About</span>
+                </a></li>
+                <li><a href="skills.html">
+                    <i class="fas fa-cogs"></i>
+                    <span>Skills</span>
+                </a></li>
+                <li><a href="projects.html">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Projects</span>
+                </a></li>
+                <li><a href="contact.html">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+                <li class="dropdown">
+                    <a href="#" class="neon-text dropdown-toggle">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>More</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="certifications.html" class="active">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certifications</span>
+                        </a></li>
+                        <li><a href="education.html">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Education</span>
+                        </a></li>
+                        <li><a href="tools.html">
+                            <i class="fas fa-tools"></i>
+                            <span>Tools</span>
+                        </a></li>
+                        <li><a href="games.html">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Games</span>
+                        </a></li>
+                        <li><a href="music-keyboard.html">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                        </a></li>
+                    </ul>
+                </li>            
+            <!-- User Menu -->
+            <div class="user-menu" style="display: none;">
+                <div class="user-avatar-container">
+                    <img src="../images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                    <div class="user-dropdown">
+                        <a href="profile.html" class="user-dropdown-item" style="display: none;">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="#" class="user-dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <button class="hamburger" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page Title -->
+    <section class="page-title">
+        <div class="container">
+            <h1 data-aos="fade-up">Certifications</h1>
+            <div class="title-line" data-aos="fade-up" data-aos-delay="200"></div>
+        </div>
+    </section>
+
+    <!-- Certifications Overview -->
+    <section class="certifications-overview">
+        <div class="container">
+            <div class="overview-content" data-aos="fade-up">
+                <p>My professional development journey includes valuable certifications and training programs that have enhanced my technical skills and industry knowledge. These credentials demonstrate my commitment to continuous learning and staying current with industry standards.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Certifications Grid -->
+    <section class="certifications-section">
+        <div class="container">
+            <div class="certifications-grid">
+                <!-- Internship Certificate -->
+                <div class="certification-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="cert-header">
+                        <div class="cert-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="cert-badge">
+                            <span>Internship</span>
+                        </div>
+                    </div>
+                    <div class="cert-content">
+                        <h3>Industrial Training Certificate</h3>
+                        <div class="cert-issuer">
+                            <i class="fas fa-building"></i>
+                            <span>Microcon i2i</span>
+                        </div>
+                        <div class="cert-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>2025</span>
+                        </div>
+                        <div class="cert-description">
+                            <p>Completed comprehensive industrial training program focusing on automation engineering, embedded systems, and industrial control systems. Gained hands-on experience with real-world projects including UTM Automation and Full Wheel Leak Testing systems.</p>
+                        </div>
+                        <div class="cert-skills">
+                            <span class="skill-tag">Industrial Automation</span>
+                            <span class="skill-tag">Embedded Systems</span>
+                            <span class="skill-tag">Control Systems</span>
+                            <span class="skill-tag">Project Management</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Python Certificate -->
+                <div class="certification-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="cert-header">
+                        <div class="cert-icon">
+                            <i class="fab fa-python"></i>
+                        </div>
+                        <div class="cert-badge">
+                            <span>Programming</span>
+                        </div>
+                    </div>
+                    <div class="cert-content">
+                        <h3>Python Programming Certificate</h3>
+                        <div class="cert-issuer">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Ztech</span>
+                        </div>
+                        <div class="cert-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>2024</span>
+                        </div>
+                        <div class="cert-description">
+                            <p>Successfully completed comprehensive Python programming course covering fundamental to advanced concepts. Gained proficiency in data structures, object-oriented programming, libraries, and practical application development.</p>
+                        </div>
+                        <div class="cert-skills">
+                            <span class="skill-tag">Python Programming</span>
+                            <span class="skill-tag">Data Structures</span>
+                            <span class="skill-tag">OOP</span>
+                            <span class="skill-tag">Libraries & Frameworks</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <span class="logo-text">SRN</span>
+                        <div class="logo-circle"></div>
+                    </div>
+                    <p>Electrical & Electronics Engineer</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="skills.html">Skills</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-social">
+                    <h4>Connect With Me</h4>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/sanjayraj-n-b201a1332" target="_blank"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a>
+                        <a href="https://www.facebook.com/sanjayrajn.sanjay?mibextid=ZbWKwL" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/sanjayraj_197" target="_blank"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2023 Sanjayraj N. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="../js/navigation.js"></script>
+        <script src="../js/page-transition.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/login-modal.js"></script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Music Keyboard - Sanjayraj N</title>
+    <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../css/critical.css">
+    <link rel="stylesheet" href="../css/styles.css?v=3.0">
+    <link rel="stylesheet" href="../css/fix-logo.css">
+    <link rel="stylesheet" href="../css/fix-styles.css">
+    <link rel="stylesheet" href="../css/nav-fix.css">
+    <link rel="stylesheet" href="../css/login-modal.css">
+<style>
+/* Critical CSS - Fixed Navigation Issues */
+html,body{visibility:visible!important;opacity:1!important;margin:0;padding:0;background:#0c0c14;color:#fff;font-family:'Rajdhani',sans-serif}
+body{padding-top:var(--header-height,80px)}
+header{position:fixed!important;top:0!important;left:0!important;width:100%!important;background:rgba(12,12,20,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,168,255,0.15);z-index:10000!important;transition:all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);box-shadow:0 2px 20px rgba(0,0,0,0.1);transform:translateZ(0)}
+header.scrolled{background:rgba(12,12,20,0.95);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);border-bottom:1px solid rgba(0,168,255,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.3),0 2px 8px rgba(0,168,255,0.1)}
+.nav-container{max-width:1400px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:80px}
+.nav-links{display:flex;list-style:none;align-items:center;gap:5px;margin:0;padding:0}
+.nav-links a{display:flex;align-items:center;gap:8px;padding:12px 18px;color:#fff;text-decoration:none;font-size:1.1rem;border-radius:10px;transition:color 0.2s ease,background 0.2s ease}
+.hamburger{display:none;flex-direction:column;cursor:pointer;padding:12px;background:rgba(0,168,255,0.1);border:2px solid rgba(0,168,255,0.3);width:50px;height:50px;justify-content:center;align-items:center;gap:4px;border-radius:12px}
+.hamburger span{width:22px;height:2px;background:#fff;border-radius:2px;transition:all 0.3s ease}
+.cursor,.cursor-follower{position:fixed!important;pointer-events:none!important;z-index:9999!important}
+@media (max-width:992px){body{padding-top:70px}.hamburger{display:flex}.nav-links{position:fixed;right:-100%;width:100%;max-width:400px;height:100vh;background:rgba(12,12,20,0.98);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);flex-direction:column;justify-content:flex-start;align-items:flex-start;gap:3px;padding:10px 20px;transition:all 0.4s cubic-bezier(0.25,0.46,0.45,0.94);z-index:9999;border-left:2px solid rgba(0,168,255,0.3);box-shadow:-15px 0 40px rgba(0,0,0,0.6)}.nav-links.active{right:0}}
+@supports not (backdrop-filter:blur(20px)){header{background:rgba(12,12,20,0.98)}header.scrolled{background:rgba(12,12,20,1)}}
+</style>
+
+    <link rel="stylesheet" href="../css/3d-effects.css">
+    <link rel="stylesheet" href="../css/music-keyboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
+
+    <!-- FOUC Prevention and Page Transition -->
+    <script>
+        // Prevent FOUC with improved font loading
+        document.documentElement.style.visibility='visible';
+        document.documentElement.classList.add('loaded');
+        
+        // Ensure smooth font transition
+        window.addEventListener('load', function() {
+            // Force font display after a short delay if WebFont API fails
+            setTimeout(function() {
+                if (document.documentElement.classList.contains('wf-loading')) {
+                    document.documentElement.classList.remove('wf-loading');
+                    document.documentElement.classList.add('wf-inactive');
+                    console.log('Font loading timed out, using fallbacks');
+                }
+            }, 2500);
+        });
+        
+        // Ensure Font Awesome is loaded
+        (function() {
+            // Create a link checker
+            const linkChecker = document.createElement('i');
+            linkChecker.className = 'fas fa-home';
+            linkChecker.style.position = 'absolute';
+            linkChecker.style.opacity = '0';
+            document.head.appendChild(linkChecker);
+            
+            // Check if Font Awesome is loaded
+            const isFontAwesomeLoaded = () => {
+                return window.getComputedStyle(linkChecker).fontFamily.includes('Font Awesome');
+            };
+            
+            // If not loaded, add inline styles for common icons
+            if (!isFontAwesomeLoaded()) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .fas.fa-home:before { content: "\\f015"; }
+                    .fas.fa-user:before { content: "\\f007"; }
+                    .fas.fa-cogs:before { content: "\\f085"; }
+                    .fas.fa-envelope:before { content: "\\f0e0"; }
+                    .fab.fa-linkedin:before { content: "\\f08c"; }
+                    .fab.fa-github:before { content: "\\f09b"; }
+                    .fab.fa-facebook:before { content: "\\f09a"; }
+                    .fab.fa-instagram:before { content: "\\f16d"; }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Clean up
+            document.head.removeChild(linkChecker);
+        })();
+        
+        // Show page transition on unload
+        window.addEventListener('beforeunload', function() {
+            const pageTransition = document.querySelector('.page-transition');
+            if (pageTransition && !pageTransition.classList.contains('active')) {
+                pageTransition.classList.add('active');
+            }
+        });
+    </script>
+</head>
+<body class="dark-theme subpage">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="../index.html">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>About</span>
+                </a></li>
+                <li><a href="skills.html">
+                    <i class="fas fa-cogs"></i>
+                    <span>Skills</span>
+                </a></li>
+                <li><a href="projects.html">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Projects</span>
+                </a></li>
+                <li><a href="contact.html">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+                <li class="dropdown">
+                    <a href="#" class="neon-text dropdown-toggle">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>More</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="certifications.html">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certifications</span>
+                        </a></li>
+                        <li><a href="education.html">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Education</span>
+                        </a></li>
+                        <li><a href="tools.html">
+                            <i class="fas fa-tools"></i>
+                            <span>Tools</span>
+                        </a></li>
+                        <li><a href="games.html">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Games</span>
+                        </a></li>
+                        <li><a href="music-keyboard.html" class="active">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                        </a></li>
+                    </ul>
+                </li>
+                
+                <!-- Mobile More Items - Essential for hamburger menu -->
+                <div class="mobile-more-items">
+                    <ul class="mobile-more-list">
+                        <li><a href="certifications.html"><i class="fas fa-certificate"></i><span>Certifications</span></a></li>
+                        <li><a href="education.html"><i class="fas fa-graduation-cap"></i><span>Education</span></a></li>
+                        <li><a href="tools.html"><i class="fas fa-tools"></i><span>Tools</span></a></li>
+                        <li><a href="games.html"><i class="fas fa-gamepad"></i><span>Games</span></a></li>
+                        <li><a href="music-keyboard.html" class="active"><i class="fas fa-music"></i><span>Music</span></a></li>
+                    </ul>
+                </div>            
+            <!-- User Menu -->
+            <div class="user-menu" style="display: none;">
+                <div class="user-avatar-container">
+                    <img src="../images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                    <div class="user-dropdown">
+                        <a href="profile.html" class="user-dropdown-item" style="display: none;">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="#" class="user-dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <button class="hamburger" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Nav overlay for mobile menu -->
+    <div class="nav-overlay"></div>
+
+    <main class="music-keyboard-container">
+        <section class="app-header" data-aos="fade-up">
+            <h1 class="glitch neon-text" data-text="Web Music Keyboard">Web Music Keyboard</h1>
+            <p>Play, record, and create music directly in your browser!</p>
+        </section>
+
+        <section class="controls-container" data-aos="fade-up" data-aos-delay="200">
+            <div class="sound-controls">
+                <label for="sound-theme">Sound Theme:</label>
+                <select id="sound-theme" class="neon-select">
+                    <option value="piano">Piano</option>
+                    <option value="synth">Synth</option>
+                    <option value="organ">Organ</option>
+                    <option value="electric">Electric</option>
+                    <option value="ambient">Ambient</option>
+                    <option value="drums">Drums</option>
+                </select>
+                
+                <div class="volume-control">
+                    <label for="volume-slider">Volume:</label>
+                    <input type="range" id="volume-slider" min="0" max="100" value="70">
+                </div>
+                
+                <button id="toggle-theme-keyboard" class="btn primary-btn"><i class="fas fa-keyboard"></i> Toggle Theme (Tab)</button>
+                <button id="save-preferences" class="btn"><i class="fas fa-save"></i> Save Preferences</button>
+                <button id="panic-button" class="btn danger-btn"><i class="fas fa-exclamation-triangle"></i> Panic</button>
+            </div>
+            
+            <div class="recording-controls">
+                <button id="start-recording" class="btn record-btn"><i class="fas fa-circle"></i> Record</button>
+                <button id="stop-recording" class="btn stop-btn" disabled><i class="fas fa-stop"></i> Stop</button>
+                <input type="text" id="track-name" placeholder="Track name" class="neon-input">
+                <button id="save-recording" class="btn" disabled><i class="fas fa-save"></i> Save Track</button>
+            </div>
+        </section>
+
+        <section class="keyboard-container" data-aos="fade-up" data-aos-delay="300">
+            <div class="keyboard-info">
+                <p>Use your computer keyboard to play! For piano: Q-P (upper row), Z-M (lower row). On mobile, keys are evenly split into 2 rows (14 keys each) for optimal spacing. For drums: 1, A, K, L, ;, ., /, ,</p>
+                <div class="keyboard-controls">
+                    <button id="toggle-key-labels" class="btn">Toggle Key Labels</button>
+                    <button id="toggle-keyboard" class="btn primary-btn"><i class="fas fa-keyboard"></i> PC Keyboard: ON</button>
+                    <span id="keyboard-status" class="keyboard-status">Ready</span>
+                </div>
+            </div>
+            <div id="piano-keyboard" class="piano-keyboard">
+                <!-- Piano keys will be generated by JavaScript -->
+            </div>
+        </section>
+
+        <section class="tracks-container" data-aos="fade-up" data-aos-delay="400">
+            <h2 class="section-title">Your Tracks</h2>
+            <div class="section-line"></div>
+            
+            <div class="tracks-controls">
+                <button id="play-all-tracks" class="btn primary-btn"><i class="fas fa-play"></i> Play All Tracks</button>
+                <button id="stop-playback" class="btn stop-btn" disabled><i class="fas fa-stop"></i> Stop Playback</button>
+                <button id="loop-playback" class="btn secondary-btn"><i class="fas fa-sync"></i> Loop: Off</button>
+                <button id="export-tracks" class="btn secondary-btn"><i class="fas fa-file-export"></i> Export Tracks</button>
+                <button id="import-tracks" class="btn secondary-btn"><i class="fas fa-file-import"></i> Import Tracks</button>
+            </div>
+            <div id="tracks-list" class="tracks-list">
+                <!-- Track items will be added here -->
+                <p id="no-tracks-message">No tracks saved yet. Record something!</p>
+            </div>
+        </section>
+
+        <section class="key-mapping-container" data-aos="fade-up" data-aos-delay="500">
+            <h2 class="section-title">Customize Key Mapping</h2>
+            <div class="section-line"></div>
+            
+            <div class="key-mapping-controls">
+                <button id="reset-mapping" class="btn secondary-btn"><i class="fas fa-undo"></i> Reset to Default</button>
+                <button id="toggle-mapping-mode" class="btn primary-btn"><i class="fas fa-keyboard"></i> Edit Mapping</button>
+                <button id="beginner-mapping" class="btn secondary-btn"><i class="fas fa-graduation-cap"></i> Beginner Mode</button>
+            </div>
+            <div class="mapping-instructions">
+                <p class="mapping-help">To change a key mapping: Click "Edit Mapping", then click on a note, and press the key you want to assign to it.</p>
+            </div>
+            <div id="key-mapping-display" class="key-mapping-display">
+                <!-- Key mapping will be displayed here -->
+            </div>
+        </section>
+        
+        <section class="instructions-container" data-aos="fade-up" data-aos-delay="600">
+            <h2 class="section-title">How to Use</h2>
+            <div class="section-line"></div>
+            
+            <div class="instructions-grid">
+                <div class="instruction-card tilt-effect with-glare">
+                    <div class="instruction-icon">
+                        <i class="fas fa-keyboard"></i>
+                    </div>
+                    <h3>Play</h3>
+                    <p>Use your computer keyboard or click the on-screen keys to play notes. Try different sound themes!</p>
+                </div>
+                
+                <div class="instruction-card tilt-effect with-glare">
+                    <div class="instruction-icon">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <h3>Record</h3>
+                    <p>Click Record, play some notes, then Stop when finished. Name your track and save it.</p>
+                </div>
+                
+                <div class="instruction-card tilt-effect with-glare">
+                    <div class="instruction-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3>Layer</h3>
+                    <p>Create multiple tracks with different instruments, then play them all together for a rich sound.</p>
+                </div>
+                
+                <div class="instruction-card tilt-effect with-glare">
+                    <div class="instruction-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h3>Customize</h3>
+                    <p>Change which keys trigger which notes using the key mapping editor. Save your preferences.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <span class="logo-text">SRN</span>
+                        <div class="logo-circle"></div>
+                    </div>
+                    <p>Creating innovative web experiences with passion and precision.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="music-keyboard.html">Music Keyboard</a></li>
+                    </ul>
+                </div>
+                <div class="footer-social">
+                    <h4>Connect With Me</h4>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/sanjayraj-n-b201a1332" target="_blank" aria-label="LinkedIn">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="https://github.com" target="_blank" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://www.facebook.com/sanjayrajn.sanjay?mibextid=ZbWKwL" target="_blank" aria-label="Facebook">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="https://www.instagram.com/sanjayraj_197" target="_blank" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Sanjayraj N. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="../js/music-keyboard.js"></script>
+    
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+    </script>
+    <script src="../js/page-transition.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/login-modal.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

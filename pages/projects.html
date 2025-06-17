@@ -1,0 +1,1021 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects | Sanjayraj N</title>
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <link rel="stylesheet" href="../css/critical.css">
+    <link rel="stylesheet" href="../css/styles.css?v=3.0">
+    <link rel="stylesheet" href="../css/fix-logo.css">
+    <link rel="stylesheet" href="../css/fix-styles.css">
+    <link rel="stylesheet" href="../css/nav-fix.css">
+    <link rel="stylesheet" href="../css/login-modal.css">
+
+    <link rel="stylesheet" href="../css/projects.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Backup Google Fonts loading method -->
+    <script>
+        // Add wf-loading class to html element
+        document.documentElement.classList.add('wf-loading');
+        
+        // Enhanced font loading with proper events
+        WebFontConfig = {
+            google: {
+                families: ['Orbitron:400,500,700,900', 'Rajdhani:300,400,500,600,700']
+            },
+            timeout: 2000, // Set timeout to 2 seconds
+            loading: function() {
+                console.log('Fonts are loading...');
+            },
+            active: function() {
+                // Fonts have loaded successfully
+                document.documentElement.classList.remove('wf-loading');
+                document.documentElement.classList.add('wf-active');
+                console.log('Fonts loaded successfully');
+            },
+            inactive: function() {
+                // Fallback if fonts fail to load
+                document.documentElement.classList.remove('wf-loading');
+                document.documentElement.classList.add('wf-inactive');
+                console.log('Fonts failed to load, using fallbacks');
+            }
+        };
+        
+        (function(d) {
+            var wf = d.createElement('script'), s = d.scripts[0];
+            wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
+            wf.async = true;
+            s.parentNode.insertBefore(wf, s);
+        })(document);
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
+    
+    <!-- Fallback font styles -->
+    <style>
+        /* Ensure text is visible during font loading */
+        body {
+            font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        h1, h2, h3, .logo, .glitch, .hero-title {
+            font-family: 'Orbitron', 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+    </style>
+
+    <!-- FOUC Prevention and Page Transition -->
+    <script>
+        // Prevent FOUC with improved font loading
+        document.documentElement.style.visibility='visible';
+        document.documentElement.classList.add('loaded');
+        
+        // Ensure smooth font transition
+        window.addEventListener('load', function() {
+            // Force font display after a short delay if WebFont API fails
+            setTimeout(function() {
+                if (document.documentElement.classList.contains('wf-loading')) {
+                    document.documentElement.classList.remove('wf-loading');
+                    document.documentElement.classList.add('wf-inactive');
+                    console.log('Font loading timed out, using fallbacks');
+                }
+            }, 2500);
+        });
+        
+        // Ensure Font Awesome is loaded
+        (function() {
+            // Create a link checker
+            const linkChecker = document.createElement('i');
+            linkChecker.className = 'fas fa-home';
+            linkChecker.style.position = 'absolute';
+            linkChecker.style.opacity = '0';
+            document.head.appendChild(linkChecker);
+            
+            // Check if Font Awesome is loaded
+            const isFontAwesomeLoaded = () => {
+                return window.getComputedStyle(linkChecker).fontFamily.includes('Font Awesome');
+            };
+            
+            // If not loaded, add inline styles for common icons
+            if (!isFontAwesomeLoaded()) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .fas.fa-home:before { content: "\\f015"; }
+                    .fas.fa-user:before { content: "\\f007"; }
+                    .fas.fa-cogs:before { content: "\\f085"; }
+                    .fas.fa-envelope:before { content: "\\f0e0"; }
+                    .fab.fa-linkedin:before { content: "\\f08c"; }
+                    .fab.fa-github:before { content: "\\f09b"; }
+                    .fab.fa-facebook:before { content: "\\f09a"; }
+                    .fab.fa-instagram:before { content: "\\f16d"; }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Clean up
+            document.head.removeChild(linkChecker);
+        })();
+        
+        // Show page transition on unload
+        window.addEventListener('beforeunload', function() {
+            const pageTransition = document.querySelector('.page-transition');
+            if (pageTransition && !pageTransition.classList.contains('active')) {
+                pageTransition.classList.add('active');
+            }
+        });
+    </script></head>
+<body class="dark-theme subpage">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="../index.html">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>About</span>
+                </a></li>
+                <li><a href="skills.html">
+                    <i class="fas fa-cogs"></i>
+                    <span>Skills</span>
+                </a></li>
+                <li><a href="projects.html" class="active">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Projects</span>
+                </a></li>
+                <li><a href="contact.html">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+                <li class="dropdown">
+                    <a href="#" class="neon-text dropdown-toggle">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>More</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="certifications.html">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certifications</span>
+                        </a></li>
+                        <li><a href="education.html">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Education</span>
+                        </a></li>
+                        <li><a href="tools.html">
+                            <i class="fas fa-tools"></i>
+                            <span>Tools</span>
+                        </a></li>
+                        <li><a href="games.html">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Games</span>
+                        </a></li>
+                        <li><a href="music-keyboard.html">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                        </a></li>
+                    </ul>
+                </li>            
+            <!-- User Menu -->
+            <div class="user-menu" style="display: none;">
+                <div class="user-avatar-container">
+                    <img src="../images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                    <div class="user-dropdown">
+                        <a href="profile.html" class="user-dropdown-item" style="display: none;">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="#" class="user-dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <button class="hamburger" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page Title -->
+    <section class="page-title">
+        <div class="container">
+            <h1 data-aos="fade-up">My Projects</h1>
+            <div class="title-line" data-aos="fade-up" data-aos-delay="200"></div>
+        </div>
+    </section>
+
+    <!-- Projects Grid -->
+    <section class="projects-grid">
+        <div class="container">
+            <div class="projects-container">
+                <!-- Project 1: Driver Drowsiness Detection -->
+                <div class="project-item" id="drowsiness" data-aos="fade-up" data-aos-delay="100">
+                    <div class="project-image">
+                        <img src="../images/DriversDrowsiness.png" alt="Driver Drowsiness Detection and Alert System">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="#" class="project-github"><i class="fab fa-github"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+
+                        <h3>Driver Drowsiness Detection and Alert System</h3>
+                        <p>An intelligent real-time drowsiness detection system using Raspberry Pi 3, USB camera, and OpenCV. Features multi-tiered alerts: buzzer, water spray, and ignition cutoff with email notifications based on Eye Aspect Ratio (EAR) monitoring.</p>
+                        <div class="project-tech">
+                            <span>Raspberry Pi 3</span>
+                            <span>Python</span>
+                            <span>OpenCV</span>
+                            <span>dlib</span>
+                            <span>GPIO Control</span>
+                            <span>Email Alerts</span>
+                        </div>
+                        <a href="#" class="btn-view-project" data-project="drowsiness">
+                            <span>View Details</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Project 2: Laser Li-Fi Communication System -->
+                <div class="project-item" id="lifi" data-aos="fade-up" data-aos-delay="200">
+                    <div class="project-image">
+                        <img src="../images/LifiP.jpg" alt="Laser Li-Fi: Advancing Li-Fi with Laser Communication">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="#" class="project-github"><i class="fab fa-github"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+
+                        <h3>Laser Li-Fi: Advancing Li-Fi with Laser Communication</h3>
+                        <p>A working prototype of a laser-based Li-Fi system for wireless data transmission. Unlike traditional Li-Fi using LEDs, this design uses laser diodes for higher precision and longer range, showcasing secure, interference-free communication.</p>
+                        <div class="project-tech">
+                            <span>Arduino Uno & Nano</span>
+                            <span>Laser Diode Module</span>
+                            <span>Solar Panel</span>
+                            <span>Binary Encoding</span>
+                        </div>
+                        <a href="#" class="btn-view-project" data-project="lifi">
+                            <span>View Details</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Project 3: Kitchen Automation -->
+                <div class="project-item" data-aos="fade-up" data-aos-delay="300">
+                    <div class="project-image">
+                        <img src="../images/KitchenAutomation.png" alt="Kitchen Automation">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="#" class="project-github"><i class="fab fa-github"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+
+                        <h3>Arduino-Based Kitchen Automation System</h3>
+                        <p>An intelligent Arduino-based kitchen automation system that enhances efficiency, convenience, and safety through automated lighting control, exhaust fan management, insect detection with alerts, and smart trash bin functionality.</p>
+                        <div class="project-tech">
+                            <span>Arduino Uno</span>
+                            <span>Arduino IDE</span>
+                            <span>Light Sensors</span>
+                            <span>Smoke Detection</span>
+                            <span>Motion Sensors</span>
+                            <span>Buzzer Alerts</span>
+                        </div>
+                        <a href="#" class="btn-view-project" data-project="kitchen">
+                            <span>View Details</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Project 4: KEITHLEY Data Logger -->
+                <div class="project-item" data-aos="fade-up" data-aos-delay="400">
+                    <div class="project-image">
+                        <img src="../images/memory/circuit.png" alt="KEITHLEY Data Logger">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="#" class="project-github"><i class="fab fa-github"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+
+                        <h3>KEITHLEY Data Logger</h3>
+                        <p>A desktop application for logging and visualizing data from KEITHLEY measurement instruments, with real-time graphing and data export capabilities.</p>
+                        <div class="project-tech">
+                            <span>Python</span>
+                            <span>PyQt5</span>
+                            <span>SQL</span>
+                            <span>Data Visualization</span>
+                        </div>
+                        <a href="#" class="btn-view-project" data-project="keithley">
+                            <span>View Details</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+
+
+                <!-- Project 6: Solar Powered Garbage Monitoring and Alert System -->
+                <div class="project-item" data-aos="fade-up" data-aos-delay="200">
+                    <div class="project-image">
+                        <img src="../images/SolarPowered.jpg" alt="Solar Powered Garbage Monitoring and Alert System">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="#" class="project-github"><i class="fab fa-github"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+
+                        <h3>Solar Powered Garbage Monitoring and Alert System</h3>
+                        <p>This project presents an eco-friendly, real-time waste monitoring system powered by solar energy. It utilizes an Arduino Nano, ultrasonic sensor, LCD display, buzzer, and a solar charging system to monitor garbage levels in public or private bins. When the bin reaches 80% capacity, a buzzer is triggered and a "Time to Clear" message is displayed, ensuring proactive waste management and avoiding overflow.</p>
+                        <div class="project-tech">
+                            <span>Arduino Nano</span>
+                            <span>Embedded C</span>
+                            <span>Ultrasonic Sensor</span>
+                            <span>LCD Display</span>
+                            <span>Solar Panel</span>
+                            <span>Li-ion Battery</span>
+                        </div>
+                        <a href="#" class="btn-view-project" data-project="garbage">
+                            <span>View Details</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Modal -->
+    <div class="project-modal">
+        <div class="modal-content">
+            <div class="modal-close"><i class="fas fa-times"></i></div>
+            <div class="modal-body">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Details Templates (Hidden) -->
+    <div class="project-details-template" id="drowsiness-details" style="display: none;">
+        <div class="project-details">
+            <div class="project-details-header">
+                <h2>Driver Drowsiness Detection and Alert System Using Raspberry Pi and OpenCV</h2>
+                <div class="project-details-meta">
+                    <span><i class="far fa-calendar-alt"></i> 2022</span>
+                    <span><i class="fas fa-tag"></i> Road Safety & IoT</span>
+                    <span><i class="fas fa-microchip"></i> Raspberry Pi 3</span>
+                </div>
+            </div>
+            
+            <div class="project-details-gallery">
+                <div class="gallery-main">
+                    <img src="../images/DriversDrowsiness.png" alt="Driver Drowsiness Detection System Model">
+                </div>
+                <div class="gallery-thumbs">
+                    <img src="../images/DriversDrowsiness.png" alt="System Model Photo" class="active">
+                    <img src="../images/DriversDrowsinessS.png" alt="System Schematic Diagram">
+                </div>
+            </div>
+            
+            <div class="project-details-content">
+                <div class="details-section">
+                    <h3>Project Overview</h3>
+                    <p>This project addresses a critical road safety issue—driver fatigue—by developing an intelligent, real-time drowsiness detection system. Built using a Raspberry Pi 3, a USB camera, and OpenCV, the system monitors the driver's eye aspect ratio (EAR) using facial landmark detection to identify signs of drowsiness and fatigue.</p>
+                    <p>The system is highly applicable in commercial transportation, fleet management, public vehicles, and personal cars. It ensures proactive accident prevention, is cost-effective, and can be expanded with additional safety features like GPS and night vision capabilities.</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Multi-Tiered Alert System</h3>
+                    <p>Based on the level of drowsiness detected through EAR monitoring, the system triggers progressive alerts:</p>
+                    <ul>
+                        <li><strong>Level 1:</strong> Activates a buzzer (auditory alert) for initial drowsiness detection</li>
+                        <li><strong>Level 2:</strong> Triggers a water spray mechanism (physical alert) for moderate drowsiness</li>
+                        <li><strong>Level 3:</strong> Cuts off ignition and sends an email alert with the driver's image (emergency response) for severe drowsiness</li>
+                    </ul>
+                    <p>The system uses Python's GPIO control for hardware interfacing and smtplib for email notifications, ensuring comprehensive safety coverage.</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Key Features & Highlights</h3>
+                    <ul>
+                        <li>Real-time face & eye monitoring using USB camera</li>
+                        <li>Eye Aspect Ratio (EAR) detection for precise drowsiness measurement</li>
+                        <li>Tiered safety alerts based on fatigue severity levels</li>
+                        <li>Simulated vehicle ignition control for emergency situations</li>
+                        <li>Remote notification via email with driver's image capture</li>
+                        <li>Customizable and power-efficient design</li>
+                        <li>Modular and scalable system architecture</li>
+                        <li>Cost-effective solution for various vehicle types</li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Key Technologies & Components</h3>
+                    <div class="tech-tags">
+                        <span>Raspberry Pi 3</span>
+                        <span>Python</span>
+                        <span>OpenCV</span>
+                        <span>dlib</span>
+                        <span>GPIO Control</span>
+                        <span>USB Camera</span>
+                        <span>Buzzer Module</span>
+                        <span>Water Pump</span>
+                        <span>Relay Module</span>
+                        <span>Email System (smtplib)</span>
+                        <span>EAR Detection</span>
+                        <span>Computer Vision</span>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <h3>System Architecture & Implementation</h3>
+                    <p>The system architecture consists of three main components: detection, processing, and response. The USB camera continuously captures the driver's face, while OpenCV and dlib libraries process the image to extract facial landmarks and calculate the Eye Aspect Ratio (EAR).</p>
+                    <p>The Raspberry Pi 3 serves as the central processing unit, managing GPIO pins to control various hardware components including the buzzer, water pump, and relay module for ignition control. The email alert system captures and sends the driver's image along with timestamp information to designated emergency contacts.</p>
+                    <p>The modular design allows for easy integration with existing vehicle systems and can be customized based on specific requirements for different vehicle types and use cases.</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Applications & Impact</h3>
+                    <p>This intelligent drowsiness detection system has wide-ranging applications across multiple sectors:</p>
+                    <ul>
+                        <li><strong>Commercial Transportation:</strong> Long-haul trucking and freight delivery services</li>
+                        <li><strong>Fleet Management:</strong> Corporate vehicle fleets and logistics companies</li>
+                        <li><strong>Public Transportation:</strong> Buses, taxis, and ride-sharing vehicles</li>
+                        <li><strong>Personal Vehicles:</strong> Private cars for enhanced family safety</li>
+                    </ul>
+                    <p>The system's proactive approach to accident prevention, combined with its cost-effective design and scalability, makes it an ideal solution for improving road safety across various transportation sectors. The multi-tiered alert system ensures appropriate response based on the severity of drowsiness detected.</p>
+                </div>
+            </div>
+            
+            <div class="project-details-footer">
+                <a href="#" class="btn primary-btn">
+                    <span class="btn-text">View Live Demo</span>
+                    <span class="btn-icon"><i class="fas fa-external-link-alt"></i></span>
+                </a>
+                <a href="#" class="btn secondary-btn">
+                    <span class="btn-text">View Source Code</span>
+                    <span class="btn-icon"><i class="fab fa-github"></i></span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-details-template" id="lifi-details" style="display: none;">
+        <div class="project-details">
+            <div class="project-details-header">
+                <h2>Laser Li-Fi: Advancing Li-Fi with Laser Communication</h2>
+                <div class="project-details-meta">
+                    <span><i class="far fa-calendar-alt"></i> 2023</span>
+                    <span><i class="fas fa-tag"></i> Li-Fi Technology</span>
+                    <span><i class="fas fa-microchip"></i> Arduino</span>
+                </div>
+            </div>
+            
+            <div class="project-details-gallery">
+                <div class="gallery-main">
+                    <img src="../images/LifiP.jpg" alt="Laser Li-Fi Communication System">
+                </div>
+                <div class="gallery-thumbs">
+                    <img src="../images/LifiP.jpg" alt="Complete Li-Fi System" class="active">
+                    <img src="../images/LifiTransmitter.png" alt="Li-Fi Transmitter Unit">
+                    <img src="../images/LifiReciever.png" alt="Li-Fi Receiver Unit">
+                </div>
+            </div>
+            
+            <div class="project-details-content">
+                <div class="details-section">
+                    <h3>Project Overview</h3>
+                    <p>This project demonstrates a working prototype of a laser-based Li-Fi (Light Fidelity) system for wireless data transmission. Unlike traditional Li-Fi that uses LEDs, this design uses a laser diode for higher precision and longer range. The system effectively showcases secure, interference-free, and high-speed communication, highlighting Li-Fi's potential in areas where traditional RF communication struggles (e.g., hospitals, aircrafts, and underwater environments).</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>System Architecture</h3>
+                    <div class="architecture-grid">
+                        <div class="arch-component">
+                            <h4><i class="fas fa-broadcast-tower"></i> Transmitter Unit</h4>
+                            <p>Built with Arduino Nano and laser module, encodes text input into binary pulses of laser light. Converts digital data into precise light signals for transmission.</p>
+                        </div>
+                        <div class="arch-component">
+                            <h4><i class="fas fa-satellite-dish"></i> Receiver Unit</h4>
+                            <p>Uses Arduino Uno connected to an epoxy solar panel to detect laser pulses and decode them back into readable text in real-time.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Key Technologies</h3>
+                    <div class="tech-grid">
+                        <div class="tech-item">
+                            <i class="fas fa-microchip"></i>
+                            <h4>Arduino Uno & Nano</h4>
+                            <p>Microcontroller platforms for encoding/decoding and system control</p>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-laser-pointer"></i>
+                            <h4>Laser Diode Module</h4>
+                            <p>High-precision laser for focused light transmission</p>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-solar-panel"></i>
+                            <h4>Epoxy Solar Panel</h4>
+                            <p>Light detection and conversion to electrical signals</p>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-code"></i>
+                            <h4>Binary Data Encoding</h4>
+                            <p>Custom protocol for reliable data transmission</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Project Highlights</h3>
+                    <ul class="highlights-list">
+                        <li><i class="fas fa-check-circle"></i> Transmits numbers, characters & symbols with high accuracy</li>
+                        <li><i class="fas fa-check-circle"></i> Uses laser pulses to represent binary 1s and 0s</li>
+                        <li><i class="fas fa-check-circle"></i> Real-time text decoding at receiver end</li>
+                        <li><i class="fas fa-check-circle"></i> Ideal for secure, short-range wireless communication</li>
+                        <li><i class="fas fa-check-circle"></i> Interference-free operation in RF-restricted environments</li>
+                        <li><i class="fas fa-check-circle"></i> Higher precision and longer range than LED-based Li-Fi</li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Technical Implementation</h3>
+                    <p><strong>Transmitter Operation:</strong> The Arduino Nano receives text input via serial communication and converts each character into its binary representation. The laser diode is modulated to produce light pulses corresponding to binary data - laser ON for '1' and laser OFF for '0'.</p>
+                    <p><strong>Receiver Operation:</strong> The solar panel detects the incoming laser pulses and converts them to electrical signals. The Arduino Uno processes these signals, reconstructs the binary data, and converts it back to readable text characters.</p>
+                    <p><strong>Communication Protocol:</strong> A custom serial communication protocol ensures reliable data transfer with start/stop bits and error detection mechanisms.</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Applications & Use Cases</h3>
+                    <div class="applications-grid">
+                        <div class="app-item">
+                            <i class="fas fa-hospital"></i>
+                            <h4>Medical Facilities</h4>
+                            <p>RF-free communication in sensitive medical equipment environments</p>
+                        </div>
+                        <div class="app-item">
+                            <i class="fas fa-plane"></i>
+                            <h4>Aircraft Systems</h4>
+                            <p>Secure communication without electromagnetic interference</p>
+                        </div>
+                        <div class="app-item">
+                            <i class="fas fa-water"></i>
+                            <h4>Underwater Communication</h4>
+                            <p>Light-based transmission where radio waves cannot penetrate</p>
+                        </div>
+                        <div class="app-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <h4>Secure Environments</h4>
+                            <p>Highly secure communication with minimal interception risk</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Technologies Used</h3>
+                    <div class="tech-tags">
+                        <span>Arduino Uno</span>
+                        <span>Arduino Nano</span>
+                        <span>Laser Diode Module</span>
+                        <span>Epoxy Solar Panel</span>
+                        <span>Serial Communication</span>
+                        <span>Binary Data Encoding</span>
+                        <span>C/C++</span>
+                        <span>Li-Fi Technology</span>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Challenges & Solutions</h3>
+                    <p><strong>Signal Alignment:</strong> Ensuring precise alignment between laser transmitter and solar panel receiver was critical. This was solved by implementing adjustable mounting systems and alignment indicators.</p>
+                    <p><strong>Environmental Interference:</strong> Ambient light could interfere with signal detection. This was addressed by using focused laser beams and implementing signal filtering algorithms.</p>
+                    <p><strong>Data Integrity:</strong> Ensuring reliable data transmission required developing robust encoding schemes and error detection mechanisms to handle potential signal loss or corruption.</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Results & Future Scope</h3>
+                    <p>The prototype successfully demonstrated reliable text transmission over short distances with high accuracy. The system proved the viability of laser-based Li-Fi for specialized applications requiring secure, interference-free communication.</p>
+                    <p><strong>Future Enhancements:</strong> Integration of bidirectional communication, increased transmission range, support for multimedia data, and development of portable, battery-powered units for field applications.</p>
+                </div>
+            </div>
+            
+            <div class="project-details-footer">
+                <a href="#" class="btn primary-btn">
+                    <span class="btn-text">View Live Demo</span>
+                    <span class="btn-icon"><i class="fas fa-external-link-alt"></i></span>
+                </a>
+                <a href="#" class="btn secondary-btn">
+                    <span class="btn-text">View Source Code</span>
+                    <span class="btn-icon"><i class="fab fa-github"></i></span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kitchen Automation Project Details -->
+    <div class="project-details-template" id="kitchen-details" style="display: none;">
+        <div class="project-details">
+            <div class="project-details-header">
+                <h2>Arduino-Based Kitchen Automation System</h2>
+                <div class="project-details-meta">
+                    <span><i class="far fa-calendar-alt"></i> 2023</span>
+                    <span><i class="fas fa-microchip"></i> Arduino Uno</span>
+                    <span><i class="fas fa-code"></i> Arduino IDE</span>
+                </div>
+            </div>
+            
+            <div class="project-details-gallery">
+                <div class="gallery-main">
+                    <img src="../images/KitchenAutomation.png" alt="Arduino-Based Kitchen Automation System">
+                </div>
+                <div class="gallery-thumbs">
+                    <img src="../images/KitchenAutomation.png" alt="Kitchen Automation System" class="active">
+                </div>
+            </div>
+            
+            <div class="project-details-content">
+                <div class="details-section">
+                    <h3>Project Overview</h3>
+                    <p>This project presents an Arduino-based kitchen automation system aimed at improving efficiency, convenience, and safety. The system automates various kitchen tasks using the Arduino Uno board, enhancing energy conservation, reducing accidents, and providing real-time monitoring to make the kitchen safer and smarter.</p>
+                    <p>The system is powered by an Arduino Uno and developed using the Arduino IDE, providing a cost-effective and user-friendly solution for modern kitchen automation needs.</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Key Features & Automation Systems</h3>
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Automatic Lighting Control</h4>
+                                <p>Intelligent lighting system that controls lights based on kitchen light intensity using light sensors, optimizing energy consumption and providing convenience.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-fan"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Exhaust Fan Control</h4>
+                                <p>Smart exhaust fan system that automatically activates when smoke is detected, ensuring proper ventilation and maintaining air quality in the kitchen.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-bug"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Insect Detection System</h4>
+                                <p>Advanced insect detection system with motion sensors that triggers a buzzer alert upon detecting insect movement, maintaining kitchen hygiene.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-trash-alt"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Smart Trash Bin</h4>
+                                <p>Intelligent trash bin with proximity sensors that opens automatically when an object is detected nearby, providing touchless and hygienic waste disposal.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <h3>System Architecture & Components</h3>
+                    <p>The system is built around the Arduino Uno microcontroller board, which serves as the central processing unit for all automation tasks. Various sensors and actuators are interfaced with the Arduino to create a comprehensive kitchen automation solution.</p>
+                    
+                    <div class="tech-components">
+                        <div class="component-category">
+                            <h4><i class="fas fa-microchip"></i> Core Processing</h4>
+                            <ul>
+                                <li>Arduino Uno - Main microcontroller board</li>
+                                <li>Arduino IDE - Development environment</li>
+                                <li>Digital & Analog I/O pins for sensor interfacing</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="component-category">
+                            <h4><i class="fas fa-sensor"></i> Sensor Systems</h4>
+                            <ul>
+                                <li>Light intensity sensors for automatic lighting</li>
+                                <li>Smoke detection sensors for exhaust control</li>
+                                <li>Motion/PIR sensors for insect detection</li>
+                                <li>Proximity sensors for smart trash bin</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="component-category">
+                            <h4><i class="fas fa-cogs"></i> Output Systems</h4>
+                            <ul>
+                                <li>LED lights and relay modules</li>
+                                <li>Exhaust fan control circuits</li>
+                                <li>Buzzer modules for audio alerts</li>
+                                <li>Servo motors for trash bin mechanism</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Key Benefits & Impact</h3>
+                    <ul class="benefits-list">
+                        <li><i class="fas fa-check-circle"></i> <strong>Energy Efficiency:</strong> Automatic control reduces unnecessary power consumption</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>Enhanced Safety:</strong> Smoke detection and automatic ventilation prevent accidents</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>Improved Hygiene:</strong> Touchless trash bin and insect detection maintain cleanliness</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>User Convenience:</strong> Automated systems reduce manual intervention</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>Real-time Monitoring:</strong> Continuous sensor monitoring provides instant responses</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>Cost-effective Solution:</strong> Arduino-based system offers affordable automation</li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Technical Implementation</h3>
+                    <p><strong>Programming & Development:</strong> The system is programmed using the Arduino IDE with C/C++ programming language. The code implements sensor reading, decision logic, and actuator control in a continuous loop.</p>
+                    <p><strong>Sensor Integration:</strong> Multiple sensors are connected to the Arduino's digital and analog pins, with appropriate pull-up resistors and signal conditioning circuits for reliable operation.</p>
+                    <p><strong>Control Logic:</strong> Smart algorithms process sensor data and trigger appropriate responses based on predefined thresholds and conditions, ensuring optimal system performance.</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Technologies Used</h3>
+                    <div class="tech-tags">
+                        <span>Arduino Uno</span>
+                        <span>Arduino IDE</span>
+                        <span>C/C++ Programming</span>
+                        <span>Light Sensors</span>
+                        <span>Smoke Detection</span>
+                        <span>Motion Sensors</span>
+                        <span>Proximity Sensors</span>
+                        <span>Servo Motors</span>
+                        <span>Relay Modules</span>
+                        <span>Buzzer Modules</span>
+                        <span>LED Control</span>
+                        <span>Digital I/O</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="project-details-footer">
+                <a href="#" class="btn primary-btn">
+                    <span class="btn-text">View Live Demo</span>
+                    <span class="btn-icon"><i class="fas fa-external-link-alt"></i></span>
+                </a>
+                <a href="#" class="btn secondary-btn">
+                    <span class="btn-text">View Source Code</span>
+                    <span class="btn-icon"><i class="fab fa-github"></i></span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- KEITHLEY Data Logger Project Details -->
+    <div class="project-details-template" id="keithley-details" style="display: none;">
+        <div class="project-details">
+            <div class="project-details-header">
+                <h2>KEITHLEY Data Logger</h2>
+                <div class="project-details-meta">
+                    <span><i class="far fa-calendar-alt"></i> 2023</span>
+                    <span><i class="fas fa-code"></i> Python</span>
+                    <span><i class="fas fa-database"></i> SQL</span>
+                </div>
+            </div>
+            <div class="project-details-gallery">
+                <div class="gallery-main">
+                    <img src="../images/memory/circuit.png" alt="KEITHLEY Data Logger">
+                </div>
+                <div class="gallery-thumbs">
+                    <img src="../images/memory/circuit.png" alt="KEITHLEY Data Logger" class="active">
+                </div>
+            </div>
+            <div class="project-details-content">
+                <div class="details-section">
+                    <h3>Project Overview</h3>
+                    <p>The KEITHLEY Data Logger is a desktop application designed to interface with KEITHLEY measurement instruments, collect data in real-time, and provide visualization and analysis tools for the captured data.</p>
+                </div>
+                <div class="details-section">
+                    <h3>Key Features</h3>
+                    <ul>
+                        <li>Real-time data acquisition from KEITHLEY instruments</li>
+                        <li>Interactive data visualization with customizable charts</li>
+                        <li>Data export in multiple formats (CSV, Excel, PDF)</li>
+                        <li>Automated test sequences and reporting</li>
+                        <li>SQL database for data storage and retrieval</li>
+                    </ul>
+                </div>
+                <div class="details-section">
+                    <h3>Technical Implementation</h3>
+                    <p>The application is built using Python with PyQt5 for the user interface. It communicates with KEITHLEY instruments via VISA/GPIB interfaces and stores data in an SQLite database for efficient retrieval and analysis.</p>
+                    <p>The visualization component uses Matplotlib and PyQtGraph to create interactive charts that update in real-time as data is collected.</p>
+                </div>
+            </div>
+            <div class="project-details-footer">
+                <a href="#" class="btn-project-link">
+                    <i class="fab fa-github"></i>
+                    <span>View on GitHub</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Solar Powered Garbage Monitoring and Alert System Project Details -->
+    <div class="project-details-template" id="garbage-details" style="display: none;">
+        <div class="project-details">
+            <div class="project-details-header">
+                <h2>Solar Powered Garbage Monitoring and Alert System</h2>
+                <div class="project-details-meta">
+                    <span><i class="far fa-calendar-alt"></i> 2023</span>
+                    <span><i class="fas fa-microchip"></i> Arduino Nano</span>
+                    <span><i class="fas fa-solar-panel"></i> Solar Powered</span>
+                    <span><i class="fas fa-recycle"></i> Smart Waste Management</span>
+                </div>
+            </div>
+            <div class="project-details-gallery">
+                <div class="gallery-main">
+                    <img src="../images/SolarPowered.jpg" alt="Solar Powered Garbage Monitoring and Alert System">
+                </div>
+                <div class="gallery-thumbs">
+                    <img src="../images/SolarPowered.jpg" alt="Solar Powered Garbage Monitoring System" class="active">
+                </div>
+            </div>
+            <div class="project-details-content">
+                <div class="details-section">
+                    <h3>Project Overview</h3>
+                    <p>This project presents an eco-friendly, real-time waste monitoring system powered by solar energy. It utilizes an Arduino Nano, ultrasonic sensor, LCD display, buzzer, and a solar charging system to monitor garbage levels in public or private bins. When the bin reaches 80% capacity, a buzzer is triggered and a "Time to Clear" message is displayed, ensuring proactive waste management and avoiding overflow.</p>
+                    <p>The system is entirely solar-powered, making it ideal for remote or off-grid areas. It helps municipalities and organizations improve collection efficiency, reduce manual checks, and contribute to sustainable urban development. It is also a scalable and cost-effective solution for smart city applications.</p>
+                </div>
+                <div class="details-section">
+                    <h3>Key Technologies</h3>
+                    <ul>
+                        <li><strong>Arduino Nano & Embedded C:</strong> Main microcontroller programmed with embedded C for efficient processing and control</li>
+                        <li><strong>Ultrasonic Sensor:</strong> HC-SR04 sensor for precise distance measurement and level detection</li>
+                        <li><strong>LCD Display:</strong> 16x2 LCD for real-time display of garbage percentage and status messages</li>
+                        <li><strong>Solar Panel & Li-ion Battery:</strong> Renewable energy system ensuring continuous operation and energy autonomy</li>
+                        <li><strong>Buzzer for Audible Alerts:</strong> Sound alerts when bin reaches 80% capacity threshold</li>
+                    </ul>
+                </div>
+                <div class="details-section">
+                    <h3>Key Features & Highlights</h3>
+                    <ul>
+                        <li><strong>Real-time Monitoring:</strong> Continuously monitors bin fill-level and displays live garbage percentage</li>
+                        <li><strong>Solar-powered Operation:</strong> Completely sustainable operation with solar energy harvesting and battery backup</li>
+                        <li><strong>Smart Alert System:</strong> Automatically alerts when bin reaches 80% capacity with buzzer and LCD message "Time to Clear"</li>
+                        <li><strong>Live Status Display:</strong> LCD shows current garbage fill percentage in real-time</li>
+                        <li><strong>Eco-friendly Design:</strong> Zero carbon footprint with renewable solar energy</li>
+                        <li><strong>Maintenance-free:</strong> Reduces manual effort and promotes hygiene by eliminating frequent physical checks</li>
+                        <li><strong>Cost-effective Solution:</strong> Low-cost implementation suitable for widespread deployment</li>
+                        <li><strong>Remote Area Compatible:</strong> Perfect for off-grid locations where traditional power sources are unavailable</li>
+                    </ul>
+                </div>
+                <div class="details-section">
+                    <h3>Technical Implementation</h3>
+                    <p>The system architecture is built around an Arduino Nano microcontroller that serves as the central processing unit. The ultrasonic sensor (HC-SR04) continuously measures the distance from the sensor to the garbage surface, calculating the fill percentage in real-time.</p>
+                    <p>The solar panel charges a Li-ion battery system that ensures uninterrupted operation even during low-light conditions. The energy management system is designed to optimize power consumption while maintaining continuous monitoring capabilities.</p>
+                    <p>The embedded C program implements intelligent algorithms for:</p>
+                    <ul>
+                        <li>Distance-to-percentage conversion with calibration options</li>
+                        <li>Threshold-based alert triggering at 80% capacity</li>
+                        <li>LCD display management for clear status indication</li>
+                        <li>Power management for extended battery life</li>
+                        <li>Sensor data filtering for accurate measurements</li>
+                    </ul>
+                </div>
+                <div class="details-section">
+                    <h3>Applications & Impact</h3>
+                    <p>This system addresses critical urban waste management challenges by providing:</p>
+                    <ul>
+                        <li><strong>Smart City Integration:</strong> Scalable solution for modern urban infrastructure</li>
+                        <li><strong>Municipal Efficiency:</strong> Optimizes garbage collection routes and schedules</li>
+                        <li><strong>Environmental Benefits:</strong> Prevents overflow, reduces pest attraction, and maintains cleanliness</li>
+                        <li><strong>Cost Savings:</strong> Reduces unnecessary collection trips and labor costs</li>
+                        <li><strong>Sustainability:</strong> Promotes green technology adoption in waste management</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="project-details-footer">
+                <a href="#" class="btn-project-link">
+                    <i class="fab fa-github"></i>
+                    <span>View on GitHub</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Teaser -->
+    <section class="contact-teaser">
+        <div class="container">
+            <div class="contact-content" data-aos="fade-up">
+                <h2>Have a project in mind?</h2>
+                <p>Let's discuss how we can collaborate to bring your ideas to life.</p>
+                <a href="contact.html" class="btn primary-btn">
+                    <span class="btn-text">Get In Touch</span>
+                    <span class="btn-icon"><i class="fas fa-paper-plane"></i></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <span class="logo-text">SRN</span>
+                        <div class="logo-circle"></div>
+                    </div>
+                    <p>Electrical & Electronics Engineer</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="skills.html">Skills</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-social">
+                    <h4>Connect With Me</h4>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/sanjayraj-n-b201a1332" target="_blank"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a>
+                        <a href="https://www.facebook.com/sanjayrajn.sanjay?mibextid=ZbWKwL" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/sanjayraj_197" target="_blank"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2023 Sanjayraj N. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/projects.js"></script>
+    <script src="../js/page-transition.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/login-modal.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

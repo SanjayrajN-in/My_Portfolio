@@ -1,0 +1,436 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools | Sanjayraj N</title>
+    
+    <link rel="stylesheet" href="../css/critical.css">
+    <link rel="stylesheet" href="../css/styles.css?v=3.0">
+    <link rel="stylesheet" href="../css/fix-logo.css">
+    <link rel="stylesheet" href="../css/fix-styles.css">
+    <link rel="stylesheet" href="../css/nav-fix.css">
+    <link rel="stylesheet" href="../css/login-modal.css">
+
+    <link rel="stylesheet" href="../css/tools.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
+
+                    <!-- FOUC Prevention and Page Transition -->
+    <script>
+        // Prevent FOUC with improved font loading
+        document.documentElement.style.visibility='visible';
+        document.documentElement.classList.add('loaded');
+        
+        // Ensure smooth font transition
+        window.addEventListener('load', function() {
+            // Force font display after a short delay if WebFont API fails
+            setTimeout(function() {
+                if (document.documentElement.classList.contains('wf-loading')) {
+                    document.documentElement.classList.remove('wf-loading');
+                    document.documentElement.classList.add('wf-inactive');
+                    console.log('Font loading timed out, using fallbacks');
+                }
+            }, 2500);
+        });
+        
+        // Ensure Font Awesome is loaded
+        (function() {
+            // Create a link checker
+            const linkChecker = document.createElement('i');
+            linkChecker.className = 'fas fa-home';
+            linkChecker.style.position = 'absolute';
+            linkChecker.style.opacity = '0';
+            document.head.appendChild(linkChecker);
+            
+            // Check if Font Awesome is loaded
+            const isFontAwesomeLoaded = () => {
+                return window.getComputedStyle(linkChecker).fontFamily.includes('Font Awesome');
+            };
+            
+            // If not loaded, add inline styles for common icons
+            if (!isFontAwesomeLoaded()) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .fas.fa-home:before { content: "\\f015"; }
+                    .fas.fa-user:before { content: "\\f007"; }
+                    .fas.fa-cogs:before { content: "\\f085"; }
+                    .fas.fa-envelope:before { content: "\\f0e0"; }
+                    .fab.fa-linkedin:before { content: "\\f08c"; }
+                    .fab.fa-github:before { content: "\\f09b"; }
+                    .fab.fa-facebook:before { content: "\\f09a"; }
+                    .fab.fa-instagram:before { content: "\\f16d"; }
+                ;
+                document.head.appendChild(style);
+            }
+            
+            // Clean up
+            document.head.removeChild(linkChecker);
+        })();
+        
+        // Show page transition on unload
+        window.addEventListener('beforeunload', function() {
+            const pageTransition = document.querySelector('.page-transition');
+            if (pageTransition && !pageTransition.classList.contains('active')) {
+                pageTransition.classList.add('active');
+            }
+        });
+    </script>
+</head>
+<body class="dark-theme subpage">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="../index.html">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>About</span>
+                </a></li>
+                <li><a href="skills.html">
+                    <i class="fas fa-cogs"></i>
+                    <span>Skills</span>
+                </a></li>
+                <li><a href="projects.html">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Projects</span>
+                </a></li>
+                <li><a href="contact.html">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+                <li class="dropdown">
+                    <a href="#" class="neon-text dropdown-toggle">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>More</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="certifications.html">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certifications</span>
+                        </a></li>
+                        <li><a href="education.html">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Education</span>
+                        </a></li>
+                        <li><a href="tools.html" class="active">
+                            <i class="fas fa-tools"></i>
+                            <span>Tools</span>
+                        </a></li>
+                        <li><a href="games.html">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Games</span>
+                        </a></li>
+                        <li><a href="music-keyboard.html">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                        </a></li>
+                    </ul>
+                </li>            
+            <!-- User Menu -->
+            <div class="user-menu" style="display: none;">
+                <div class="user-avatar-container">
+                    <img src="../images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                    <div class="user-dropdown">
+                        <a href="profile.html" class="user-dropdown-item" style="display: none;">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="#" class="user-dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <button class="hamburger" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Tools Section -->
+    <section class="tools-section">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h1 class="section-title">Utility Tools</h1>
+                <p class="section-subtitle">Client-side tools for your daily needs</p>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="tools-grid">
+                <!-- Image Compression Tool -->
+                <div class="tool-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="tool-header">
+                        <div class="tool-icon">
+                            <i class="fas fa-compress-alt"></i>
+                        </div>
+                        <h3>Image Compressor</h3>
+                        <p>Compress images without losing quality</p>
+                    </div>
+                    <div class="tool-content">
+                        <div class="upload-area" id="imageCompressUpload">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drop image here or click to upload</p>
+                        </div>
+                        <input type="file" accept="image/*" id="imageCompressInput" style="display: none;">
+                        <div class="compression-controls" id="imageCompressionControls" style="display: none;">
+                            <div class="uploaded-file-info" id="imageCompressFileInfo"></div>
+                            
+                            <div class="control-group">
+                                <label for="imageQuality">Quality: <span id="qualityValue">80</span>%</label>
+                                <input type="range" id="imageQuality" min="10" max="100" value="80">
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button class="btn clear-btn" id="clearImageCompress">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                                <button class="btn primary-btn" id="compressImageBtn">
+                                    <i class="fas fa-compress-alt"></i> Compress
+                                </button>
+                            </div>
+                        </div>
+                        <div class="result-area" id="imageCompressResult" style="display: none;">
+                            <div class="comparison">
+                                <div class="original">
+                                    <h4>Original</h4>
+                                    <img id="originalImage" alt="Original">
+                                    <p id="originalSize"></p>
+                                </div>
+                                <div class="compressed">
+                                    <h4>Compressed</h4>
+                                    <img id="compressedImage" alt="Compressed">
+                                    <p id="compressedSize"></p>
+                                </div>
+                            </div>
+                            <button class="btn secondary-btn full-width" id="downloadCompressedImage">
+                                <i class="fas fa-download"></i> Download Compressed Image
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Compression Tool -->
+                <div class="tool-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="tool-header">
+                        <div class="tool-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <h3>PDF Compressor</h3>
+                        <p>Reduce PDF file size</p>
+                    </div>
+                    <div class="tool-content">
+                        <div class="upload-area" id="pdfCompressUpload">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drop PDF here or click to upload</p>
+                        </div>
+                        <input type="file" accept=".pdf" id="pdfCompressInput" style="display: none;">
+                        <div class="compression-controls" id="pdfCompressionControls" style="display: none;">
+                            <div class="uploaded-file-info" id="pdfCompressFileInfo"></div>
+                            
+                            <div class="compression-notice">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Note:</strong> PDF compression results depend on content type. Different quality levels will produce different file sizes.
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="pdfQuality">Compression Level:</label>
+                                <select id="pdfQuality">
+                                    <option value="0.7">High Quality (70%)</option>
+                                    <option value="0.5" selected>Medium Quality (50%)</option>
+                                    <option value="0.3">Low Quality (30%)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button class="btn clear-btn" id="clearPdfCompress">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                                <button class="btn primary-btn" id="compressPdfBtn">
+                                    <i class="fas fa-file-pdf"></i> Compress PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div class="processing-area" id="pdfProcessing" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <p>Compressing PDF...</p>
+                        </div>
+                        <div class="result-area" id="pdfCompressResult" style="display: none;">
+                            <div class="pdf-info">
+                                <p>Original Size: <span id="originalPdfSize"></span></p>
+                                <p>Compressed Size: <span id="compressedPdfSize"></span></p>
+                                <p>Reduction: <span id="pdfReduction"></span></p>
+                            </div>
+                            <button class="btn secondary-btn full-width" id="downloadCompressedPdf">
+                                <i class="fas fa-download"></i> Download Compressed PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Scale Measurement Tool -->
+                <div class="tool-card full-width" data-aos="fade-up" data-aos-delay="400">
+                    <div class="tool-header">
+                        <div class="tool-icon">
+                            <i class="fas fa-ruler"></i>
+                        </div>
+                        <h3>Image Scale Measurement</h3>
+                        <p>Measure objects in images using reference scale</p>
+                    </div>
+                    <div class="tool-content">
+                        <div class="upload-area" id="scaleUpload">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drop image here or click to upload</p>
+                        </div>
+                        <input type="file" accept="image/*" id="scaleInput" style="display: none;">
+                        <div class="scale-workspace" id="scaleWorkspace" style="display: none;">
+                            <div class="scale-controls">
+                                <div class="uploaded-file-info" id="scaleFileInfo"></div>
+                                
+                                <div class="control-group">
+                                    <button class="btn primary-btn full-width" id="setReferenceBtn">
+                                        <i class="fas fa-ruler"></i> Set Reference Scale
+                                    </button>
+                                </div>
+                                
+                                <div class="control-group">
+                                    <label for="referenceLength">Reference Length:</label>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="number" id="referenceLength" placeholder="Length" step="0.01" style="flex: 1;">
+                                        <select id="referenceUnit" style="flex: 0 0 80px;">
+                                            <option value="mm">mm</option>
+                                            <option value="cm">cm</option>
+                                            <option value="m">m</option>
+                                            <option value="in">inches</option>
+                                            <option value="ft">feet</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="btn-group">
+                                    <button class="btn secondary-btn" id="measureBtn">
+                                        <i class="fas fa-search-plus"></i> Measure
+                                    </button>
+                                    <button class="btn clear-btn" id="clearMeasurementsBtn">
+                                        <i class="fas fa-eraser"></i> Clear All
+                                    </button>
+                                </div>
+                                
+                                <div class="btn-group">
+                                    <button class="btn clear-btn full-width" id="clearScaleUpload">
+                                        <i class="fas fa-times"></i> Clear Upload
+                                    </button>
+                                </div>
+                                <div class="measurements-display" id="measurementsDisplay"></div>
+                            </div>
+                            <div class="canvas-container">
+                                <canvas id="scaleCanvas"></canvas>
+                            </div>
+                            <div class="instructions">
+                                <h4>Instructions:</h4>
+                                <ol>
+                                    <li><strong>Upload an image</strong> - Drag & drop or click to select</li>
+                                    <li><strong>Set Reference Scale</strong> - Click the button (or Ctrl+R) and draw a line on a known measurement</li>
+                                    <li><strong>Enter Reference Length</strong> - Input the actual length of your reference line</li>
+                                    <li><strong>Measure Objects</strong> - Click "Measure Object" (or Ctrl+M) and draw lines to measure</li>
+                                    <li><strong>View Results</strong> - Click on measurements in the list to highlight them</li>
+                                </ol>
+                                <div style="margin-top: 15px; padding: 10px; background: rgba(0,255,255,0.1); border-radius: 5px; font-size: 0.85rem;">
+                                    <strong>Keyboard Shortcuts:</strong><br>
+                                    • Ctrl+R: Set Reference Scale<br>
+                                    • Ctrl+M: Measure Object<br>
+                                    • Ctrl+C: Clear All<br>
+                                    • Escape: Cancel current mode
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <span class="logo-text">SRN</span>
+                        <div class="logo-circle"></div>
+                    </div>
+                    <p>Electrical & Electronics Engineer</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="skills.html">Skills</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-social">
+                    <h4>Connect With Me</h4>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/sanjayraj-n-b201a1332" target="_blank"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a>
+                        <a href="https://www.facebook.com/sanjayrajn.sanjay?mibextid=ZbWKwL" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/sanjayraj_197" target="_blank"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Sanjayraj N. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="../js/tools.js"></script>
+    <script src="../js/page-transition.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/login-modal.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

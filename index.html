@@ -1,0 +1,541 @@
+﻿﻿﻿﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sanjayraj N | Electrical & Electronics Engineer</title>
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <link rel="stylesheet" href="css/critical.css">
+    <link rel="stylesheet" href="css/styles.css?v=3.0">
+    <link rel="stylesheet" href="css/fix-logo.css">
+    <link rel="stylesheet" href="css/fix-styles.css">
+    <link rel="stylesheet" href="css/nav-fix.css">
+    <link rel="stylesheet" href="css/login-modal.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Optimized Google Fonts loading method -->
+    <script>
+        // Add wf-loading class to html element
+        document.documentElement.classList.add('wf-loading');
+        
+        // Enhanced font loading with proper events
+        WebFontConfig = {
+            google: {
+                families: ['Orbitron:400,500,700,900', 'Rajdhani:300,400,500,600,700']
+            },
+            timeout: 2000, // Set timeout to 2 seconds
+            loading: function() {
+                console.log('Fonts are loading...');
+            },
+            active: function() {
+                // Fonts have loaded successfully
+                document.documentElement.classList.remove('wf-loading');
+                document.documentElement.classList.add('wf-active');
+                console.log('Fonts loaded successfully');
+            },
+            inactive: function() {
+                // Fallback if fonts fail to load
+                document.documentElement.classList.remove('wf-loading');
+                document.documentElement.classList.add('wf-inactive');
+                console.log('Fonts failed to load, using fallbacks');
+            }
+        };
+        
+        (function(d) {
+            var wf = d.createElement('script'), s = d.scripts[0];
+            wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
+            wf.async = true;
+            s.parentNode.insertBefore(wf, s);
+        })(document);
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
+    
+    <!-- Fallback font styles -->
+    <style>
+        /* Ensure text is visible during font loading */
+        body {
+            font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        h1, h2, h3, .logo, .glitch, .hero-title {
+            font-family: 'Orbitron', 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+    </style>
+
+    <!-- FOUC Prevention and Page Transition -->
+    <script>
+        // Prevent FOUC with improved font loading
+        document.documentElement.style.visibility='visible';
+        document.documentElement.classList.add('loaded');
+        
+        // Ensure smooth font transition
+        window.addEventListener('load', function() {
+            // Force font display after a short delay if WebFont API fails
+            setTimeout(function() {
+                if (document.documentElement.classList.contains('wf-loading')) {
+                    document.documentElement.classList.remove('wf-loading');
+                    document.documentElement.classList.add('wf-inactive');
+                    console.log('Font loading timed out, using fallbacks');
+                }
+            }, 2500);
+        });
+        
+        // Ensure Font Awesome is loaded
+        (function() {
+            // Create a link checker
+            const linkChecker = document.createElement('i');
+            linkChecker.className = 'fas fa-home';
+            linkChecker.style.position = 'absolute';
+            linkChecker.style.opacity = '0';
+            document.head.appendChild(linkChecker);
+            
+            // Check if Font Awesome is loaded
+            const isFontAwesomeLoaded = () => {
+                return window.getComputedStyle(linkChecker).fontFamily.includes('Font Awesome');
+            };
+            
+            // If not loaded, add inline styles for common icons
+            if (!isFontAwesomeLoaded()) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .fas.fa-home:before { content: "\\f015"; }
+                    .fas.fa-user:before { content: "\\f007"; }
+                    .fas.fa-cogs:before { content: "\\f085"; }
+                    .fas.fa-envelope:before { content: "\\f0e0"; }
+                    .fab.fa-linkedin:before { content: "\\f08c"; }
+                    .fab.fa-github:before { content: "\\f09b"; }
+                    .fab.fa-facebook:before { content: "\\f09a"; }
+                    .fab.fa-instagram:before { content: "\\f16d"; }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Clean up
+            document.head.removeChild(linkChecker);
+        })();
+        
+        // Show page transition on unload
+        window.addEventListener('beforeunload', function() {
+            const pageTransition = document.querySelector('.page-transition');
+            if (pageTransition && !pageTransition.classList.contains('active')) {
+                pageTransition.classList.add('active');
+            }
+        });
+    </script>
+
+
+</head>
+<body class="dark-theme">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="pages/about.html">
+                    <i class="fas fa-user"></i>
+                    <span>About</span>
+                </a></li>
+                <li><a href="pages/skills.html">
+                    <i class="fas fa-cogs"></i>
+                    <span>Skills</span>
+                </a></li>
+                <li><a href="pages/projects.html">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Projects</span>
+                </a></li>
+                <li><a href="pages/contact.html">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+                <li class="dropdown">
+                    <a href="#" class="neon-text dropdown-toggle">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>More</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="pages/certifications.html">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certifications</span>
+                        </a></li>
+                        <li><a href="pages/education.html">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Education</span>
+                        </a></li>
+                        <li><a href="pages/tools.html">
+                            <i class="fas fa-tools"></i>
+                            <span>Tools</span>
+                        </a></li>
+                        <li><a href="pages/games.html">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Games</span>
+                        </a></li>
+                        <li><a href="pages/music-keyboard.html">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <!-- User Menu -->
+            <div class="user-menu" style="display: none;">
+                <div class="user-avatar-container">
+                    <img src="images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                    <div class="user-dropdown">
+                        <a href="pages/profile.html" class="user-dropdown-item" style="display: none;">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="#" class="user-dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="hamburger" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="glitch-container">
+            <div class="glitch neon-text" data-text="Sanjayraj N">Sanjayraj N</div>
+        </div>
+        
+        <div class="hero-content" data-aos="fade-up" data-aos-delay="300">
+            <div class="hero-subtitle">
+                <span class="typed-text"></span><span class="cursor">&nbsp;</span>
+            </div>
+            
+            <div class="hero-description" data-aos="fade-up" data-aos-delay="600">
+                <p>Transforming ideas into innovative solutions through technology</p>
+            </div>
+            
+            <div class="cta-buttons" data-aos="fade-up" data-aos-delay="900">
+                <a href="pages/projects.html" class="btn primary-btn glow-effect">
+                    <span class="btn-text">Explore Projects</span>
+                    <span class="btn-icon"><i class="fas fa-arrow-right"></i></span>
+                </a>
+                <a href="resume.pdf" class="btn secondary-btn glow-effect" download>
+                    <span class="btn-text">Download CV</span>
+                    <span class="btn-icon"><i class="fas fa-download"></i></span>
+                </a>
+                <a href="pages/games.html" class="btn primary-btn glow-effect">
+                    <span class="btn-text">Play Games</span>
+                    <span class="btn-icon"><i class="fas fa-gamepad"></i></span>
+                    <span class="btn-tail"></span>
+                </a>
+                <a href="pages/music-keyboard.html" class="btn secondary-btn glow-effect">
+                    <span class="btn-text">Music Keyboard</span>
+                    <span class="btn-icon"><i class="fas fa-music"></i></span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="hero-scroll">
+            <div class="scroll-indicator">
+                <span>Scroll Down</span>
+                <div class="scroll-arrow">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hero-social">
+            <ul>
+                <li data-aos="fade-right" data-aos-delay="1200"><a href="https://www.linkedin.com/in/sanjayraj-n-b201a1332" target="_blank"><i class="fab fa-linkedin"></i></a></li>
+                <li data-aos="fade-right" data-aos-delay="1300"><a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a></li>
+                <li data-aos="fade-right" data-aos-delay="1400"><a href="https://www.facebook.com/sanjayrajn.sanjay?mibextid=ZbWKwL" target="_blank"><i class="fab fa-facebook"></i></a></li>
+                <li data-aos="fade-right" data-aos-delay="1500"><a href="https://www.instagram.com/sanjayraj_197" target="_blank"><i class="fab fa-instagram"></i></a></li>
+            </ul>
+        </div>
+        
+        <div class="hero-email">
+            <a href="mailto:sanjayrajnblr@gmail.com" data-aos="fade-left" data-aos-delay="1200">sanjayrajnblr@gmail.com</a>
+        </div>
+    </section>
+
+    <!-- Featured Section -->
+    <section id="featured" class="featured">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Featured Projects</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="featured-grid">
+                <div class="featured-card card-3d" data-aos="fade-up" data-aos-delay="300">
+                    <div class="featured-content">
+                        <div class="featured-tag">Software</div>
+                        <h3>KEITHLEY Data Logger</h3>
+                        <p>A desktop application for logging and visualizing data from KEITHLEY measurement instruments, with real-time graphing and data export capabilities.</p>
+                        <div class="featured-tech">
+                            <span>Python</span>
+                            <span>PyQt5</span>
+                            <span>SQL</span>
+                        </div>
+                        <a href="pages/projects.html" class="featured-link">
+                            <span>View Project</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="featured-image">
+                        <div class="image-wrapper">
+                            <img src="images/memory/circuit.png" alt="KEITHLEY Data Logger">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="featured-card reverse card-3d" data-aos="fade-up" data-aos-delay="500">
+                    <div class="featured-content">
+                        <div class="featured-tag">Communication</div>
+                        <h3>Laser Li-Fi Communication System</h3>
+                        <p>Developed a light-based communication system using laser technology for high-speed data transmission, demonstrating an alternative to traditional RF communication.</p>
+                        <div class="featured-tech">
+                            <span>Li-Fi</span>
+                            <span>Laser</span>
+                            <span>Communication</span>
+                        </div>
+                        <a href="pages/projects.html#lifi" class="featured-link">
+                            <span>View Project</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="featured-image">
+                        <div class="image-wrapper">
+                            <img src="images/LifiP.jpg" alt="Laser Li-Fi Communication System">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="featured-cta" data-aos="fade-up">
+                <a href="pages/projects.html" class="btn primary-btn">
+                    <span class="btn-text">View All Projects</span>
+                    <span class="btn-icon"><i class="fas fa-arrow-right"></i></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Highlight -->
+    <section id="skills-highlight" class="skills-highlight">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Technical Expertise</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="skills-categories">
+                <div class="skill-category tilt-effect with-glare" data-aos="fade-up" data-aos-delay="300">
+                    <div class="skill-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h3>Embedded Systems</h3>
+                    <p>Designing and programming microcontroller-based systems for various applications.</p>
+                </div>
+                
+                <div class="skill-category tilt-effect with-glare" data-aos="fade-up" data-aos-delay="500">
+                    <div class="skill-icon">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <h3>Automation</h3>
+                    <p>Implementing industrial automation solutions using PLC, HMI, and SCADA systems.</p>
+                </div>
+                
+                <div class="skill-category tilt-effect with-glare" data-aos="fade-up" data-aos-delay="700">
+                    <div class="skill-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Software Development</h3>
+                    <p>Creating applications in Python, C/C++, and Java for various engineering solutions.</p>
+                </div>
+                
+                <div class="skill-category tilt-effect with-glare" data-aos="fade-up" data-aos-delay="900">
+                    <div class="skill-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h3>PCB Design</h3>
+                    <p>Designing electronic circuits and PCB layouts using industry-standard tools.</p>
+                </div>
+            </div>
+            
+            <div class="skills-cta" data-aos="fade-up">
+                <a href="pages/skills.html" class="btn primary-btn">
+                    <span class="btn-text">Explore All Skills</span>
+                    <span class="btn-icon"><i class="fas fa-arrow-right"></i></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience Teaser -->
+    <section id="experience-teaser" class="experience-teaser">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Professional Experience</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="experience-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="experience-header">
+                    <div class="experience-company">
+                        <h3>Microcon i2i</h3>
+                        <span class="experience-position">Automation Engineering Intern</span>
+                    </div>
+                    <div class="experience-duration">
+                        <span>2022 - 2023</span>
+                    </div>
+                </div>
+                <div class="experience-details">
+                    <p>Gained hands-on experience with industrial automation systems and contributed to several key projects including UTM Automation and Full Wheel Leak Testing systems.</p>
+                    <a href="pages/experience.html" class="experience-link">
+                        <span>View Full Experience</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tools Teaser -->
+    <section id="tools-teaser" class="tools-teaser">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Utility Tools</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="tools-preview">
+                <div class="tool-preview-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="tool-preview-icon">
+                        <i class="fas fa-compress-alt"></i>
+                    </div>
+                    <h3>Image Compressor</h3>
+                    <p>Compress images without losing quality</p>
+                </div>
+                
+                <div class="tool-preview-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="tool-preview-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <h3>PDF Compressor</h3>
+                    <p>Reduce PDF file sizes efficiently</p>
+                </div>
+
+                <div class="tool-preview-card" data-aos="fade-up" data-aos-delay="500">
+                    <div class="tool-preview-icon">
+                        <i class="fas fa-ruler"></i>
+                    </div>
+                    <h3>Scale Measurement</h3>
+                    <p>Measure objects in images with precision</p>
+                </div>
+            </div>
+            
+            <div class="tools-cta" data-aos="fade-up" data-aos-delay="600">
+                <a href="pages/tools.html" class="btn primary-btn">
+                    <span class="btn-text">Try Tools</span>
+                    <span class="btn-icon"><i class="fas fa-tools"></i></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Teaser -->
+    <section id="contact-teaser" class="contact-teaser">
+        <div class="container">
+            <div class="contact-content" data-aos="fade-up">
+                <h2>Interested in working together?</h2>
+                <p>Let's discuss how we can collaborate on your next project.</p>
+                <a href="pages/contact.html" class="btn primary-btn">
+                    <span class="btn-text">Get In Touch</span>
+                    <span class="btn-icon"><i class="fas fa-paper-plane"></i></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <span class="logo-text">SRN</span>
+                        <div class="logo-circle"></div>
+                    </div>
+                    <p>Electrical & Electronics Engineer</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="pages/about.html">About</a></li>
+                        <li><a href="pages/skills.html">Skills</a></li>
+                        <li><a href="pages/projects.html">Projects</a></li>
+                        <li><a href="pages/contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-social">
+                    <h4>Connect With Me</h4>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/sanjayraj-n-b201a1332" target="_blank"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a>
+                        <a href="https://www.facebook.com/sanjayrajn.sanjay?mibextid=ZbWKwL" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/sanjayraj_197" target="_blank"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2023 Sanjayraj N. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/page-transition.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/login-modal.js"></script>
+</body>
+</html>

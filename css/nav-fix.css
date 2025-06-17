@@ -1,0 +1,1225 @@
+/* 
+ * Navigation and Page Transition Fixes
+ * 1. Consistent navigation bar across all pages
+ * 2. Smooth page transitions
+ * 3. Properly aligned dropdown menus
+ */
+
+/* CSS Reset for Navigation Elements */
+.nav-links, .nav-links li, .nav-links li a, 
+.dropdown, .dropdown-menu, .dropdown-menu li, .dropdown-menu li a {
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Force consistent sizing for all pages */
+:root {
+    --header-height: 70px !important;
+}
+
+/* Ensure consistent header height and styling */
+header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--header-height) !important;
+    z-index: 999999 !important;
+    background: rgba(12, 12, 20, 0.85) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.15) !important;
+    transform: translateZ(0);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 30px !important;
+    box-sizing: border-box !important;
+}
+
+/* Force consistent header height for all pages */
+body.dark-theme header,
+body.subpage header,
+body:not(.subpage) header {
+    height: var(--header-height) !important;
+}
+
+/* Consistent navigation container */
+.nav-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+}
+
+/* Consistent logo styling */
+.logo {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    text-decoration: none !important;
+    color: var(--text-color) !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 1.5rem !important;
+    letter-spacing: 1px !important;
+    position: relative !important;
+    z-index: 2 !important;
+    text-align: center !important;
+}
+
+/* COMPLETELY REDEFINED NAVIGATION STYLES */
+/* Force consistent styling across all pages */
+
+/* CRITICAL OVERRIDE - Force consistent styling across all pages */
+body.dark-theme .nav-links li a,
+body.subpage .nav-links li a,
+body:not(.subpage) .nav-links li a,
+header .nav-links li a,
+.nav-links li a {
+    font-size: 0.9rem !important; /* Smaller font size for all pages */
+    padding: 8px 12px !important; /* Reduced padding */
+    height: 36px !important; /* Reduced height */
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important; /* Reduced gap between icon and text */
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+}
+
+/* Navigation container */
+.nav-links {
+    display: flex !important;
+    list-style: none !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
+    gap: 10px !important; /* Reduced gap for all pages */
+    transition: all 0.3s ease !important; /* Smooth transitions for layout changes */
+}
+
+/* User Menu and Login Button Container */
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 100%;
+    position: relative;
+    gap: 1rem;
+}
+
+/* User Menu Styles - HIDDEN BY DEFAULT */
+.user-menu {
+    position: relative;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    align-items: center;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+/* Only show when explicitly enabled by JavaScript */
+.user-menu.show,
+.user-menu[style*="display: flex"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.user-avatar-container {
+    position: relative;
+    cursor: pointer;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.user-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    border: 2px solid var(--primary-color) !important;
+    object-fit: cover !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    cursor: pointer !important;
+}
+
+.user-avatar:hover {
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 20px rgba(0, 168, 255, 0.5) !important;
+    border-color: var(--accent-color) !important;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 168, 255, 0.1);
+    padding: 0.5rem 0;
+    min-width: 200px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1000;
+    margin-top: 0.5rem;
+    backdrop-filter: blur(15px);
+}
+
+.user-avatar-container:hover .user-dropdown {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+.user-dropdown-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+    color: var(--text-color) !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    border-radius: 0 !important;
+}
+
+.user-dropdown-item:hover {
+    background: var(--card-bg-hover) !important;
+    color: var(--primary-color) !important;
+    transform: translateX(5px) !important;
+}
+
+.user-dropdown-item i {
+    font-size: 1rem !important;
+    width: 1.2rem !important;
+    text-align: center !important;
+    color: inherit !important;
+}
+
+/* Login Button Styles */
+.login-btn {
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+    margin-left: 1rem !important;
+    list-style: none !important;
+}
+
+.login-btn .btn {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.9rem !important;
+    border-radius: 25px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+    color: white !important;
+    border: none !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.login-btn .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.3s ease;
+}
+
+.login-btn .btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 25px rgba(0, 168, 255, 0.4) !important;
+}
+
+.login-btn .btn:hover::before {
+    left: 100%;
+}
+
+/* Navigation list items */
+.nav-links li {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Navigation links - CORE STYLING */
+.nav-links li a {
+    /* Text styling */
+    color: var(--text-color) !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important; /* Smaller font size */
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+    
+    /* Box model */
+    padding: 8px 12px !important; /* Reduced padding */
+    height: 36px !important; /* Reduced height */
+    box-sizing: border-box !important;
+    border-radius: 8px !important;
+    
+    /* Layout */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important; /* Reduced gap between icon and text */
+    position: relative !important;
+    overflow: hidden !important;
+    
+    /* Animation */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    
+    /* Hardware acceleration */
+    transform: translateZ(0) !important;
+    will-change: transform, background-color !important;
+    backface-visibility: hidden !important;
+    -webkit-font-smoothing: antialiased !important;
+}
+
+/* CRITICAL OVERRIDE - Force consistent icon sizing */
+body.dark-theme .nav-links li a i,
+body.subpage .nav-links li a i,
+body:not(.subpage) .nav-links li a i,
+header .nav-links li a i,
+.nav-links li a i {
+    font-size: 0.9rem !important; /* Smaller icon size */
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Active state */
+.nav-links li a.active {
+    color: var(--primary-color) !important;
+    background: rgba(0, 168, 255, 0.15) !important;
+    transform: translateZ(0) !important;
+    font-weight: 600 !important;
+}
+
+/* Hover state */
+.nav-links li a:hover {
+    background: rgba(0, 168, 255, 0.1) !important;
+    transform: translateY(-1px) translateZ(0) !important; /* Reduced lift on hover */
+}
+
+/* COMPLETELY REDEFINED DROPDOWN MENU */
+.dropdown {
+    position: relative !important;
+}
+
+.dropdown-menu {
+    position: absolute !important;
+    top: calc(100% + 5px) !important; /* Small gap from dropdown button */
+    left: 50% !important; /* Center align with dropdown button */
+    transform: translateX(-50%) translateY(-10px) !important; /* Center horizontally and start slightly above */
+    background: rgba(12, 12, 20, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(0, 168, 255, 0.15) !important;
+    border-radius: 10px !important;
+    padding: 0px 5px 5px 5px !important; /* No top padding, minimal side/bottom padding */
+    min-width: 240px !important; /* Slightly wider dropdown for better readability */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: all 0.3s ease !important;
+    z-index: 1000000 !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25) !important;
+    text-align: left !important; /* Force left alignment for all content */
+    max-height: min(400px, calc(100vh - 150px)) !important; /* Prevent dropdown from going off-screen */
+    overflow-y: auto !important; /* Add scroll if needed */
+    bottom: auto !important; /* Ensure it doesn't stick to bottom */
+}
+
+/* Dropdown hover effects */
+.dropdown:hover .dropdown-menu {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateX(-50%) translateY(0) !important; /* Move to final position while maintaining horizontal centering */
+}
+
+/* Prevent dropdown from showing when dev tools are open */
+@media (max-height: 500px) and (min-width: 993px) {
+    .dropdown:hover .dropdown-menu {
+        display: none !important;
+    }
+}
+
+/* No dropdown indicators - removed as requested */
+
+/* Dropdown menu items - completely redefined */
+.dropdown-menu li {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+    display: block !important;
+}
+
+/* Remove any top spacing from first dropdown item */
+.dropdown-menu li:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+.dropdown-menu li:first-child a {
+    margin-top: 0 !important;
+    padding-top: 10px !important; /* Keep normal padding but no extra margin */
+}
+
+/* Force first dropdown item to have no top margin - CRITICAL OVERRIDE */
+body.dark-theme .dropdown-menu li:first-child a,
+body.subpage .dropdown-menu li:first-child a,
+body:not(.subpage) .dropdown-menu li:first-child a,
+header .dropdown-menu li:first-child a,
+.dropdown-menu li:first-child a {
+    margin-top: 0 !important;
+    margin-bottom: 1px !important;
+}
+
+/* CRITICAL OVERRIDE - Force dropdown menu items to be left-justified */
+body.dark-theme .dropdown-menu li a,
+body.subpage .dropdown-menu li a,
+body:not(.subpage) .dropdown-menu li a,
+header .dropdown-menu li a,
+.dropdown-menu li a {
+    height: auto !important;
+    width: 100% !important;
+    justify-content: flex-start !important; /* Force left justification - OVERRIDE CENTER */
+    text-align: left !important;
+    white-space: nowrap !important;
+    padding: 10px 16px !important; /* Padding for better spacing */
+    font-size: 0.9rem !important; /* Match main nav font size */
+    border-radius: 6px !important; /* Border radius for dropdown items */
+    margin: 1px 0 !important; /* Reduced margin between items */
+    color: var(--text-color) !important; /* Consistent text color */
+    display: flex !important;
+    align-items: center !important;
+    text-transform: uppercase !important; /* Match main nav text transform */
+    text-indent: 0 !important; /* Prevent any indentation */
+    float: none !important; /* Remove float which can cause alignment issues */
+    position: relative !important; /* Ensure proper positioning */
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    flex-direction: row !important; /* Ensure horizontal layout */
+    flex-wrap: nowrap !important; /* Prevent wrapping */
+}
+
+/* CRITICAL OVERRIDE - Dropdown item hover state with left justification */
+body.dark-theme .dropdown-menu li a:hover,
+body.subpage .dropdown-menu li a:hover,
+body:not(.subpage) .dropdown-menu li a:hover,
+header .dropdown-menu li a:hover,
+.dropdown-menu li a:hover {
+    background: rgba(0, 168, 255, 0.1) !important;
+    transform: none !important; /* No lift effect for dropdown items */
+    justify-content: flex-start !important; /* Force left alignment even on hover - OVERRIDE CENTER */
+    text-align: left !important;
+    padding-left: 18px !important; /* Slightly increased left padding on hover for a subtle effect */
+}
+
+/* CRITICAL OVERRIDE - Dropdown menu item icons with left justification */
+body.dark-theme .dropdown-menu li a i,
+body.subpage .dropdown-menu li a i,
+body:not(.subpage) .dropdown-menu li a i,
+header .dropdown-menu li a i,
+.dropdown-menu li a i {
+    margin-right: 12px !important; /* Space between icon and text */
+    font-size: 0.9rem !important; /* Icon size */
+    width: 20px !important; /* Fixed width for consistent alignment */
+    text-align: left !important; /* Left align the icon */
+    display: inline-flex !important; /* Use flex for better alignment */
+    align-items: center !important;
+    justify-content: flex-start !important; /* Left justify the icon - OVERRIDE CENTER */
+    flex-shrink: 0 !important; /* Prevent icon from shrinking */
+}
+
+/* Dropdown menu item text */
+.dropdown-menu li a span {
+    text-align: left !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex: 1 !important; /* Take up remaining space */
+}
+
+/* CRITICAL OVERRIDE - Dropdown item active state with left justification */
+body.dark-theme .dropdown-menu li a.active,
+body.subpage .dropdown-menu li a.active,
+body:not(.subpage) .dropdown-menu li a.active,
+header .dropdown-menu li a.active,
+.dropdown-menu li a.active {
+    color: var(--primary-color) !important;
+    background: rgba(0, 168, 255, 0.15) !important;
+    transform: none !important;
+    justify-content: flex-start !important; /* Maintain left justification - OVERRIDE CENTER */
+    text-align: left !important;
+    padding-left: 18px !important; /* Match hover state padding */
+}
+
+/* Enhanced page transitions */
+.page-transition {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(12, 12, 20, 0.98) !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.4s ease, visibility 0.4s ease !important;
+    pointer-events: none !important;
+    will-change: opacity, visibility !important;
+    transform: translateZ(0) !important;
+}
+
+.page-transition.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: all !important;
+}
+
+/* Smooth page transition animation */
+body {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Hamburger menu consistency */
+.hamburger {
+    display: none !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    padding: 10px !important;
+    z-index: 1000001 !important;
+    position: relative !important;
+}
+
+.hamburger span {
+    display: block !important;
+    width: 25px !important;
+    height: 2px !important;
+    background-color: var(--text-color) !important;
+    margin: 5px 0 !important;
+    transition: all 0.3s ease !important;
+    border-radius: 2px !important;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px) !important;
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0 !important;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px) !important;
+}
+
+/* Nav overlay for mobile */
+.nav-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    z-index: 998 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: all 0.3s ease !important;
+}
+
+.nav-overlay.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+body.menu-open {
+    overflow: hidden !important;
+}
+
+/* Desktop layout reset */
+@media (min-width: 993px) {
+    .hamburger {
+        display: none !important;
+    }
+    
+    .nav-links {
+        position: static !important;
+        right: auto !important;
+        width: auto !important;
+        height: auto !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        gap: 10px !important;
+        border: none !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    
+    .nav-links.active {
+        right: auto !important;
+        transform: none !important;
+    }
+    
+    .nav-links li {
+        width: auto !important;
+        height: 100% !important;
+        margin: 0 !important;
+    }
+    
+    .nav-links li a {
+        width: auto !important;
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 8px 12px !important;
+        height: 36px !important;
+        gap: 6px !important;
+    }
+    
+    .nav-links li a i {
+        width: auto !important;
+        text-align: center !important;
+        margin-right: 0 !important;
+    }
+    
+    .nav-links li a span {
+        flex: none !important;
+        text-align: center !important;
+    }
+    
+    /* Show dropdowns on desktop */
+    li.dropdown {
+        display: flex !important;
+    }
+    
+    .dropdown-toggle, .dropdown-menu {
+        display: block !important;
+    }
+    
+    .dropdown-menu {
+        position: absolute !important;
+        top: calc(100% + 5px) !important;
+        left: 50% !important;
+        transform: translateX(-50%) translateY(-10px) !important;
+        width: auto !important;
+        min-width: 240px !important;
+        background: rgba(12, 12, 20, 0.95) !important;
+        border: 1px solid rgba(0, 168, 255, 0.15) !important;
+        border-radius: 10px !important;
+        padding: 10px !important;
+        margin: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    .dropdown:hover .dropdown-menu {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateX(-50%) translateY(0) !important;
+        display: block !important;
+    }
+    
+    /* Hide mobile-specific elements */
+    .mobile-more-items {
+        display: none !important;
+    }
+    
+    .nav-overlay {
+        display: none !important;
+    }
+    
+    body.menu-open {
+        overflow: auto !important;
+    }
+}
+
+/* Mobile menu consistency */
+@media (max-width: 992px) {
+    .hamburger {
+        display: block !important;
+    }
+    
+    .nav-links {
+        position: fixed !important;
+        top: var(--header-height) !important;
+        right: -100% !important;
+        width: 300px !important;
+        max-width: 80% !important;
+        height: calc(100vh - var(--header-height)) !important;
+        background: rgba(12, 12, 20, 0.95) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        z-index: 999999 !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        padding: 0px 20px 20px 20px !important; /* No top padding to eliminate extra space */
+        transition: right 0.3s ease !important;
+        overflow-y: auto !important; /* Auto scroll instead of forced */
+        -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+        scroll-behavior: smooth !important;
+        gap: 3px !important; /* Reduced gap for better spacing */
+        scroll-padding-top: 0 !important; /* Ensure scroll starts at top */
+        border-left: 1px solid rgba(0, 168, 255, 0.15) !important;
+        /* Force override any music keyboard conflicts */
+        position: fixed !important;
+        top: var(--header-height) !important;
+        scrollbar-width: thin !important; /* Firefox */
+        scrollbar-color: rgba(0, 168, 255, 0.5) rgba(12, 12, 20, 0.3) !important; /* Firefox */
+    }
+    
+    /* Custom scrollbar for Webkit browsers */
+    .nav-links::-webkit-scrollbar {
+        width: 6px !important;
+    }
+    
+    .nav-links::-webkit-scrollbar-track {
+        background: rgba(12, 12, 20, 0.3) !important;
+    }
+    
+    .nav-links::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 168, 255, 0.5) !important;
+        border-radius: 6px !important;
+    }
+    
+    .nav-links.active {
+        right: 0 !important;
+    }
+    
+    .nav-links li {
+        width: 100% !important;
+        height: auto !important;
+    }
+    
+    .nav-links li a {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        padding: 12px 15px !important; /* Reduced vertical padding */
+        height: auto !important;
+        text-indent: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important; /* Space between icon and text */
+        margin: 2px 0 !important; /* Small margin between items */
+        border-radius: 8px !important;
+    }
+    
+    /* Remove top margin from the first navigation item to eliminate extra space */
+    .nav-links li:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    .nav-links li:first-child a {
+        margin-top: 0 !important;
+        padding-top: 8px !important; /* Reduced top padding for first item */
+    }
+    
+    .nav-links li a i {
+        width: 20px !important; /* Fixed width for icons */
+        text-align: left !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        margin-right: 0 !important; /* Remove margin since we're using gap */
+    }
+    
+    .nav-links li a span {
+        flex: 1 !important;
+        text-align: left !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+    }
+    
+    .dropdown-menu {
+        position: static !important;
+        transform: none !important;
+        width: 100% !important;
+        background: rgba(20, 20, 35, 0.5) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        margin-top: 8px !important; /* Increased margin for better spacing */
+        margin-bottom: 8px !important; /* Increased margin for better spacing */
+        display: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        box-shadow: none !important;
+        left: 0 !important; /* Ensure left alignment */
+        padding: 8px !important; /* Consistent padding */
+    }
+    
+
+    
+    .dropdown:hover .dropdown-menu {
+        display: none !important;
+    }
+    
+    /* Hide the "More" dropdown on mobile and show all items directly */
+    li.dropdown {
+        display: none !important; /* Hide all dropdowns on mobile */
+    }
+    
+    /* Ensure the dropdown is completely hidden on mobile */
+    .dropdown-toggle, 
+    .dropdown-menu,
+    .dropdown-menu.mobile-open {
+        display: none !important;
+    }
+    
+    /* Show all dropdown items directly in the main menu */
+    .mobile-more-items {
+        display: block !important;
+        width: 100% !important;
+        margin-top: 5px !important; /* Minimal margin */
+        border-top: 1px solid rgba(0, 168, 255, 0.15) !important;
+        padding-top: 5px !important; /* Minimal padding */
+    }
+    
+    /* No heading as requested */
+    .mobile-more-heading {
+        display: none !important;
+    }
+    
+    .mobile-more-list {
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+    
+    .mobile-more-list li {
+        width: 100% !important;
+        margin: 2px 0 !important; /* Reduced margin */
+    }
+    
+    .mobile-more-list li a {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        padding: 10px 15px !important; /* Reduced padding */
+        color: var(--text-color) !important;
+        text-decoration: none !important;
+        font-size: 0.9rem !important;
+        border-radius: 6px !important;
+        transition: all 0.3s ease !important;
+        text-indent: 0 !important;
+        text-transform: uppercase !important;
+        gap: 12px !important; /* Space between icon and text */
+    }
+    
+    .mobile-more-list li a:hover {
+        background: rgba(0, 168, 255, 0.1) !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+    
+    .mobile-more-list li a i {
+        width: 20px !important;
+        text-align: left !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        margin-right: 0 !important; /* Remove margin since we're using gap */
+    }
+    
+    .mobile-more-list li a span {
+        flex: 1 !important;
+        text-align: left !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+    }
+    
+    /* Ensure dropdown menu items are left-aligned on mobile */
+    .dropdown-menu li a {
+        text-align: left !important;
+        justify-content: flex-start !important;
+        padding: 12px 15px !important; /* Consistent padding */
+        margin: 2px 0 !important; /* Consistent margin */
+        border-radius: 6px !important; /* Consistent border radius */
+    }
+    
+    /* Ensure dropdown menu icons are properly aligned on mobile */
+    .dropdown-menu li a i {
+        margin-right: 12px !important;
+        width: 1.5em !important;
+        text-align: left !important; /* Left align the icon */
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important; /* Left justify the icon */
+    }
+}
+
+/* ===================================================================
+   MOBILE LANDSCAPE ORIENTATION FIXES
+   Fixes navbar covering content and dropdown menu issues in landscape
+   =================================================================== */
+
+/* Mobile Landscape Orientation - Phones in landscape mode */
+@media screen and (max-width: 992px) and (orientation: landscape) {
+    /* Reduce header height in landscape to save vertical space */
+    :root {
+        --header-height: 60px !important;
+    }
+    
+    /* Adjust header for landscape */
+    header {
+        height: var(--header-height) !important;
+        padding: 0 20px !important;
+    }
+    
+    /* Ensure body has proper top padding */
+    body {
+        padding-top: var(--header-height) !important;
+    }
+    
+    /* Adjust navigation container for smaller header */
+    .nav-container {
+        height: 100% !important;
+        padding: 0 !important;
+    }
+    
+    /* Reduce logo size in landscape */
+    .logo {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .logo-circle {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    /* Adjust hamburger menu for landscape */
+    .hamburger {
+        padding: 8px !important;
+    }
+    
+    .hamburger span {
+        width: 22px !important;
+        height: 2px !important;
+        margin: 4px 0 !important;
+    }
+    
+    /* Mobile navigation adjustments for landscape */
+    .nav-links {
+        top: var(--header-height) !important;
+        height: calc(100vh - var(--header-height)) !important;
+        max-height: calc(100vh - var(--header-height)) !important;
+        padding: 15px !important;
+        overflow-y: auto !important;
+    }
+    
+    /* Reduce spacing between nav items in landscape */
+    .nav-links li a {
+        padding: 12px 15px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Adjust mobile more items for landscape */
+    .mobile-more-items {
+        margin-top: 10px !important;
+        padding-top: 10px !important;
+    }
+    
+    .mobile-more-list li a {
+        padding: 10px 15px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Ensure dropdown menus don't go off-screen in landscape */
+    .dropdown-menu {
+        max-height: calc(100vh - var(--header-height) - 40px) !important;
+        overflow-y: auto !important;
+    }
+}
+
+/* Tablet Landscape Orientation - Larger screens in landscape */
+@media screen and (min-width: 993px) and (max-width: 1200px) and (orientation: landscape) {
+    /* Slightly reduce header height for tablet landscape */
+    :root {
+        --header-height: 65px !important;
+    }
+    
+    header {
+        height: var(--header-height) !important;
+    }
+    
+    body {
+        padding-top: var(--header-height) !important;
+    }
+    
+    /* Adjust dropdown positioning for tablet landscape */
+    .dropdown-menu {
+        max-height: calc(100vh - var(--header-height) - 60px) !important;
+        overflow-y: auto !important;
+    }
+}
+
+/* Small Mobile Landscape - Very small screens in landscape */
+@media screen and (max-width: 667px) and (orientation: landscape) and (max-height: 400px) {
+    /* Further reduce header height for very small landscape screens */
+    :root {
+        --header-height: 50px !important;
+    }
+    
+    header {
+        height: var(--header-height) !important;
+        padding: 0 15px !important;
+    }
+    
+    body {
+        padding-top: var(--header-height) !important;
+    }
+    
+    /* Compact logo for very small landscape */
+    .logo {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1rem !important;
+    }
+    
+    .logo-circle {
+        width: 35px !important;
+        height: 35px !important;
+    }
+    
+    /* Compact hamburger for very small landscape */
+    .hamburger {
+        padding: 6px !important;
+    }
+    
+    .hamburger span {
+        width: 20px !important;
+        height: 1.5px !important;
+        margin: 3px 0 !important;
+    }
+    
+    /* Adjust mobile navigation for very small landscape */
+    .nav-links {
+        top: var(--header-height) !important;
+        height: calc(100vh - var(--header-height)) !important;
+        padding: 10px !important;
+        width: 280px !important;
+    }
+    
+    .nav-links li a {
+        padding: 10px 12px !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .mobile-more-list li a {
+        padding: 8px 12px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Ensure content sections have proper spacing in landscape */
+@media screen and (max-width: 992px) and (orientation: landscape) {
+    /* Add extra top padding to main content areas */
+    .hero {
+        margin-top: calc(-1 * var(--header-height)) !important;
+        padding-top: calc(var(--header-height) + 20px) !important;
+        min-height: calc(100vh - var(--header-height)) !important;
+    }
+    
+    /* Adjust section padding for landscape */
+    section {
+        padding: 40px 0 !important;
+    }
+    
+    /* Ensure proper scroll padding for anchor links */
+    html {
+        scroll-padding-top: calc(var(--header-height) + 15px) !important;
+    }
+}
+
+/* Fix for pages with specific containers */
+@media screen and (max-width: 992px) and (orientation: landscape) {
+    /* Music keyboard and other app containers */
+    .music-keyboard-container,
+    .games-container,
+    .projects-container,
+    .about-container,
+    .contact-container,
+    .skills-container,
+    .tools-container {
+        padding-top: 15px !important;
+        min-height: calc(100vh - var(--header-height) - 30px) !important;
+    }
+    
+    /* Ensure app headers don't get cut off */
+    .app-header {
+        margin: 20px 0 30px !important;
+        padding: 15px 0 !important;
+    }
+    
+    .app-header h1 {
+        font-size: 2.2rem !important;
+    }
+    
+    .app-header p {
+        font-size: 1rem !important;
+    }
+}
+
+/* ===================================================================
+   USER MENU AND LOGIN BUTTON RESPONSIVE STYLES
+   =================================================================== */
+
+/* Desktop User Menu Styles - Still hidden by default */
+@media (min-width: 993px) {
+    .user-menu {
+        margin-left: 1rem !important;
+        /* Don't override display - keep hidden until JS shows it */
+    }
+    
+    .user-menu.show,
+    .user-menu[style*="display: flex"] {
+        display: flex !important;
+        align-items: center !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .login-btn {
+        display: flex !important;
+        align-items: center !important;
+        margin-left: 1rem !important;
+    }
+    
+    .user-dropdown {
+        min-width: 200px !important;
+    }
+}
+
+/* Mobile User Menu Styles */
+@media (max-width: 992px) {
+    .user-menu {
+        margin-right: 1rem !important;
+        position: relative !important;
+        /* Keep hidden by default - don't override */
+    }
+    
+    .user-menu.show,
+    .user-menu[style*="display: flex"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .user-avatar {
+        width: 35px !important;
+        height: 35px !important;
+    }
+    
+    .user-dropdown {
+        right: -1rem !important;
+        min-width: 180px !important;
+        max-width: 90vw !important;
+    }
+    
+    .login-btn {
+        margin-left: 0.5rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    .login-btn .btn {
+        padding: 0.4rem 0.8rem !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Small Mobile Adjustments */
+@media (max-width: 480px) {
+    .user-avatar {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    .user-dropdown {
+        right: -0.5rem !important;
+        min-width: 160px !important;
+    }
+    
+    .login-btn .btn {
+        padding: 0.35rem 0.7rem !important;
+        font-size: 0.75rem !important;
+    }
+}
+
+/* Landscape Mobile Adjustments */
+@media screen and (max-width: 992px) and (orientation: landscape) {
+    .user-menu {
+        margin-right: 0.5rem !important;
+    }
+    
+    .user-avatar {
+        width: 30px !important;
+        height: 30px !important;
+    }
+    
+    .login-btn {
+        margin-left: 0.3rem !important;
+        margin-right: 0.3rem !important;
+    }
+    
+    .login-btn .btn {
+        padding: 0.3rem 0.6rem !important;
+        font-size: 0.7rem !important;
+    }
+}

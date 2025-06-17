@@ -1,0 +1,466 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | Sanjayraj N</title>
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <link rel="stylesheet" href="../css/critical.css">
+    <link rel="stylesheet" href="../css/styles.css?v=3.0">
+    <link rel="stylesheet" href="../css/fix-logo.css">
+    <link rel="stylesheet" href="../css/fix-styles.css">
+    <link rel="stylesheet" href="../css/nav-fix.css">
+    <link rel="stylesheet" href="../css/login-modal.css">
+
+    <link rel="stylesheet" href="../css/about.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Backup Google Fonts loading method -->
+    <script>
+        // Add wf-loading class to html element
+        document.documentElement.classList.add('wf-loading');
+        
+        // Enhanced font loading with proper events
+        WebFontConfig = {
+            google: {
+                families: ['Orbitron:400,500,700,900', 'Rajdhani:300,400,500,600,700']
+            },
+            timeout: 2000, // Set timeout to 2 seconds
+            loading: function() {
+                console.log('Fonts are loading...');
+            },
+            active: function() {
+                // Fonts have loaded successfully
+                document.documentElement.classList.remove('wf-loading');
+                document.documentElement.classList.add('wf-active');
+                console.log('Fonts loaded successfully');
+            },
+            inactive: function() {
+                // Fallback if fonts fail to load
+                document.documentElement.classList.remove('wf-loading');
+                document.documentElement.classList.add('wf-inactive');
+                console.log('Fonts failed to load, using fallbacks');
+            }
+        };
+        
+        (function(d) {
+            var wf = d.createElement('script'), s = d.scripts[0];
+            wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
+            wf.async = true;
+            s.parentNode.insertBefore(wf, s);
+        })(document);
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
+    
+    <!-- Fallback font styles -->
+    <style>
+        /* Ensure text is visible during font loading */
+        body {
+            font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        h1, h2, h3, .logo, .glitch, .hero-title {
+            font-family: 'Orbitron', 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+    </style>
+
+    <!-- FOUC Prevention and Page Transition -->
+    <script>
+        // Prevent FOUC with improved font loading
+        document.documentElement.style.visibility='visible';
+        document.documentElement.classList.add('loaded');
+        
+        // Ensure smooth font transition
+        window.addEventListener('load', function() {
+            // Force font display after a short delay if WebFont API fails
+            setTimeout(function() {
+                if (document.documentElement.classList.contains('wf-loading')) {
+                    document.documentElement.classList.remove('wf-loading');
+                    document.documentElement.classList.add('wf-inactive');
+                    console.log('Font loading timed out, using fallbacks');
+                }
+            }, 2500);
+        });
+        
+        // Ensure Font Awesome is loaded
+        (function() {
+            // Create a link checker
+            const linkChecker = document.createElement('i');
+            linkChecker.className = 'fas fa-home';
+            linkChecker.style.position = 'absolute';
+            linkChecker.style.opacity = '0';
+            document.head.appendChild(linkChecker);
+            
+            // Check if Font Awesome is loaded
+            const isFontAwesomeLoaded = () => {
+                return window.getComputedStyle(linkChecker).fontFamily.includes('Font Awesome');
+            };
+            
+            // If not loaded, add inline styles for common icons
+            if (!isFontAwesomeLoaded()) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .fas.fa-home:before { content: "\\f015"; }
+                    .fas.fa-user:before { content: "\\f007"; }
+                    .fas.fa-cogs:before { content: "\\f085"; }
+                    .fas.fa-envelope:before { content: "\\f0e0"; }
+                    .fab.fa-linkedin:before { content: "\\f08c"; }
+                    .fab.fa-github:before { content: "\\f09b"; }
+                    .fab.fa-facebook:before { content: "\\f09a"; }
+                    .fab.fa-instagram:before { content: "\\f16d"; }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Clean up
+            document.head.removeChild(linkChecker);
+        })();
+        
+        // Show page transition on unload
+        window.addEventListener('beforeunload', function() {
+            const pageTransition = document.querySelector('.page-transition');
+            if (pageTransition && !pageTransition.classList.contains('active')) {
+                pageTransition.classList.add('active');
+            }
+        });
+    </script></head>
+<body class="dark-theme subpage">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="../index.html">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="about.html" class="active">
+                    <i class="fas fa-user"></i>
+                    <span>About</span>
+                </a></li>
+                <li><a href="skills.html">
+                    <i class="fas fa-cogs"></i>
+                    <span>Skills</span>
+                </a></li>
+                <li><a href="projects.html">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Projects</span>
+                </a></li>
+                <li><a href="contact.html">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+                <li class="dropdown">
+                    <a href="#" class="neon-text dropdown-toggle">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>More</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="certifications.html">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certifications</span>
+                        </a></li>
+                        <li><a href="education.html">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Education</span>
+                        </a></li>
+                        <li><a href="tools.html">
+                            <i class="fas fa-tools"></i>
+                            <span>Tools</span>
+                        </a></li>
+                        <li><a href="games.html">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Games</span>
+                        </a></li>
+                        <li><a href="music-keyboard.html">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <!-- User Menu -->
+            <div class="user-menu" style="display: none;">
+                <div class="user-avatar-container">
+                    <img src="../images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                    <div class="user-dropdown">
+                        <a href="profile.html" class="user-dropdown-item" style="display: none;">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="#" class="user-dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="hamburger" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page Title -->
+    <section class="page-title">
+        <div class="container">
+            <h1 data-aos="fade-up">About Me</h1>
+            <div class="title-line" data-aos="fade-up" data-aos-delay="200"></div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-image" data-aos="fade-right">
+                    <div class="image-frame">
+                        <img src="../images/MyProfile.jpg" alt="Sanjayraj N">
+                        <div class="frame-border"></div>
+                    </div>
+                    <div class="tech-stack">
+                        <div class="tech-item" style="--delay: 0.1s">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <div class="tech-item" style="--delay: 0.2s">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="tech-item" style="--delay: 0.3s">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="tech-item" style="--delay: 0.4s">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="about-content" data-aos="fade-left">
+                    <div class="section-subtitle">Who I Am</div>
+                    <h2>Electrical & Electronics Engineer with a passion for innovation</h2>
+                    <p>Hello! I'm Sanjayraj, an Electrical and Electronics Engineering graduate with a passion for creating innovative solutions across multiple domains. My expertise spans embedded systems, automation technologies, software development, and PCB design.</p>
+                    <p>I thrive on challenges that require cross-disciplinary knowledge and enjoy bringing ideas to life through practical engineering solutions. Whether it's programming microcontrollers, designing control systems, or developing software applications, I approach each project with enthusiasm and attention to detail.</p>
+                    <p>My goal is to contribute to technological advancements that make a positive impact, combining my technical skills with creative problem-solving abilities.</p>
+                    
+                    <div class="personal-info">
+                        <div class="info-item">
+                            <span class="info-title">Name:</span>
+                            <span class="info-value">Sanjayraj N</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-title">Email:</span>
+                            <span class="info-value">sanjayrajnblr@gmail.com</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-title">Phone:</span>
+                            <span class="info-value">+91-9632889019</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-title">Location:</span>
+                            <span class="info-value">Bengaluru (560099), Karnataka, India</span>
+                        </div>
+                    </div>
+                    
+                    <div class="about-cta">
+                        <a href="../resume.pdf" class="btn primary-btn" download>
+                            <span class="btn-text">Download CV</span>
+                            <span class="btn-icon"><i class="fas fa-download"></i></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What I Do Section -->
+    <section class="what-i-do">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">What I Do</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="services-grid">
+                <div class="service-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="service-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h3>Embedded Systems</h3>
+                    <p>Design and development of microcontroller-based systems for various applications, including sensor integration, data acquisition, and control systems.</p>
+                </div>
+                
+                <div class="service-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="service-icon">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <h3>Industrial Automation</h3>
+                    <p>Implementation of PLC, HMI, and SCADA systems for industrial automation, focusing on efficiency, reliability, and user-friendly interfaces.</p>
+                </div>
+                
+                <div class="service-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="service-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Software Development</h3>
+                    <p>Creation of desktop and web applications using Python, C/C++, and Java, with a focus on data visualization, control interfaces, and system monitoring.</p>
+                </div>
+                
+                <div class="service-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="service-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h3>PCB Design</h3>
+                    <p>Design of electronic circuits and PCB layouts using industry-standard tools like KiCAD and Altium Designer, from concept to production-ready files.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-number" data-count="10">0</div>
+                    <div class="stat-title">Projects Completed</div>
+                </div>
+                
+                <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-number" data-count="5">0</div>
+                    <div class="stat-title">Technologies</div>
+                </div>
+                
+                <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-number" data-count="1">0</div>
+                    <div class="stat-title">Internship Completed</div>
+                </div>
+                
+                <div class="stat-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="stat-number" data-count="0">0</div>
+                    <div class="stat-title">Clients (Starting Fresh)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Internship Experience Section -->
+    <section class="internship-experience">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Internship Experience</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="experience-content" data-aos="fade-up">
+                <div class="experience-card">
+                    <div class="experience-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <div class="experience-details">
+                        <h3>Engineering Intern</h3>
+                        <p class="company-name">Industrial Training Program</p>
+                        <p class="experience-description">
+                            Gained hands-on experience in electrical systems design, embedded programming, and industrial automation. 
+                            Worked on real-world projects involving PCB design, microcontroller programming, and system integration. 
+                            Developed strong problem-solving skills and learned industry best practices.
+                        </p>
+                        <div class="experience-skills">
+                            <span class="skill-tag">Circuit Design</span>
+                            <span class="skill-tag">Embedded Systems</span>
+                            <span class="skill-tag">Industrial Automation</span>
+                            <span class="skill-tag">Team Collaboration</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="career-goals" data-aos="fade-up" data-aos-delay="200">
+                <h3>Career Aspirations</h3>
+                <p>As a fresh graduate, I'm eager to apply my knowledge and skills in a challenging role where I can contribute to innovative projects while continuing to learn and grow professionally. I'm particularly interested in embedded systems, automation, and emerging technologies in the electrical engineering field.</p>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <span class="logo-text">SRN</span>
+                        <div class="logo-circle"></div>
+                    </div>
+                    <p>Electrical & Electronics Engineer</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="skills.html">Skills</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-social">
+                    <h4>Connect With Me</h4>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/sanjayraj-n-b201a1332" target="_blank"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a>
+                        <a href="https://www.facebook.com/sanjayrajn.sanjay?mibextid=ZbWKwL" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/sanjayraj_197" target="_blank"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2023 Sanjayraj N. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/about.js"></script>
+    <script src="../js/page-transition.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/login-modal.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+

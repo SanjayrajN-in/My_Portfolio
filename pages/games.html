@@ -1,0 +1,679 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games | Sanjayraj N</title>
+    
+    <link rel="stylesheet" href="../css/critical.css">
+    <link rel="stylesheet" href="../css/styles.css?v=3.0">
+    <link rel="stylesheet" href="../css/fix-logo.css">
+    <link rel="stylesheet" href="../css/fix-styles.css">
+    <link rel="stylesheet" href="../css/nav-fix.css">
+    <link rel="stylesheet" href="../css/login-modal.css">
+
+    <link rel="stylesheet" href="../css/3d-effects.css">
+
+    <link rel="stylesheet" href="../css/games.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
+
+    <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
+
+                    <!-- FOUC Prevention and Page Transition -->
+    <script>
+        // Prevent FOUC with improved font loading
+        document.documentElement.style.visibility='visible';
+        document.documentElement.classList.add('loaded');
+        
+        // Ensure smooth font transition
+        window.addEventListener('load', function() {
+            // Force font display after a short delay if WebFont API fails
+            setTimeout(function() {
+                if (document.documentElement.classList.contains('wf-loading')) {
+                    document.documentElement.classList.remove('wf-loading');
+                    document.documentElement.classList.add('wf-inactive');
+                    console.log('Font loading timed out, using fallbacks');
+                }
+            }, 2500);
+        });
+        
+        // Ensure Font Awesome is loaded
+        (function() {
+            // Create a link checker
+            const linkChecker = document.createElement('i');
+            linkChecker.className = 'fas fa-home';
+            linkChecker.style.position = 'absolute';
+            linkChecker.style.opacity = '0';
+            document.head.appendChild(linkChecker);
+            
+            // Check if Font Awesome is loaded
+            const isFontAwesomeLoaded = () => {
+                return window.getComputedStyle(linkChecker).fontFamily.includes('Font Awesome');
+            };
+            
+            // If not loaded, add inline styles for common icons
+            if (!isFontAwesomeLoaded()) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .fas.fa-home:before { content: "\\f015"; }
+                    .fas.fa-user:before { content: "\\f007"; }
+                    .fas.fa-cogs:before { content: "\\f085"; }
+                    .fas.fa-envelope:before { content: "\\f0e0"; }
+                    .fab.fa-linkedin:before { content: "\\f08c"; }
+                    .fab.fa-github:before { content: "\\f09b"; }
+                    .fab.fa-facebook:before { content: "\\f09a"; }
+                    .fab.fa-instagram:before { content: "\\f16d"; }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Clean up
+            document.head.removeChild(linkChecker);
+        })();
+        
+        // Show page transition on unload
+        window.addEventListener('beforeunload', function() {
+            const pageTransition = document.querySelector('.page-transition');
+            if (pageTransition && !pageTransition.classList.contains('active')) {
+                pageTransition.classList.add('active');
+            }
+        });
+    </script>
+</head>
+<body class="dark-theme subpage">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="../index.html">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>About</span>
+                </a></li>
+                <li><a href="skills.html">
+                    <i class="fas fa-cogs"></i>
+                    <span>Skills</span>
+                </a></li>
+                <li><a href="projects.html">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Projects</span>
+                </a></li>
+                <li><a href="contact.html">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+                <li class="dropdown">
+                    <a href="#" class="neon-text dropdown-toggle">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>More</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="certifications.html">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certifications</span>
+                        </a></li>
+                        <li><a href="education.html">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Education</span>
+                        </a></li>
+                        <li><a href="tools.html">
+                            <i class="fas fa-tools"></i>
+                            <span>Tools</span>
+                        </a></li>
+                        <li><a href="games.html" class="active">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Games</span>
+                        </a></li>
+                        <li><a href="music-keyboard.html">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                        </a></li>
+                    </ul>
+                </li>            
+            <!-- User Menu -->
+            <div class="user-menu" style="display: none;">
+                <div class="user-avatar-container">
+                    <img src="../images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                    <div class="user-dropdown">
+                        <a href="profile.html" class="user-dropdown-item" style="display: none;">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="#" class="user-dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <button class="hamburger" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page Title -->
+    <section class="page-title">
+        <div class="container">
+            <h1 data-aos="fade-up" class="neon-text">Interactive Games</h1>
+            <div class="title-line" data-aos="fade-up" data-aos-delay="200"></div>
+        </div>
+    </section>
+
+    <!-- Games Introduction -->
+    <section class="games-intro">
+        <div class="container">
+            <div class="section-content" data-aos="fade-up">
+                <p>Take a break and enjoy these interactive games! They showcase my programming skills while providing a fun experience. All games are optimized for both desktop and mobile devices.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Game Selection Tabs -->
+    <section class="game-selection">
+        <div class="container">
+            <div class="game-tabs" data-aos="fade-up">
+                <button class="game-tab active" data-game="snake-game-container">
+                    <i class="fas fa-dragon"></i>
+                    <span>Snake</span>
+                </button>
+                <button class="game-tab" data-game="tictactoe-game-container">
+                    <i class="fas fa-th"></i>
+                    <span>Tic Tac Toe</span>
+                </button>
+
+                <button class="game-tab" data-game="tetris-game-container">
+                    <i class="fas fa-cubes"></i>
+                    <span>Brick Breaker</span>
+                </button>
+
+
+                <button class="game-tab" data-game="memory-match-game-container">
+                    <i class="fas fa-brain"></i>
+                    <span>Memory Match</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Snake Game -->
+    <section class="game-container active" id="snake-game-container">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Snake Game</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="section-content" data-aos="fade-up">
+                <p>Control the snake to eat the food and grow longer. Avoid hitting the walls or yourself!</p>
+                
+                <div class="snake-game-container">
+                    <!-- Snake Game Wrapper with complete border -->
+                    <div class="snake-game-wrapper">
+                        <!-- Game Scoreboard -->
+                        <div class="game-scoreboard">
+                            <div class="score-row">
+                                <div class="score-item">
+                                    <span class="score-label">Score:</span>
+                                    <span class="score-value" id="snake-score">0</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">Level:</span>
+                                    <span class="score-value" id="snake-level">1</span>
+                                </div>
+                            </div>
+                            <div class="score-row">
+                                <div class="score-item">
+                                    <span class="score-label">Time:</span>
+                                    <span class="score-value" id="snake-time">00:00</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">High Score:</span>
+                                    <span class="score-value" id="snake-high-score">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snake-game">
+                            <canvas width="400" height="400"></canvas>
+                            <div id="snake-start-screen" class="game-start-screen">
+                                <button id="snake-start-btn" class="game-start-btn">
+                                    <i class="fas fa-play"></i> Start Game
+                                </button>
+                                <div class="start-instructions">
+                                    <p>Press ENTER, SPACE, click Start, or use the ▶️ button below</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="game-controls">
+                        <div class="control-row">
+                            <div class="control-btn control-up">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                        </div>
+                        <div class="control-row">
+                            <div class="control-btn control-left">
+                                <i class="fas fa-arrow-left"></i>
+                            </div>
+                            <div class="control-btn control-pause">
+                                <i class="fas fa-pause"></i>
+                            </div>
+                            <div class="control-btn control-right">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                        <div class="control-row">
+                            <div class="control-btn control-down">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                        </div>
+                        <div class="control-instructions">
+                            <p><strong>Mobile Tip:</strong> Use the center button to Start/Pause/Restart the game!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tic Tac Toe -->
+    <section class="game-container" id="tictactoe-game-container">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Tic Tac Toe</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="section-content" data-aos="fade-up">
+                <p>The classic game of X's and O's. Get three in a row to win!</p>
+                <div class="game-instructions">
+                    <small>💡 <strong>Tip:</strong> Use number keys 1-9 to play, or R to restart</small>
+                </div>
+                
+                <div class="tictactoe-game">
+                    <!-- Game Mode Selection -->
+                    <div class="game-mode-selection">
+                        <h3>Choose Game Mode</h3>
+                        <div class="mode-buttons">
+                            <button class="mode-btn active" data-mode="vs-player">
+                                <i class="fas fa-users"></i>
+                                <span>VS Player</span>
+                            </button>
+                            <button class="mode-btn" data-mode="vs-pc">
+                                <i class="fas fa-robot"></i>
+                                <span>VS Computer</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Difficulty Selection (for VS PC mode) -->
+                    <div class="difficulty-selection" style="display: none;">
+                        <h4>Select Difficulty</h4>
+                        <div class="difficulty-buttons">
+                            <button class="difficulty-btn active" data-difficulty="easy">
+                                <i class="fas fa-smile"></i>
+                                <span>Easy</span>
+                            </button>
+                            <button class="difficulty-btn" data-difficulty="medium">
+                                <i class="fas fa-meh"></i>
+                                <span>Medium</span>
+                            </button>
+                            <button class="difficulty-btn" data-difficulty="hard">
+                                <i class="fas fa-fire"></i>
+                                <span>Hard</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Game Info -->
+                    <div class="game-info">
+                        <div class="current-player">
+                            <span class="player-label">Current Player:</span>
+                            <span class="player-indicator">X</span>
+                        </div>
+                        <div class="score-board">
+                            <div class="score-item">
+                                <span class="score-label">X Wins:</span>
+                                <span class="score-value" id="x-wins">0</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">Draws:</span>
+                                <span class="score-value" id="draws">0</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">O Wins:</span>
+                                <span class="score-value" id="o-wins">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="game-status"></div>
+                    
+                    <div class="tictactoe-board">
+                        <div class="cell" data-cell-index="0"></div>
+                        <div class="cell" data-cell-index="1"></div>
+                        <div class="cell" data-cell-index="2"></div>
+                        <div class="cell" data-cell-index="3"></div>
+                        <div class="cell" data-cell-index="4"></div>
+                        <div class="cell" data-cell-index="5"></div>
+                        <div class="cell" data-cell-index="6"></div>
+                        <div class="cell" data-cell-index="7"></div>
+                        <div class="cell" data-cell-index="8"></div>
+                    </div>
+                    
+                    <div class="game-controls">
+                        <button class="restart-game">
+                            <i class="fas fa-redo"></i>
+                            <span>New Game</span>
+                        </button>
+                        <button class="reset-scores">
+                            <i class="fas fa-trash"></i>
+                            <span>Reset Scores</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Brick Breaker Game -->
+    <section class="game-container" id="tetris-game-container">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Brick Breaker</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="section-content" data-aos="fade-up">
+                <p>Break all the bricks with the ball. Control the paddle with your mouse or arrow keys. Collect power-ups for special abilities!</p>
+                
+                <div class="brick-breaker-container">
+                    <!-- Game Scoreboard -->
+                    <div class="game-scoreboard">
+                        <div class="score-row">
+                            <div class="score-item">
+                                <span class="score-label">Score:</span>
+                                <span class="score-value" id="brick-score">0</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">Level:</span>
+                                <span class="score-value" id="brick-level">1</span>
+                            </div>
+                        </div>
+                        <div class="score-row">
+                            <div class="score-item">
+                                <span class="score-label">Lives:</span>
+                                <span class="score-value" id="brick-lives">3</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">High Score:</span>
+                                <span class="score-value" id="brick-high-score">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tetris-game">
+                        <canvas width="640" height="480"></canvas>
+                        <div id="brick-start-screen" class="game-start-screen">
+                            <button id="brick-start-btn" class="game-start-btn">
+                                <i class="fas fa-play"></i> Start Game
+                            </button>
+                            <div class="start-instructions">
+                                <p>Press SPACE, click Start, or use the controls below</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Controls for Brick Breaker -->
+                    <div class="brick-breaker-controls">
+                        <div class="control-row">
+                            <div class="control-btn brick-control-pause">
+                                <i class="fas fa-pause"></i>
+                            </div>
+                            <div class="control-btn brick-control-play" style="display: none;">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <div class="control-btn brick-control-restart">
+                                <i class="fas fa-redo"></i>
+                            </div>
+                        </div>
+                        <div class="control-instructions">
+                            <p>Move paddle with mouse/touch • Space/buttons to pause</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="game-instructions">
+                    <h3>How to Play:</h3>
+                    <ul>
+                        <li><i class="fas fa-mouse-pointer"></i> Move paddle with mouse</li>
+                        <li><i class="fas fa-arrow-left"></i><i class="fas fa-arrow-right"></i> Move paddle with arrow keys (A/D keys also work)</li>
+                        <li><i class="fas fa-mouse-pointer"></i> Click or press SPACE to start/pause game</li>
+                        <li><i class="fas fa-gift"></i> Collect power-ups for special abilities</li>
+                        <li><i class="fas fa-trophy"></i> Break all bricks to advance to next level</li>
+                        <li><i class="fas fa-shield-alt"></i> Watch out for villains that shoot at your paddle!</li>
+                        <li><i class="fas fa-level-up-alt"></i> Game gets harder as you progress through 100 levels</li>
+                    </ul>
+                    
+                    <div class="power-ups-info">
+                        <h4>Power-ups:</h4>
+                        <div class="power-up-list">
+                            <div class="power-up-item">
+                                <div class="power-up-icon" style="background-color: #00a8ff;"></div>
+                                <span>Expand Paddle</span>
+                            </div>
+                            <div class="power-up-item">
+                                <div class="power-up-icon" style="background-color: #00e4ff;"></div>
+                                <span>Slow Ball</span>
+                            </div>
+                            <div class="power-up-item">
+                                <div class="power-up-icon" style="background-color: #0097e6;"></div>
+                                <span>Extra Life</span>
+                            </div>
+
+                            <div class="power-up-item">
+                                <div class="power-up-icon" style="background-color: #e1b12c;"></div>
+                                <span>Shield</span>
+                            </div>
+                            <div class="power-up-item">
+                                <div class="power-up-icon" style="background-color: #7d5fff;"></div>
+                                <span>Multi Ball</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Memory Match Game -->
+    <section class="game-container" id="memory-match-game-container">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title">Memory Match Game</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="section-content" data-aos="fade-up">
+                <p>Challenge your memory with this progressive card matching game. Start easy and work your way up to master level!</p>
+                
+                <!-- Game Stats and Controls -->
+                <div class="memory-game-header">
+                    <div class="memory-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Level:</span>
+                            <span class="stat-value" id="memory-level">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Score:</span>
+                            <span class="stat-value" id="memory-score">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Time:</span>
+                            <span class="stat-value" id="memory-time">00:00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Moves:</span>
+                            <span class="stat-value" id="memory-moves">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="memory-controls">
+                        <div class="difficulty-selector">
+                            <label>Difficulty:</label>
+                            <select id="memory-difficulty">
+                                <option value="easy">Easy (3x2)</option>
+                                <option value="medium" selected>Medium (4x3)</option>
+                                <option value="hard">Hard (4x4)</option>
+                                <option value="expert">Expert (6x4)</option>
+                                <option value="master">Master (6x6)</option>
+                            </select>
+                        </div>
+                        <button class="memory-btn" id="memory-new-game">
+                            <i class="fas fa-play"></i>
+                            <span>New Game</span>
+                        </button>
+                        <button class="memory-btn" id="memory-hint">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Hint</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="memory-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="memory-progress-fill"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="memory-progress-text">0 / 0 pairs found</span>
+                    </div>
+                </div>
+
+                <!-- Game Board -->
+                <div class="memory-game-board" id="memory-game-board">
+                    <!-- Cards will be generated dynamically -->
+                </div>
+
+                <!-- Game Status -->
+                <div class="memory-status" id="memory-status">
+                    <p>Select difficulty and click "New Game" to start!</p>
+                </div>
+                
+                <div class="game-instructions">
+                    <h3>Memory Match - Level by Level</h3>
+                    <div class="instruction-grid">
+                        <div class="instruction-item">
+                            <i class="fas fa-brain"></i>
+                            <p><strong>Goal:</strong> Match all pairs of cards by remembering their positions</p>
+                        </div>
+                        <div class="instruction-item">
+                            <i class="fas fa-trophy"></i>
+                            <p><strong>Scoring:</strong> Faster completion and fewer moves = higher score</p>
+                        </div>
+                        <div class="instruction-item">
+                            <i class="fas fa-level-up-alt"></i>
+                            <p><strong>Levels:</strong> Complete each difficulty to unlock the next challenge</p>
+                        </div>
+                        <div class="instruction-item">
+                            <i class="fas fa-lightbulb"></i>
+                            <p><strong>Hint:</strong> Use hints sparingly - they reduce your final score</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <span class="logo-text">SRN</span>
+                        <div class="logo-circle"></div>
+                    </div>
+                    <p>Electrical & Electronics Engineer</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="skills.html">Skills</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-social">
+                    <h4>Connect With Me</h4>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/sanjayraj-n-b201a1332" target="_blank"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a>
+                        <a href="https://www.facebook.com/sanjayrajn.sanjay?mibextid=ZbWKwL" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/sanjayraj_197" target="_blank"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2023 Sanjayraj N. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/games.js"></script>
+    <script src="../js/page-transition.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/login-modal.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

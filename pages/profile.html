@@ -1,0 +1,246 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Sanjayraj N Portfolio</title>
+    <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/nav-fix.css">
+    <link rel="stylesheet" href="../css/login-modal.css">
+    <link rel="stylesheet" href="../css/profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="../index.html">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>About</span>
+                </a></li>
+                <li><a href="games.html">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Games</span>
+                </a></li>
+                <li><a href="contact.html">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+            </ul>
+            
+            <!-- User Menu -->
+            <div class="user-menu" style="display: none;">
+                <div class="user-avatar-container">
+                    <img src="../images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                    <div class="user-dropdown">
+                        <a href="profile.html" class="user-dropdown-item" style="display: none;">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="#" class="user-dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="hamburger" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Authentication Check -->
+    <div id="authCheck" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(12, 12, 20, 0.95); backdrop-filter: blur(10px); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="text-align: center; color: var(--text-color); padding: 2rem; background: rgba(30, 30, 47, 0.9); border-radius: 20px; border: 1px solid rgba(0, 168, 255, 0.3); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);">
+            <div style="width: 50px; height: 50px; border: 3px solid rgba(0, 168, 255, 0.3); border-top: 3px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <p style="margin: 0; font-size: 1.1rem; font-weight: 500;">Checking authentication...</p>
+            <p style="margin: 10px 0 0 0; font-size: 0.9rem; color: var(--text-color-dark);">Please wait</p>
+        </div>
+    </div>
+
+    <!-- Profile Section -->
+    <section class="profile-section">
+        <div class="container">
+            <div class="profile-header">
+                <h1 class="section-title">My Profile</h1>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="profile-content">
+                <!-- Profile Info Card -->
+                <div class="profile-card profile-info-card">
+                    <div class="profile-avatar-section">
+                        <div class="profile-avatar-container">
+                            <img src="../images/default-avatar.svg" alt="Profile Avatar" class="profile-avatar" id="profileAvatar">
+                            <button class="avatar-edit-btn" onclick="openAvatarModal()">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
+                        <div class="profile-basic-info">
+                            <div class="editable-field">
+                                <h2 id="profileName" class="profile-name">User Name</h2>
+                                <button class="edit-btn" onclick="editField('name')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                            <p class="profile-email" id="profileEmail">user@example.com</p>
+                            <p class="profile-joined">Joined: <span id="profileJoined">--</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gaming Stats Card -->
+                <div class="profile-card gaming-stats-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-gamepad"></i> Gaming Statistics</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalGamesPlayed">0</div>
+                            <div class="stat-label">Games Played</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalPlaytime">0h 0m</div>
+                            <div class="stat-label">Total Playtime</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="favoriteGame">None</div>
+                            <div class="stat-label">Favorite Game</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="longestSession">0m</div>
+                            <div class="stat-label">Longest Session</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Games Card -->
+                <div class="profile-card recent-games-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-history"></i> Recent Games</h3>
+                        <button class="clear-history-btn" onclick="clearGameHistory()">
+                            <i class="fas fa-trash"></i> Clear History
+                        </button>
+                    </div>
+                    <div class="games-list" id="recentGamesList">
+                        <div class="no-games-message">
+                            <i class="fas fa-gamepad"></i>
+                            <p>No games played yet. Start playing to see your history!</p>
+                            <a href="games.html" class="play-games-btn">
+                                <i class="fas fa-play"></i> Play Games
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Achievements Card -->
+                <div class="profile-card achievements-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-trophy"></i> Achievements</h3>
+                    </div>
+                    <div class="achievements-grid" id="achievementsList">
+                        <!-- Achievements will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Avatar Selection Modal -->
+    <div id="avatarModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Choose Avatar</h3>
+                <button class="modal-close" onclick="closeAvatarModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="avatar-options">
+                    <div class="avatar-option" data-avatar="../images/default-avatar.svg">
+                        <img src="../images/default-avatar.svg" alt="Avatar 1">
+                    </div>
+                    <div class="avatar-option" data-avatar="../images/default-avatar.svg">
+                        <img src="../images/default-avatar.svg" alt="Avatar 2">
+                    </div>
+                    <div class="avatar-option" data-avatar="../images/default-avatar.svg">
+                        <img src="../images/default-avatar.svg" alt="Avatar 3">
+                    </div>
+                    <div class="avatar-option" data-avatar="../images/default-avatar.svg">
+                        <img src="../images/default-avatar.svg" alt="Avatar 4">
+                    </div>
+                </div>
+                <div class="upload-section">
+                    <p>Or upload your own:</p>
+                    <input type="file" id="avatarUpload" accept="image/*" onchange="handleAvatarUpload(event)">
+                    <label for="avatarUpload" class="upload-btn">
+                        <i class="fas fa-upload"></i> Upload Image
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Name Modal -->
+    <div id="editNameModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Name</h3>
+                <button class="modal-close" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editNameForm">
+                    <div class="form-group">
+                        <label for="newName">Full Name</label>
+                        <input type="text" id="newName" name="name" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn secondary-btn" onclick="closeEditModal()">Cancel</button>
+                        <button type="submit" class="btn primary-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="../js/script.js"></script>
+    <script src="../js/page-transition.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/login-modal.js"></script>
+    <script src="../js/profile.js"></script>
+</body>
+</html>

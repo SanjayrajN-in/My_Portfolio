@@ -1,0 +1,21 @@
+// Run these commands in order:
+
+1. Install dependencies:
+npm install
+
+2. Initialize git:
+git init
+git add .
+git commit -m "Initial commit"
+
+3. Add your GitHub repo:
+git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
+git branch -M main
+git push -u origin main
+
+4. Then deploy via Vercel dashboard (click import from GitHub)
+
+// Don't forget to:
+- Set up MongoDB Atlas
+- Add environment variables in Vercel
+- Test your live site!

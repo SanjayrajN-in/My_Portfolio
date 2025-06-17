@@ -1,0 +1,10 @@
+This folder contains images for the memory game:
+✓ arduino.png - Created (Arduino themed)
+✓ raspberry.png - Created (Raspberry Pi themed)
+✓ python.png - Created (Python themed)
+✓ cpp.png - Created (C++ themed)
+✓ plc.png - Created (PLC themed)
+✓ circuit.png - Created (Circuit themed)
+
+All placeholder images have been created with appropriate colors and labels.
+You can replace these with your own custom images if desired.

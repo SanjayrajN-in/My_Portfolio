@@ -1,0 +1,712 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills | Sanjayraj N</title>
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <link rel="stylesheet" href="../css/critical.css">
+    <link rel="stylesheet" href="../css/styles.css?v=3.0">
+    <link rel="stylesheet" href="../css/fix-logo.css">
+    <link rel="stylesheet" href="../css/fix-styles.css">
+    <link rel="stylesheet" href="../css/nav-fix.css">
+    <link rel="stylesheet" href="../css/login-modal.css">
+
+    <link rel="stylesheet" href="../css/skills.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Backup Google Fonts loading method -->
+    <script>
+        // Add wf-loading class to html element
+        document.documentElement.classList.add('wf-loading');
+        
+        // Enhanced font loading with proper events
+        WebFontConfig = {
+            google: {
+                families: ['Orbitron:400,500,700,900', 'Rajdhani:300,400,500,600,700']
+            },
+            timeout: 2000, // Set timeout to 2 seconds
+            loading: function() {
+                console.log('Fonts are loading...');
+            },
+            active: function() {
+                // Fonts have loaded successfully
+                document.documentElement.classList.remove('wf-loading');
+                document.documentElement.classList.add('wf-active');
+                console.log('Fonts loaded successfully');
+            },
+            inactive: function() {
+                // Fallback if fonts fail to load
+                document.documentElement.classList.remove('wf-loading');
+                document.documentElement.classList.add('wf-inactive');
+                console.log('Fonts failed to load, using fallbacks');
+            }
+        };
+        
+        (function(d) {
+            var wf = d.createElement('script'), s = d.scripts[0];
+            wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
+            wf.async = true;
+            s.parentNode.insertBefore(wf, s);
+        })(document);
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
+    
+    <!-- Fallback font styles -->
+    <style>
+        /* Ensure text is visible during font loading */
+        body {
+            font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        h1, h2, h3, .logo, .glitch, .hero-title {
+            font-family: 'Orbitron', 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+    </style>
+
+    <!-- FOUC Prevention and Page Transition -->
+    <script>
+        // Prevent FOUC with improved font loading
+        document.documentElement.style.visibility='visible';
+        document.documentElement.classList.add('loaded');
+        
+        // Ensure smooth font transition
+        window.addEventListener('load', function() {
+            // Force font display after a short delay if WebFont API fails
+            setTimeout(function() {
+                if (document.documentElement.classList.contains('wf-loading')) {
+                    document.documentElement.classList.remove('wf-loading');
+                    document.documentElement.classList.add('wf-inactive');
+                    console.log('Font loading timed out, using fallbacks');
+                }
+            }, 2500);
+        });
+        
+        // Ensure Font Awesome is loaded
+        (function() {
+            // Create a link checker
+            const linkChecker = document.createElement('i');
+            linkChecker.className = 'fas fa-home';
+            linkChecker.style.position = 'absolute';
+            linkChecker.style.opacity = '0';
+            document.head.appendChild(linkChecker);
+            
+            // Check if Font Awesome is loaded
+            const isFontAwesomeLoaded = () => {
+                return window.getComputedStyle(linkChecker).fontFamily.includes('Font Awesome');
+            };
+            
+            // If not loaded, add inline styles for common icons
+            if (!isFontAwesomeLoaded()) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .fas.fa-home:before { content: "\\f015"; }
+                    .fas.fa-user:before { content: "\\f007"; }
+                    .fas.fa-cogs:before { content: "\\f085"; }
+                    .fas.fa-envelope:before { content: "\\f0e0"; }
+                    .fab.fa-linkedin:before { content: "\\f08c"; }
+                    .fab.fa-github:before { content: "\\f09b"; }
+                    .fab.fa-facebook:before { content: "\\f09a"; }
+                    .fab.fa-instagram:before { content: "\\f16d"; }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Clean up
+            document.head.removeChild(linkChecker);
+        })();
+        
+        // Show page transition on unload
+        window.addEventListener('beforeunload', function() {
+            const pageTransition = document.querySelector('.page-transition');
+            if (pageTransition && !pageTransition.classList.contains('active')) {
+                pageTransition.classList.add('active');
+            }
+        });
+    </script>
+</head>
+<body class="dark-theme subpage">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="../index.html">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>About</span>
+                </a></li>
+                <li><a href="skills.html" class="active">
+                    <i class="fas fa-cogs"></i>
+                    <span>Skills</span>
+                </a></li>
+                <li><a href="projects.html">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Projects</span>
+                </a></li>
+                <li><a href="contact.html">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+                <li class="dropdown">
+                    <a href="#" class="neon-text dropdown-toggle">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>More</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="certifications.html">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certifications</span>
+                        </a></li>
+                        <li><a href="education.html">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Education</span>
+                        </a></li>
+                        <li><a href="tools.html">
+                            <i class="fas fa-tools"></i>
+                            <span>Tools</span>
+                        </a></li>
+                        <li><a href="games.html">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Games</span>
+                        </a></li>
+                        <li><a href="music-keyboard.html">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                        </a></li>
+                    </ul>
+                </li>            
+            <!-- User Menu -->
+            <div class="user-menu" style="display: none;">
+                <div class="user-avatar-container">
+                    <img src="../images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                    <div class="user-dropdown">
+                        <a href="profile.html" class="user-dropdown-item" style="display: none;">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="#" class="user-dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <button class="hamburger" aria-label="Toggle navigation menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page Title -->
+    <section class="page-title">
+        <div class="container">
+            <h1 data-aos="fade-up" class="text-center">Technical Skills</h1>
+            <div class="title-line" data-aos="fade-up" data-aos-delay="200"></div>
+        </div>
+    </section>
+
+    <!-- Skills Overview -->
+    <section class="skills-overview">
+        <div class="container">
+            <div class="overview-content" data-aos="fade-up">
+                <p>As an Electrical and Electronics Engineer, I've developed a diverse set of technical skills across multiple domains. My expertise spans embedded systems programming, industrial automation, software development, and PCB design, allowing me to approach engineering challenges from various perspectives.</p>
+            </div>
+            
+            <div class="skills-categories">
+                <div class="skill-category active" data-category="programming" data-aos="fade-up" data-aos-delay="100">
+                    <div class="category-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Programming</h3>
+                </div>
+                
+                <div class="skill-category" data-category="tools" data-aos="fade-up" data-aos-delay="200">
+                    <div class="category-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h3>Tools & Software</h3>
+                </div>
+                
+                <div class="skill-category" data-category="automation" data-aos="fade-up" data-aos-delay="300">
+                    <div class="category-icon">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <h3>Automation</h3>
+                </div>
+                
+                <div class="skill-category" data-category="hardware" data-aos="fade-up" data-aos-delay="400">
+                    <div class="category-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h3>Hardware</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Content -->
+    <section class="skills-content">
+        <div class="container">
+            <!-- Programming Skills -->
+            <div class="skills-tab active" id="programming">
+                <div class="skills-grid">
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fab fa-python"></i>
+                            </div>
+                            <h3>Python</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 90%"></div>
+                            </div>
+                            <span class="level-text">90%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Proficient in Python for data analysis, GUI development with PyQt5, and automation scripts. Experienced with libraries like NumPy, Pandas, and OpenCV.</p>
+                            <div class="skill-projects">
+                                <span>Driver Drowsiness Detection</span>
+                                <span>Data Logger Application</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fab fa-cuttlefish"></i>
+                            </div>
+                            <h3>C/C++</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 85%"></div>
+                            </div>
+                            <span class="level-text">85%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Strong foundation in C/C++ for embedded systems programming, microcontroller interfacing, and system-level applications.</p>
+                            <div class="skill-projects">
+                                <span>Ultrasonic Digital Ruler</span>
+                                <span>Kitchen Automation</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fab fa-java"></i>
+                            </div>
+                            <h3>Java</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 75%"></div>
+                            </div>
+                            <span class="level-text">75%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Experienced in Java for desktop application development and Android programming for IoT control interfaces.</p>
+                            <div class="skill-projects">
+                                <span>Solar Garbage Monitoring System</span>
+                                <span>IoT Control Interface</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="400">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <h3>SQL</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 70%"></div>
+                            </div>
+                            <span class="level-text">70%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Proficient in SQL for database design, data management, and integration with applications for storing sensor data and system logs.</p>
+                            <div class="skill-projects">
+                                <span>KEITHLEY Data Logger</span>
+                                <span>Sensor Data Management</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tools & Software Skills -->
+            <div class="skills-tab" id="tools">
+                <div class="skills-grid">
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <h3>MATLAB</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 85%"></div>
+                            </div>
+                            <span class="level-text">85%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Experienced in MATLAB for signal processing, data analysis, and simulation of electrical and control systems.</p>
+                            <div class="skill-projects">
+                                <span>Signal Processing Applications</span>
+                                <span>Control System Simulation</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-desktop"></i>
+                            </div>
+                            <h3>PyQt5</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 80%"></div>
+                            </div>
+                            <span class="level-text">80%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Proficient in PyQt5 for developing cross-platform desktop applications with modern user interfaces and real-time data visualization.</p>
+                            <div class="skill-projects">
+                                <span>KEITHLEY Data Logger</span>
+                                <span>System Monitoring Dashboard</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-drafting-compass"></i>
+                            </div>
+                            <h3>AutoCAD</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 75%"></div>
+                            </div>
+                            <span class="level-text">75%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Skilled in AutoCAD for electrical layout design, panel drawings, and mechanical component design for engineering projects.</p>
+                            <div class="skill-projects">
+                                <span>Electrical Panel Design</span>
+                                <span>Project Layout Planning</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="400">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-flask"></i>
+                            </div>
+                            <h3>LabVIEW</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 70%"></div>
+                            </div>
+                            <span class="level-text">70%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Experienced in LabVIEW for data acquisition, instrument control, and test automation in laboratory environments.</p>
+                            <div class="skill-projects">
+                                <span>Data Acquisition Systems</span>
+                                <span>Automated Testing</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Automation Skills -->
+            <div class="skills-tab" id="automation">
+                <div class="skills-grid">
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                            <h3>TIA Portal</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 90%"></div>
+                            </div>
+                            <span class="level-text">90%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Proficient in Siemens TIA Portal for PLC programming, HMI design, and industrial automation system development.</p>
+                            <div class="skill-projects">
+                                <span>UTM Automation</span>
+                                <span>Industrial Control Systems</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                            <h3>GX Works</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 85%"></div>
+                            </div>
+                            <span class="level-text">85%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Experienced in Mitsubishi GX Works for PLC programming and industrial automation applications.</p>
+                            <div class="skill-projects">
+                                <span>Full Wheel Leak Testing</span>
+                                <span>Process Automation</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                            <h3>Delta ISPSoft</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 80%"></div>
+                            </div>
+                            <span class="level-text">80%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Skilled in Delta ISPSoft for PLC programming and automation system development with Delta controllers.</p>
+                            <div class="skill-projects">
+                                <span>Conveyor Control System</span>
+                                <span>Automated Sorting System</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="400">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <h3>SCADA</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 75%"></div>
+                            </div>
+                            <span class="level-text">75%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Experienced in SCADA system design and implementation for industrial monitoring and control applications.</p>
+                            <div class="skill-projects">
+                                <span>Plant Monitoring System</span>
+                                <span>Remote Control Interface</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hardware Skills -->
+            <div class="skills-tab" id="hardware">
+                <div class="skills-grid">
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                            <h3>KiCAD</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 85%"></div>
+                            </div>
+                            <span class="level-text">85%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Proficient in KiCAD for schematic design, PCB layout, and electronic circuit development.</p>
+                            <div class="skill-projects">
+                                <span>Ultrasonic Digital Ruler</span>
+                                <span>Sensor Interface Boards</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                            <h3>Altium Designer</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 80%"></div>
+                            </div>
+                            <span class="level-text">80%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Experienced in Altium Designer for professional PCB design, multi-layer boards, and complex circuit layouts.</p>
+                            <div class="skill-projects">
+                                <span>Control System PCBs</span>
+                                <span>Communication Modules</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                            <h3>Arduino</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 95%"></div>
+                            </div>
+                            <span class="level-text">95%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Expert in Arduino platform for rapid prototyping, IoT applications, and embedded system development.</p>
+                            <div class="skill-projects">
+                                <span>Kitchen Automation</span>
+                                <span>IoT Sensor Networks</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-card" data-aos="fade-up" data-aos-delay="400">
+                        <div class="skill-header">
+                            <div class="skill-icon">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                            <h3>Raspberry Pi</h3>
+                        </div>
+                        <div class="skill-level">
+                            <div class="level-bar">
+                                <div class="level-fill" style="width: 90%"></div>
+                            </div>
+                            <span class="level-text">90%</span>
+                        </div>
+                        <div class="skill-details">
+                            <p>Proficient in Raspberry Pi for embedded Linux applications, computer vision projects, and IoT gateways.</p>
+                            <div class="skill-projects">
+                                <span>Driver Drowsiness Detection</span>
+                                <span>Solar Garbage Monitoring System</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <span class="logo-text">SRN</span>
+                        <div class="logo-circle"></div>
+                    </div>
+                    <p>Electrical & Electronics Engineer</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="skills.html">Skills</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-social">
+                    <h4>Connect With Me</h4>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/in/sanjayraj-n-b201a1332" target="_blank"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a>
+                        <a href="https://www.facebook.com/sanjayrajn.sanjay?mibextid=ZbWKwL" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/sanjayraj_197" target="_blank"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2023 Sanjayraj N. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/skills.js"></script>
+    <script src="../js/page-transition.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/login-modal.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
