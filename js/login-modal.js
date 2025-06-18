@@ -437,24 +437,43 @@ class LoginModal {
         
         // Create OAuth URL for Google
         const clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
-        const redirectUri = encodeURIComponent(window.location.origin + '/auth/google/callback');
-        const scope = encodeURIComponent('openid email profile');
+        const redirectUri = window.location.origin + '/auth/google/callback';
+        const scope = 'openid email profile';
         const responseType = 'code';
         const state = this.generateRandomState();
+        
+        console.log('=== OAuth Configuration Debug ===');
+        console.log('Client ID:', clientId);
+        console.log('Redirect URI:', redirectUri);
+        console.log('Current Origin:', window.location.origin);
+        console.log('Current URL:', window.location.href);
         
         // Store state in sessionStorage for verification
         sessionStorage.setItem('google_oauth_state', state);
         
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-            `client_id=${clientId}&` +
-            `redirect_uri=${redirectUri}&` +
+            `client_id=${encodeURIComponent(clientId)}&` +
+            `redirect_uri=${encodeURIComponent(redirectUri)}&` +
             `response_type=${responseType}&` +
-            `scope=${scope}&` +
+            `scope=${encodeURIComponent(scope)}&` +
             `state=${state}&` +
             `access_type=offline&` +
             `prompt=select_account`;
         
-        console.log('Redirecting to Google OAuth:', authUrl);
+        console.log('Full OAuth URL:', authUrl);
+        
+        // Show a confirmation dialog first
+        const confirmed = confirm(
+            `About to redirect to Google OAuth.\n\n` +
+            `Redirect URI: ${redirectUri}\n\n` +
+            `Make sure this exact URL is added to your Google Cloud Console under "Authorized redirect URIs".\n\n` +
+            `Click OK to continue, or Cancel to abort.`
+        );
+        
+        if (!confirmed) {
+            console.log('OAuth redirect cancelled by user');
+            return;
+        }
         
         // Show loading state
         this.setLoading(true);
