@@ -1,27 +1,56 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { OAuth2Client } = require('google-auth-library');
 
 module.exports = async (req, res) => {
     try {
-        const { credential } = req.body;
+        const { credential, code, redirect_uri } = req.body;
         
-        if (!credential) {
+        // Handle both JWT token (old method) and OAuth code (new method)
+        let payload;
+        
+        if (code && redirect_uri) {
+            // New OAuth code flow
+            console.log('Processing OAuth code flow');
+            
+            const client = new OAuth2Client(
+                process.env.GOOGLE_CLIENT_ID,
+                process.env.GOOGLE_CLIENT_SECRET,
+                redirect_uri
+            );
+            
+            // Exchange code for tokens
+            const { tokens } = await client.getToken(code);
+            client.setCredentials(tokens);
+            
+            // Verify the ID token
+            const ticket = await client.verifyIdToken({
+                idToken: tokens.id_token,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+            
+            payload = ticket.getPayload();
+            
+        } else if (credential) {
+            // Old JWT token flow (fallback)
+            console.log('Processing JWT credential flow');
+            
+            const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+            
+            const ticket = await client.verifyIdToken({
+                idToken: credential,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+            
+            payload = ticket.getPayload();
+            
+        } else {
             return res.status(400).json({
                 success: false,
-                message: 'Google credential is required'
+                message: 'Google credential or authorization code is required'
             });
         }
-
-        // Verify Google JWT token
-        const { OAuth2Client } = require('google-auth-library');
-        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
         
-        const ticket = await client.verifyIdToken({
-            idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
-        
-        const payload = ticket.getPayload();
         const { sub: googleId, email, name, picture } = payload;
 
         // Check if user exists

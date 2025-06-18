@@ -296,30 +296,18 @@ class LoginModal {
         console.log('Current origin:', window.location.origin);
         console.log('Current hostname:', window.location.hostname);
         
-        // Load Google Sign-In API
-        if (!window.google) {
-            console.log('Loading Google Sign-In script...');
-            const script = document.createElement('script');
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.async = true;
-            script.defer = true;
-            script.onload = () => {
-                console.log('Google Sign-In script loaded successfully');
-                console.log('Google object available:', !!window.google);
-                console.log('Google accounts available:', !!(window.google && window.google.accounts));
-                setTimeout(() => this.setupGoogleSignIn(), 100);
-            };
-            script.onerror = () => {
-                console.error('Failed to load Google Sign-In script');
-                this.showFallbackGoogleButton();
-            };
-            document.head.appendChild(script);
-        } else {
-            console.log('Google Sign-In script already loaded');
-            console.log('Google object available:', !!window.google);
-            console.log('Google accounts available:', !!(window.google && window.google.accounts));
-            this.setupGoogleSignIn();
-        }
+        // For now, just show the fallback button to avoid FedCM issues
+        console.log('Using fallback Google button to avoid FedCM/CORS issues');
+        this.showFallbackGoogleButton();
+        
+        // Update the fallback button to handle OAuth flow manually
+        this.setupManualGoogleAuth();
+    }
+
+    setupManualGoogleAuth() {
+        console.log('Setting up manual Google OAuth...');
+        // The fallback button will handle the OAuth flow manually
+        // This avoids all FedCM and CORS issues
     }
 
     setupGoogleSignIn() {
@@ -445,8 +433,40 @@ class LoginModal {
     }
 
     handleGoogleLogin() {
-        console.log('Fallback Google login button clicked');
-        this.showMessage('Please use the official Google Sign-In button above, or sign in with email.', 'info');
+        console.log('Google login button clicked - starting OAuth flow');
+        
+        // Create OAuth URL for Google
+        const clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
+        const redirectUri = encodeURIComponent(window.location.origin + '/auth/google/callback');
+        const scope = encodeURIComponent('openid email profile');
+        const responseType = 'code';
+        const state = this.generateRandomState();
+        
+        // Store state in sessionStorage for verification
+        sessionStorage.setItem('google_oauth_state', state);
+        
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+            `client_id=${clientId}&` +
+            `redirect_uri=${redirectUri}&` +
+            `response_type=${responseType}&` +
+            `scope=${scope}&` +
+            `state=${state}&` +
+            `access_type=offline&` +
+            `prompt=select_account`;
+        
+        console.log('Redirecting to Google OAuth:', authUrl);
+        
+        // Show loading state
+        this.setLoading(true);
+        this.showMessage('Redirecting to Google...', 'info');
+        
+        // Redirect to Google OAuth
+        window.location.href = authUrl;
+    }
+    
+    generateRandomState() {
+        return Math.random().toString(36).substring(2, 15) + 
+               Math.random().toString(36).substring(2, 15);
     }
 
     async handleGoogleSignInResponse(response) {
