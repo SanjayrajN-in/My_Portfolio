@@ -54,9 +54,30 @@ class GoogleAuthCallback {
             if (result.success) {
                 this.showMessage('Login successful! Welcome back.', 'success');
                 
-                // Store user data if needed
+                // Store user data properly for the auth system
                 if (result.user) {
-                    localStorage.setItem('user', JSON.stringify(result.user));
+                    // Store in the format expected by the auth system
+                    const userData = {
+                        id: result.user.id,
+                        name: result.user.name,
+                        email: result.user.email,
+                        avatar: result.user.avatar,
+                        joinedDate: new Date().toISOString(),
+                        gameStats: result.user.gameStats || {
+                            totalGamesPlayed: 0,
+                            totalPlaytime: 0,
+                            gamesHistory: [],
+                            achievements: []
+                        }
+                    };
+                    
+                    // Store user data in localStorage for auth system
+                    localStorage.setItem('currentUser', JSON.stringify(userData));
+                    
+                    // Also store token if provided
+                    if (result.token) {
+                        localStorage.setItem('authToken', result.token);
+                    }
                 }
 
                 // Redirect to home page after a short delay

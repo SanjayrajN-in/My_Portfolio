@@ -1184,6 +1184,12 @@ body.menu-open {
         max-width: 90vw !important;
     }
     
+    .user-dropdown.show {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateY(0) !important;
+    }
+    
     .login-btn {
         margin-left: 0.5rem !important;
         margin-right: 0.5rem !important;

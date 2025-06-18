@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -74,6 +74,19 @@
         (function() {
             console.log('🚫 Blocking Google Identity Services...');
             
+            // Block Google Identity Services completely
+            Object.defineProperty(window, 'google', {
+                get: function() {
+                    console.warn('🚫 Blocked access to window.google');
+                    return undefined;
+                },
+                set: function(value) {
+                    console.warn('🚫 Blocked setting window.google');
+                    return false;
+                },
+                configurable: false
+            });
+            
             // Override createElement to block Google Identity scripts
             const originalCreateElement = document.createElement;
             document.createElement = function(tagName) {
@@ -85,7 +98,8 @@
                             value.includes('accounts.google.com') || 
                             value.includes('gsi') ||
                             value.includes('identity') ||
-                            value.includes('client.js')
+                            value.includes('client.js') ||
+                            value.includes('googleapis.com')
                         )) {
                             console.warn('🚫 Blocked Google Identity Services script:', value);
                             return;
@@ -97,7 +111,7 @@
             };
             
             // Block any existing Google Identity Services
-            if (typeof window.google !== 'undefined' && window.google.accounts) {
+            if (typeof window.google !== 'undefined' && window.google && window.google.accounts) {
                 console.warn('Disabling existing Google Identity Services');
                 window.google.accounts = undefined;
             }

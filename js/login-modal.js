@@ -233,11 +233,22 @@ class LoginModal {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
 
+        console.log('🔐 Attempting login with email:', email);
+
         try {
-            const result = authSystem.login(email, password);
+            // Make sure authSystem is available
+            if (!window.authSystem) {
+                console.error('Auth system not available');
+                this.showMessage('Authentication system not ready. Please refresh the page.');
+                return;
+            }
+
+            const result = window.authSystem.login(email, password);
+            console.log('Login result:', result);
             
             if (result.success) {
                 this.showMessage('Login successful! Welcome back.', 'success');
+                console.log('✅ Login successful, updating UI...');
                 setTimeout(() => {
                     this.close();
                     // Refresh page to update navigation
@@ -247,6 +258,7 @@ class LoginModal {
                 this.showMessage(result.message);
             }
         } catch (error) {
+            console.error('Login error:', error);
             this.showMessage('An error occurred. Please try again.');
         } finally {
             this.setLoading(false);
@@ -263,6 +275,8 @@ class LoginModal {
         const password = document.getElementById('registerPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
 
+        console.log('📝 Attempting registration with email:', email);
+
         // Validate passwords match
         if (password !== confirmPassword) {
             this.showMessage('Passwords do not match.');
@@ -271,10 +285,19 @@ class LoginModal {
         }
 
         try {
-            const result = authSystem.register(name, email, password);
+            // Make sure authSystem is available
+            if (!window.authSystem) {
+                console.error('Auth system not available');
+                this.showMessage('Authentication system not ready. Please refresh the page.');
+                return;
+            }
+
+            const result = window.authSystem.register(name, email, password);
+            console.log('Registration result:', result);
             
             if (result.success) {
                 this.showMessage('Account created successfully! You are now logged in.', 'success');
+                console.log('✅ Registration successful, updating UI...');
                 setTimeout(() => {
                     this.close();
                     // Refresh page to update navigation
@@ -284,6 +307,7 @@ class LoginModal {
                 this.showMessage(result.message);
             }
         } catch (error) {
+            console.error('Registration error:', error);
             this.showMessage('An error occurred. Please try again.');
         } finally {
             this.setLoading(false);
@@ -305,19 +329,33 @@ class LoginModal {
     }
     
     blockGoogleIdentityServices() {
-        // Prevent Google Identity Services from loading
+        // Completely prevent Google Identity Services from loading
+        console.log('🚫 Blocking Google Identity Services in modal...');
+        
+        // Block window.google completely
         if (typeof window.google !== 'undefined') {
-            console.warn('Google APIs detected - attempting to disable Identity Services');
+            console.warn('Google APIs detected - disabling completely');
             try {
-                if (window.google.accounts) {
-                    window.google.accounts = undefined;
-                }
+                delete window.google;
             } catch (e) {
-                console.log('Could not disable Google Identity Services:', e);
+                console.log('Could not delete window.google:', e);
             }
         }
         
-        // Block any future loading of Google Identity Services
+        // Override any attempts to set window.google
+        Object.defineProperty(window, 'google', {
+            get: function() {
+                console.warn('🚫 Blocked access to window.google in modal');
+                return undefined;
+            },
+            set: function(value) {
+                console.warn('🚫 Blocked setting window.google in modal');
+                return false;
+            },
+            configurable: false
+        });
+        
+        // Block script loading
         const originalCreateElement = document.createElement;
         document.createElement = function(tagName) {
             const element = originalCreateElement.call(this, tagName);
@@ -327,9 +365,11 @@ class LoginModal {
                     if (name === 'src' && value && (
                         value.includes('accounts.google.com') || 
                         value.includes('gsi') ||
-                        value.includes('identity')
+                        value.includes('identity') ||
+                        value.includes('client.js') ||
+                        value.includes('googleapis.com')
                     )) {
-                        console.warn('🚫 Blocked Google Identity Services script:', value);
+                        console.warn('🚫 Blocked Google Identity Services script in modal:', value);
                         return;
                     }
                     return originalSetAttribute.call(this, name, value);
@@ -338,7 +378,7 @@ class LoginModal {
             return element;
         };
         
-        console.log('Google Identity Services blocking enabled');
+        console.log('✅ Google Identity Services blocking enabled in modal');
     }
 
     handleGoogleLogin() {
