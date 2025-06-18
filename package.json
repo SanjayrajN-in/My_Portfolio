@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'Static build completed'",
-    "start": "vercel dev"
+    "start": "vercel dev",
+    "test:auth": "node api/test/google-auth-test.js"
   },
   "keywords": [
     "portfolio",

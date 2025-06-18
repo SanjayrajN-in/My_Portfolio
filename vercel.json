@@ -30,7 +30,15 @@
       "use": "@vercel/static"
     },
     {
-      "src": "api/**/*.js",
+      "src": "api/auth/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/contact/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/users/*.js",
       "use": "@vercel/node"
     }
   ],
