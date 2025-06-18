@@ -316,6 +316,7 @@ class LoginModal {
     setupGoogleSignIn() {
         console.log('Setting up Google Sign-In...');
         console.log('Current domain:', window.location.hostname);
+        console.log('Current origin:', window.location.origin);
         
         if (window.google && window.google.accounts) {
             try {
@@ -327,7 +328,8 @@ class LoginModal {
                     cancel_on_tap_outside: true,
                     use_fedcm_for_prompt: false, // Disable FedCM to avoid CORS issues
                     ux_mode: 'popup', // Use popup mode for better compatibility
-                    context: 'signin'
+                    context: 'signin',
+                    allowed_parent_origin: window.location.origin // Explicitly set allowed origin
                 });
 
                 console.log('Google Sign-In initialized successfully');
@@ -335,6 +337,13 @@ class LoginModal {
                 this.renderGoogleButton();
             } catch (error) {
                 console.error('Google Sign-In setup error:', error);
+                
+                // Check if it's a domain authorization error
+                if (error.message && error.message.includes('origin')) {
+                    console.error('Domain authorization error - please check Google Cloud Console OAuth settings');
+                    this.showMessage('Google Sign-In is not configured for this domain. Please use email login.', 'info');
+                }
+                
                 // Show fallback message
                 this.showFallbackGoogleButton();
             }
