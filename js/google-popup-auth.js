@@ -4,7 +4,23 @@ class GooglePopupAuth {
         this.clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
         this.isInitialized = false;
         this.isLoading = false;
+        this.suppressGoogleWarnings();
         this.init();
+    }
+
+    suppressGoogleWarnings() {
+        // Suppress specific Google Identity Services warnings
+        const originalConsoleWarn = console.warn;
+        console.warn = function(...args) {
+            const message = args.join(' ');
+            // Suppress FedCM warnings
+            if (message.includes('[GSI_LOGGER]') || 
+                message.includes('FedCM') || 
+                message.includes('One Tap')) {
+                return; // Don't log these warnings
+            }
+            originalConsoleWarn.apply(console, args);
+        };
     }
 
     async init() {
@@ -78,11 +94,11 @@ class GooglePopupAuth {
                 callback: (response) => this.handleCredentialResponse(response),
                 auto_select: false,
                 cancel_on_tap_outside: true,
-                use_fedcm_for_prompt: false, // Disable FedCM to avoid compatibility issues
+                use_fedcm_for_prompt: true, // Enable FedCM for future compatibility
                 itp_support: true, // Enable Intelligent Tracking Prevention support
                 ux_mode: 'popup', // Force popup mode
                 context: 'signin',
-                state_cookie_domain: 'sanjayrajn.vercel.app' // Set domain for state cookie
+                state_cookie_domain: window.location.hostname // Use current hostname
             });
 
             this.isInitialized = true;
@@ -426,7 +442,6 @@ class GooglePopupAuth {
 let googlePopupAuth;
 document.addEventListener('DOMContentLoaded', () => {
     googlePopupAuth = new GooglePopupAuth();
+    // Export for global use
+    window.googlePopupAuth = googlePopupAuth;
 });
-
-// Export for global use
-window.googlePopupAuth = googlePopupAuth;

@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -70,37 +70,40 @@
 
     <!-- FOUC Prevention and Page Transition -->
     <script>
-        // Block Google Identity Services from loading
+        // Allow Google Identity Services for authentication
         (function() {
-            console.log('🚫 Blocking Google Identity Services...');
+            console.log('✅ Allowing Google Identity Services for authentication...');
             
-            // Override createElement to block Google Identity scripts
+            // Override createElement to block unwanted Google scripts but allow GSI
             const originalCreateElement = document.createElement;
             document.createElement = function(tagName) {
                 const element = originalCreateElement.call(this, tagName);
                 if (tagName.toLowerCase() === 'script') {
                     const originalSetAttribute = element.setAttribute;
                     element.setAttribute = function(name, value) {
-                        if (name === 'src' && value && (
-                            value.includes('accounts.google.com') || 
-                            value.includes('gsi') ||
-                            value.includes('identity') ||
-                            value.includes('client.js')
-                        )) {
-                            console.warn('🚫 Blocked Google Identity Services script:', value);
-                            return;
+                        if (name === 'src' && value) {
+                            // Allow Google Identity Services (GSI) for authentication
+                            if (value.includes('accounts.google.com/gsi/client')) {
+                                console.log('✅ Allowing Google Identity Services script:', value);
+                                return originalSetAttribute.call(this, name, value);
+                            }
+                            // Block other unwanted Google scripts (ads, analytics, etc.)
+                            else if (
+                                value.includes('googletagmanager.com') ||
+                                value.includes('google-analytics.com') ||
+                                value.includes('googlesyndication.com') ||
+                                value.includes('doubleclick.net') ||
+                                (value.includes('google.com') && !value.includes('accounts.google.com/gsi'))
+                            ) {
+                                console.warn('🚫 Blocked unwanted Google script:', value);
+                                return;
+                            }
                         }
                         return originalSetAttribute.call(this, name, value);
                     };
                 }
                 return element;
             };
-            
-            // Block any existing Google Identity Services
-            if (typeof window.google !== 'undefined' && window.google.accounts) {
-                console.warn('Disabling existing Google Identity Services');
-                window.google.accounts = undefined;
-            }
         })();
         
         // Prevent FOUC with improved font loading
