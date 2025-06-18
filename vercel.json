@@ -22,6 +22,10 @@
     {
       "source": "/test-oauth",
       "destination": "/test-google-oauth.html"
+    },
+    {
+      "source": "/clean-test",
+      "destination": "/clean-test.html"
     }
   ],
   "headers": [

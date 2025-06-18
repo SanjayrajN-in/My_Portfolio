@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -70,6 +70,39 @@
 
     <!-- FOUC Prevention and Page Transition -->
     <script>
+        // Block Google Identity Services from loading
+        (function() {
+            console.log('🚫 Blocking Google Identity Services...');
+            
+            // Override createElement to block Google Identity scripts
+            const originalCreateElement = document.createElement;
+            document.createElement = function(tagName) {
+                const element = originalCreateElement.call(this, tagName);
+                if (tagName.toLowerCase() === 'script') {
+                    const originalSetAttribute = element.setAttribute;
+                    element.setAttribute = function(name, value) {
+                        if (name === 'src' && value && (
+                            value.includes('accounts.google.com') || 
+                            value.includes('gsi') ||
+                            value.includes('identity') ||
+                            value.includes('client.js')
+                        )) {
+                            console.warn('🚫 Blocked Google Identity Services script:', value);
+                            return;
+                        }
+                        return originalSetAttribute.call(this, name, value);
+                    };
+                }
+                return element;
+            };
+            
+            // Block any existing Google Identity Services
+            if (typeof window.google !== 'undefined' && window.google.accounts) {
+                console.warn('Disabling existing Google Identity Services');
+                window.google.accounts = undefined;
+            }
+        })();
+        
         // Prevent FOUC with improved font loading
         document.documentElement.style.visibility='visible';
         document.documentElement.classList.add('loaded');

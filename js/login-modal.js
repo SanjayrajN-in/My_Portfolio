@@ -292,12 +292,53 @@ class LoginModal {
 
     setupManualGoogleAuth() {
         console.log('Setting up manual Google OAuth (no Google APIs)...');
+        
+        // Block any Google Identity Services from loading
+        this.blockGoogleIdentityServices();
+        
         // Ensure the Google button is visible and ready
         const googleBtn = document.getElementById('googleLoginBtn');
         if (googleBtn) {
             googleBtn.style.display = 'block';
             console.log('Google OAuth button ready');
         }
+    }
+    
+    blockGoogleIdentityServices() {
+        // Prevent Google Identity Services from loading
+        if (typeof window.google !== 'undefined') {
+            console.warn('Google APIs detected - attempting to disable Identity Services');
+            try {
+                if (window.google.accounts) {
+                    window.google.accounts = undefined;
+                }
+            } catch (e) {
+                console.log('Could not disable Google Identity Services:', e);
+            }
+        }
+        
+        // Block any future loading of Google Identity Services
+        const originalCreateElement = document.createElement;
+        document.createElement = function(tagName) {
+            const element = originalCreateElement.call(this, tagName);
+            if (tagName.toLowerCase() === 'script') {
+                const originalSetAttribute = element.setAttribute;
+                element.setAttribute = function(name, value) {
+                    if (name === 'src' && value && (
+                        value.includes('accounts.google.com') || 
+                        value.includes('gsi') ||
+                        value.includes('identity')
+                    )) {
+                        console.warn('🚫 Blocked Google Identity Services script:', value);
+                        return;
+                    }
+                    return originalSetAttribute.call(this, name, value);
+                };
+            }
+            return element;
+        };
+        
+        console.log('Google Identity Services blocking enabled');
     }
 
     handleGoogleLogin() {
