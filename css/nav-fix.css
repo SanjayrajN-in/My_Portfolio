@@ -529,13 +529,13 @@ body {
 
 /* Hamburger menu consistency */
 .hamburger {
-    display: none !important;
     background: transparent !important;
     border: none !important;
     cursor: pointer !important;
     padding: 10px !important;
     z-index: 1000001 !important;
     position: relative !important;
+    display: none; /* Hidden by default, shown on mobile */
 }
 
 .hamburger span {

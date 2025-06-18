@@ -2683,9 +2683,8 @@ function initTetris() {
         villains.forEach(villain => {
             if (!villain.active) return;
             
-            // Move villain with frame-rate independent movement
-            const frameMultiplier = deltaTime / 16.67;
-            villain.x += villain.dx * frameMultiplier;
+            // Move villain with fixed timestep
+            villain.x += villain.dx;
             
             // Bounce off walls
             if (villain.x <= 0 || villain.x + villain.width >= CANVAS_WIDTH) {
@@ -2722,10 +2721,9 @@ function initTetris() {
         projectiles.forEach(projectile => {
             if (!projectile.active) return;
             
-            // Move projectile with frame-rate independent movement
-            const frameMultiplier = deltaTime / 16.67;
-            projectile.x += projectile.dx * frameMultiplier;
-            projectile.y += projectile.dy * frameMultiplier;
+            // Move projectile with fixed timestep
+            projectile.x += projectile.dx;
+            projectile.y += projectile.dy;
             
             // Remove if off screen
             if (projectile.y < 0 || projectile.y > CANVAS_HEIGHT || 
@@ -2857,11 +2855,9 @@ function initTetris() {
             // Update spinning
             ball.spinning += ball.spinSpeed;
             
-            // Move ball with frame-rate independent movement
-            // deltaTime is in milliseconds, so we normalize to 60fps (16.67ms per frame)
-            const frameMultiplier = deltaTime / 16.67;
-            ball.x += ball.dx * frameMultiplier;
-            ball.y += ball.dy * frameMultiplier;
+            // Move ball with fixed timestep (deltaTime is now always 16.67ms)
+            ball.x += ball.dx;
+            ball.y += ball.dy;
             
             // Wall collisions
             if (ball.x - ball.radius <= 0 || ball.x + ball.radius >= CANVAS_WIDTH) {
@@ -2898,9 +2894,8 @@ function initTetris() {
     function updatePowerUps(deltaTime) {
         for (let i = powerUps.length - 1; i >= 0; i--) {
             const powerUp = powerUps[i];
-            const frameMultiplier = deltaTime / 16.67;
-            powerUp.y += powerUp.speed * frameMultiplier;
-            powerUp.rotation += powerUp.rotationSpeed * frameMultiplier;
+            powerUp.y += powerUp.speed;
+            powerUp.rotation += powerUp.rotationSpeed;
             
             // Remove if off screen
             if (powerUp.y > CANVAS_HEIGHT) {
@@ -4043,14 +4038,32 @@ function initTetris() {
         return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
     
-    // Game loop
+    // Game loop with consistent frame rate
+    const TARGET_FPS = 60;
+    const FRAME_TIME = 1000 / TARGET_FPS; // 16.67ms per frame
+    let accumulator = 0;
+    
     function gameLoop(currentTime = 0) {
+        // Initialize lastTime on first frame
+        if (lastTime === 0) {
+            lastTime = currentTime;
+        }
+        
         const deltaTime = currentTime - lastTime;
         lastTime = currentTime;
         
-        update(deltaTime);
-        render();
+        // Cap deltaTime to prevent spiral of death
+        const cappedDeltaTime = Math.min(deltaTime, 250); // Cap at 250ms (4fps minimum)
         
+        accumulator += cappedDeltaTime;
+        
+        // Fixed timestep updates
+        while (accumulator >= FRAME_TIME) {
+            update(FRAME_TIME);
+            accumulator -= FRAME_TIME;
+        }
+        
+        render();
         animationId = requestAnimationFrame(gameLoop);
     }
     
