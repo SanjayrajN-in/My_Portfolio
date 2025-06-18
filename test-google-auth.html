@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Auth Test - Sanjayraj Portfolio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #3367d6;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Google Authentication Test</h1>
+        <p>This page helps test your Google authentication setup.</p>
+
+        <div class="test-section">
+            <h3>1. Environment Check</h3>
+            <button class="test-button" onclick="checkEnvironment()">Check Environment</button>
+            <div id="envStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Google Identity Services Test</h3>
+            <button class="test-button" onclick="testGoogleIdentityServices()">Test GSI Loading</button>
+            <div id="gsiStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Popup Authentication Test</h3>
+            <button class="test-button" onclick="testPopupAuth()">Test Popup Login</button>
+            <div id="popupStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Backend API Test</h3>
+            <button class="test-button" onclick="testBackendAPI()">Test Backend</button>
+            <div id="backendStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. CORS Test</h3>
+            <button class="test-button" onclick="testCORS()">Test CORS</button>
+            <div id="corsStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Debug Log</h3>
+            <button class="test-button" onclick="clearLog()">Clear Log</button>
+            <div id="debugLog" class="log"></div>
+        </div>
+    </div>
+
+    <script src="js/google-popup-auth.js"></script>
+    <script>
+        let debugLog = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.push(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
+            updateDebugLog();
+            console.log(`[Google Auth Test] ${message}`);
+        }
+
+        function updateDebugLog() {
+            document.getElementById('debugLog').innerHTML = debugLog.join('\n');
+            document.getElementById('debugLog').scrollTop = document.getElementById('debugLog').scrollHeight;
+        }
+
+        function clearLog() {
+            debugLog = [];
+            updateDebugLog();
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function checkEnvironment() {
+            log('Checking environment...');
+            
+            const checks = {
+                'Current URL': window.location.href,
+                'Origin': window.location.origin,
+                'Protocol': window.location.protocol,
+                'User Agent': navigator.userAgent.substring(0, 100) + '...',
+                'Cookies Enabled': navigator.cookieEnabled,
+                'Local Storage': typeof(Storage) !== "undefined",
+                'Fetch API': typeof(fetch) !== "undefined"
+            };
+
+            let statusHTML = '<h4>Environment Status:</h4>';
+            for (const [key, value] of Object.entries(checks)) {
+                statusHTML += `<p><strong>${key}:</strong> ${value}</p>`;
+                log(`${key}: ${value}`);
+            }
+
+            showStatus('envStatus', statusHTML, 'info');
+        }
+
+        async function testGoogleIdentityServices() {
+            log('Testing Google Identity Services...');
+            
+            try {
+                // Check if GSI script is loaded
+                if (window.google && window.google.accounts && window.google.accounts.id) {
+                    log('Google Identity Services already loaded');
+                    showStatus('gsiStatus', 'Google Identity Services is loaded and available', 'success');
+                } else {
+                    log('Loading Google Identity Services...');
+                    
+                    // Load GSI script
+                    const script = document.createElement('script');
+                    script.src = 'https://accounts.google.com/gsi/client';
+                    script.async = true;
+                    
+                    script.onload = () => {
+                        log('Google Identity Services loaded successfully');
+                        showStatus('gsiStatus', 'Google Identity Services loaded successfully', 'success');
+                    };
+                    
+                    script.onerror = () => {
+                        log('Failed to load Google Identity Services', 'error');
+                        showStatus('gsiStatus', 'Failed to load Google Identity Services', 'error');
+                    };
+                    
+                    document.head.appendChild(script);
+                }
+            } catch (error) {
+                log(`GSI test error: ${error.message}`, 'error');
+                showStatus('gsiStatus', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function testPopupAuth() {
+            log('Testing popup authentication...');
+            
+            if (window.googlePopupAuth) {
+                log('Google Popup Auth is available');
+                showStatus('popupStatus', 'Google Popup Auth is available. Click to test login.', 'success');
+                
+                // Test the login (this will actually trigger the popup)
+                try {
+                    window.googlePopupAuth.login();
+                    log('Popup login triggered');
+                } catch (error) {
+                    log(`Popup login error: ${error.message}`, 'error');
+                    showStatus('popupStatus', `Popup login error: ${error.message}`, 'error');
+                }
+            } else {
+                log('Google Popup Auth not available', 'error');
+                showStatus('popupStatus', 'Google Popup Auth not available', 'error');
+            }
+        }
+
+        async function testBackendAPI() {
+            log('Testing backend API...');
+            
+            try {
+                const response = await fetch('/api/auth/google', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+
+                log(`Backend OPTIONS response: ${response.status}`);
+                
+                if (response.ok) {
+                    const headers = {};
+                    for (let [key, value] of response.headers.entries()) {
+                        headers[key] = value;
+                    }
+                    
+                    log(`Response headers: ${JSON.stringify(headers, null, 2)}`);
+                    showStatus('backendStatus', 'Backend API is responding correctly', 'success');
+                } else {
+                    log(`Backend API error: ${response.status} ${response.statusText}`, 'error');
+                    showStatus('backendStatus', `Backend API error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`Backend API test error: ${error.message}`, 'error');
+                showStatus('backendStatus', `Backend API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCORS() {
+            log('Testing CORS configuration...');
+            
+            try {
+                const response = await fetch('/api/auth/google', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ test: true })
+                });
+
+                log(`CORS test response: ${response.status}`);
+                
+                const corsHeaders = [
+                    'access-control-allow-origin',
+                    'access-control-allow-credentials',
+                    'access-control-allow-methods',
+                    'access-control-allow-headers'
+                ];
+
+                let corsInfo = '<h4>CORS Headers:</h4>';
+                corsHeaders.forEach(header => {
+                    const value = response.headers.get(header);
+                    corsInfo += `<p><strong>${header}:</strong> ${value || 'Not set'}</p>`;
+                    log(`${header}: ${value || 'Not set'}`);
+                });
+
+                showStatus('corsStatus', corsInfo, 'info');
+            } catch (error) {
+                log(`CORS test error: ${error.message}`, 'error');
+                showStatus('corsStatus', `CORS test error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run environment check on load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Google Auth Test page loaded');
+            checkEnvironment();
+        });
+    </script>
+</body>
+</html>

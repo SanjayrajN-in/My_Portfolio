@@ -34,7 +34,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, X-Requested-With, Accept"
+          "value": "Content-Type, Authorization, X-Requested-With, Accept, Cache-Control"
         },
         {
           "key": "Access-Control-Allow-Credentials",
@@ -46,7 +46,7 @@
         },
         {
           "key": "Vary",
-          "value": "Origin"
+          "value": "Origin, Access-Control-Request-Headers"
         },
         {
           "key": "Cross-Origin-Opener-Policy",

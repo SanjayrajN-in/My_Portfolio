@@ -284,7 +284,20 @@ class LoginModal {
     }
 
     handleGoogleLogin() {
-        console.log('Google login button clicked - starting OAuth flow');
+        console.log('Google login button clicked - starting popup flow');
+        
+        // Check if Google Popup Auth is available
+        if (window.googlePopupAuth) {
+            console.log('Using Google Popup Auth');
+            window.googlePopupAuth.login();
+        } else {
+            console.log('Google Popup Auth not available, falling back to redirect');
+            this.fallbackGoogleLogin();
+        }
+    }
+
+    fallbackGoogleLogin() {
+        console.log('Using fallback Google OAuth redirect flow');
         
         // Your Google Client ID (make sure this matches your Google Cloud Console)
         const clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';

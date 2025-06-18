@@ -4,11 +4,12 @@ const { OAuth2Client } = require('google-auth-library');
 const connectDB = require('../config/database');
 
 module.exports = async (req, res) => {
-    // Set comprehensive CORS headers
+    // Set comprehensive CORS headers for popup mode
     const allowedOrigins = [
         'https://sanjayrajn.vercel.app',
         'http://localhost:3000',
-        'http://127.0.0.1:3000'
+        'http://127.0.0.1:3000',
+        'https://accounts.google.com' // Allow Google's domain for popup
     ];
     
     const origin = req.headers.origin;
@@ -19,12 +20,14 @@ module.exports = async (req, res) => {
     }
     
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Cache-Control');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
-    res.setHeader('Vary', 'Origin'); // Important for FedCM
+    res.setHeader('Vary', 'Origin, Access-Control-Request-Headers'); // Important for FedCM and popup
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups'); // For popup auth
     res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none'); // Allow embedding
+    res.setHeader('X-Content-Type-Options', 'nosniff'); // Security header
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Prevent caching
     
     // Handle preflight requests
     if (req.method === 'OPTIONS') {
@@ -57,7 +60,15 @@ module.exports = async (req, res) => {
             }
         });
         
-        const { credential, code, redirect_uri } = req.body;
+        const { credential, code, redirect_uri, popup_mode } = req.body;
+        
+        console.log('Request details:', {
+            hasCredential: !!credential,
+            hasCode: !!code,
+            redirectUri: redirect_uri,
+            isPopupMode: popup_mode,
+            userAgent: req.headers['user-agent']?.substring(0, 100)
+        });
         
         // Validate required environment variables
         if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
