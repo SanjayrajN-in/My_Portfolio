@@ -2,30 +2,50 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/auth/*.js",
-      "use": "@vercel/node"
+      "src": "*.html",
+      "use": "@vercel/static"
     },
     {
-      "src": "api/contact/*.js",
-      "use": "@vercel/node"
+      "src": "pages/*.html",
+      "use": "@vercel/static"
     },
     {
-      "src": "api/users/*.js",
-      "use": "@vercel/node"
+      "src": "css/*",
+      "use": "@vercel/static"
     },
     {
-      "src": "api/test.js",
+      "src": "js/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "images/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "audio/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "auth/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/**/*.js",
       "use": "@vercel/node"
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
-      "source": "/auth/google/callback",
-      "destination": "/auth/google/callback.html"
+      "src": "/auth/google/callback",
+      "dest": "/auth/google/callback.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
     }
   ],
   "headers": [
