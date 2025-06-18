@@ -19,9 +19,12 @@ module.exports = async (req, res) => {
     }
     
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+    res.setHeader('Vary', 'Origin'); // Important for FedCM
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups'); // For popup auth
+    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none'); // Allow embedding
     
     // Handle preflight requests
     if (req.method === 'OPTIONS') {

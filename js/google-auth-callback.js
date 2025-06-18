@@ -42,7 +42,10 @@ class GoogleAuthCallback {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'include', // Include credentials for CORS
                 body: JSON.stringify({ 
                     code: code,
                     redirect_uri: 'https://sanjayrajn.vercel.app/auth/google/callback'
@@ -54,9 +57,12 @@ class GoogleAuthCallback {
             if (result.success) {
                 this.showMessage('Login successful! Welcome back.', 'success');
                 
-                // Store user data if needed
+                // Store user data and token
                 if (result.user) {
                     localStorage.setItem('user', JSON.stringify(result.user));
+                }
+                if (result.token) {
+                    localStorage.setItem('token', result.token);
                 }
 
                 // Redirect to home page after a short delay

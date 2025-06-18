@@ -6,14 +6,19 @@ class AuthSystem {
     }
 
     init() {
-        // Check if user is logged in
-        const userData = localStorage.getItem('currentUser');
+        // Check if user is logged in (support both old and new format)
+        const userData = localStorage.getItem('currentUser') || localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+        
         if (userData) {
             this.currentUser = JSON.parse(userData);
+            // If we have a token, this is a Google-authenticated user
+            if (token) {
+                this.currentUser.isGoogleAuth = true;
+                this.currentUser.token = token;
+            }
             this.updateUI();
         }
-
-        // Login page no longer exists - using modal system
 
         // Initialize profile page if on profile page
         if (window.location.pathname.includes('profile.html')) {
@@ -122,6 +127,8 @@ class AuthSystem {
     logout() {
         this.currentUser = null;
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('user'); // Remove Google auth user data
+        localStorage.removeItem('token'); // Remove Google auth token
         
         // Redirect to home page
         if (window.location.pathname.includes('profile.html')) {

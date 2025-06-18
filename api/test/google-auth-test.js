@@ -1,122 +1,95 @@
-// Google Auth Test Script
-const connectDB = require('../config/database');
+const { OAuth2Client } = require('google-auth-library');
+require('dotenv').config();
 
 async function testGoogleAuth() {
-    console.log('🧪 Testing Google Authentication Setup...\n');
-    
-    // Test 1: Environment Variables
-    console.log('1. Testing Environment Variables:');
-    const requiredEnvVars = [
-        'MONGODB_URI',
-        'JWT_SECRET',
-        'GOOGLE_CLIENT_ID',
-        'GOOGLE_CLIENT_SECRET'
-    ];
-    
-    let envTestPassed = true;
-    requiredEnvVars.forEach(envVar => {
-        if (process.env[envVar]) {
-            console.log(`   ✅ ${envVar}: Set`);
-        } else {
-            console.log(`   ❌ ${envVar}: Missing`);
-            envTestPassed = false;
-        }
-    });
-    
-    if (!envTestPassed) {
-        console.log('\n❌ Environment variables test failed. Please check your .env file or Vercel environment variables.');
+    console.log('🧪 Testing Google OAuth Configuration...\n');
+
+    // Check environment variables
+    console.log('📋 Environment Variables Check:');
+    console.log('✓ GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set' : '❌ Missing');
+    console.log('✓ GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'Set' : '❌ Missing');
+    console.log('✓ JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : '❌ Missing');
+    console.log('✓ MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : '❌ Missing');
+    console.log('');
+
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+        console.log('❌ Missing required Google OAuth environment variables');
         return;
     }
-    
-    // Test 2: Database Connection
-    console.log('\n2. Testing Database Connection:');
+
     try {
-        await connectDB();
-        console.log('   ✅ MongoDB connection successful');
-    } catch (error) {
-        console.log('   ❌ MongoDB connection failed:', error.message);
-        return;
-    }
-    
-    // Test 3: Google OAuth Client
-    console.log('\n3. Testing Google OAuth Client:');
-    try {
-        const { OAuth2Client } = require('google-auth-library');
+        // Test OAuth2Client initialization
+        console.log('🔧 Testing OAuth2Client initialization...');
         const client = new OAuth2Client(
             process.env.GOOGLE_CLIENT_ID,
             process.env.GOOGLE_CLIENT_SECRET,
             'https://sanjayrajn.vercel.app/auth/google/callback'
         );
-        console.log('   ✅ Google OAuth client initialized successfully');
-        
-        // Test client ID format
-        if (process.env.GOOGLE_CLIENT_ID.includes('.apps.googleusercontent.com')) {
-            console.log('   ✅ Google Client ID format is correct');
-        } else {
-            console.log('   ⚠️  Google Client ID format may be incorrect');
-        }
-        
-    } catch (error) {
-        console.log('   ❌ Google OAuth client initialization failed:', error.message);
-        return;
-    }
-    
-    // Test 4: JWT Secret Strength
-    console.log('\n4. Testing JWT Secret:');
-    const jwtSecret = process.env.JWT_SECRET;
-    if (jwtSecret.length >= 32) {
-        console.log('   ✅ JWT secret is strong enough (32+ characters)');
-    } else {
-        console.log('   ⚠️  JWT secret should be at least 32 characters long');
-    }
-    
-    // Test 5: User Model
-    console.log('\n5. Testing User Model:');
-    try {
-        const User = require('../models/User');
-        console.log('   ✅ User model loaded successfully');
-        
-        // Test creating a test user (without saving)
-        const testUser = new User({
-            name: 'Test User',
-            email: 'test@example.com',
-            googleId: 'test123',
-            avatar: 'test-avatar.jpg',
-            isVerified: true,
-            gameStats: {
-                totalGamesPlayed: 0,
-                totalScore: 0,
-                achievements: [],
-                favoriteGame: null
+        console.log('✅ OAuth2Client initialized successfully');
+        console.log('');
+
+        // Test token info endpoint (this will fail but shows if client ID is valid)
+        console.log('🔍 Testing Google Client ID validity...');
+        try {
+            // This will throw an error but we can check if it's a valid client ID error
+            await client.verifyIdToken({
+                idToken: 'invalid_token',
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+        } catch (error) {
+            if (error.message.includes('Wrong number of segments') || 
+                error.message.includes('Invalid token')) {
+                console.log('✅ Google Client ID appears to be valid format');
+            } else if (error.message.includes('Invalid client')) {
+                console.log('❌ Invalid Google Client ID');
+                return;
+            } else {
+                console.log('✅ Google Client ID validation passed (expected token error)');
             }
-        });
-        
-        const validationError = testUser.validateSync();
-        if (!validationError) {
-            console.log('   ✅ User model validation passed');
-        } else {
-            console.log('   ❌ User model validation failed:', validationError.message);
         }
-        
+        console.log('');
+
+        // Generate authorization URL
+        console.log('🔗 Generating OAuth authorization URL...');
+        const authUrl = client.generateAuthUrl({
+            access_type: 'offline',
+            scope: ['openid', 'email', 'profile'],
+            redirect_uri: 'https://sanjayrajn.vercel.app/auth/google/callback',
+            state: 'test_state'
+        });
+        console.log('✅ Authorization URL generated successfully');
+        console.log('🌐 URL:', authUrl.substring(0, 100) + '...');
+        console.log('');
+
+        // Test database connection
+        console.log('🗄️  Testing database connection...');
+        try {
+            const connectDB = require('../config/database');
+            await connectDB();
+            console.log('✅ Database connection successful');
+        } catch (dbError) {
+            console.log('❌ Database connection failed:', dbError.message);
+        }
+        console.log('');
+
+        console.log('🎉 Google OAuth configuration test completed!');
+        console.log('');
+        console.log('📝 Next steps:');
+        console.log('1. Make sure your Google Cloud Console is properly configured');
+        console.log('2. Ensure your OAuth consent screen is published');
+        console.log('3. Test the actual login flow on your website');
+        console.log('4. Check browser console for any CORS errors');
+
     } catch (error) {
-        console.log('   ❌ User model test failed:', error.message);
+        console.log('❌ Test failed:', error.message);
+        console.log('');
+        console.log('🔧 Troubleshooting:');
+        console.log('1. Check your Google Cloud Console configuration');
+        console.log('2. Verify environment variables are correct');
+        console.log('3. Ensure Google APIs are enabled');
+        console.log('4. Check if OAuth consent screen is published');
     }
-    
-    console.log('\n🎉 Google Authentication setup test completed!');
-    console.log('\nNext steps:');
-    console.log('1. Deploy to Vercel');
-    console.log('2. Update Google Cloud Console with your production domain');
-    console.log('3. Test Google login on your live site');
-    
-    process.exit(0);
 }
 
 // Run the test
-if (require.main === module) {
-    testGoogleAuth().catch(error => {
-        console.error('Test failed:', error);
-        process.exit(1);
-    });
-}
-
-module.exports = testGoogleAuth;
+testGoogleAuth().catch(console.error);

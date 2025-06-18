@@ -63,7 +63,10 @@ class GoogleModernAuth {
             callback: (response) => this.handleCredentialResponse(response),
             auto_select: false,
             cancel_on_tap_outside: true,
-            use_fedcm_for_prompt: false // Disable FedCM to avoid errors
+            use_fedcm_for_prompt: false, // Disable FedCM to avoid errors
+            itp_support: true, // Enable Intelligent Tracking Prevention support
+            ux_mode: 'popup', // Use popup mode for better compatibility
+            context: 'signin' // Specify context for better UX
         });
 
         this.isInitialized = true;
@@ -82,7 +85,10 @@ class GoogleModernAuth {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'include', // Include credentials for CORS
                 body: JSON.stringify({ 
                     credential: response.credential
                 })
