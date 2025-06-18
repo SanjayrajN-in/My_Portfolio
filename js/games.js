@@ -2683,8 +2683,9 @@ function initTetris() {
         villains.forEach(villain => {
             if (!villain.active) return;
             
-            // Move villain
-            villain.x += villain.dx;
+            // Move villain with frame-rate independent movement
+            const frameMultiplier = deltaTime / 16.67;
+            villain.x += villain.dx * frameMultiplier;
             
             // Bounce off walls
             if (villain.x <= 0 || villain.x + villain.width >= CANVAS_WIDTH) {
@@ -2721,9 +2722,10 @@ function initTetris() {
         projectiles.forEach(projectile => {
             if (!projectile.active) return;
             
-            // Move projectile
-            projectile.x += projectile.dx;
-            projectile.y += projectile.dy;
+            // Move projectile with frame-rate independent movement
+            const frameMultiplier = deltaTime / 16.67;
+            projectile.x += projectile.dx * frameMultiplier;
+            projectile.y += projectile.dy * frameMultiplier;
             
             // Remove if off screen
             if (projectile.y < 0 || projectile.y > CANVAS_HEIGHT || 
@@ -2855,9 +2857,11 @@ function initTetris() {
             // Update spinning
             ball.spinning += ball.spinSpeed;
             
-            // Move ball
-            ball.x += ball.dx;
-            ball.y += ball.dy;
+            // Move ball with frame-rate independent movement
+            // deltaTime is in milliseconds, so we normalize to 60fps (16.67ms per frame)
+            const frameMultiplier = deltaTime / 16.67;
+            ball.x += ball.dx * frameMultiplier;
+            ball.y += ball.dy * frameMultiplier;
             
             // Wall collisions
             if (ball.x - ball.radius <= 0 || ball.x + ball.radius >= CANVAS_WIDTH) {
@@ -2894,8 +2898,9 @@ function initTetris() {
     function updatePowerUps(deltaTime) {
         for (let i = powerUps.length - 1; i >= 0; i--) {
             const powerUp = powerUps[i];
-            powerUp.y += powerUp.speed;
-            powerUp.rotation += powerUp.rotationSpeed;
+            const frameMultiplier = deltaTime / 16.67;
+            powerUp.y += powerUp.speed * frameMultiplier;
+            powerUp.rotation += powerUp.rotationSpeed * frameMultiplier;
             
             // Remove if off screen
             if (powerUp.y > CANVAS_HEIGHT) {
