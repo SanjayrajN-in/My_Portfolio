@@ -4,11 +4,12 @@
   "description": "Portfolio website of Sanjayraj N - Electrical & Electronics Engineer",
   "main": "index.html",
   "scripts": {
-    "start": "node server.js",
-    "dev": "live-server",
-    "build": "echo 'Build process completed'"
+    "dev": "vercel dev",
+    "build": "echo 'Static build completed'",
+    "start": "vercel dev",
+    "deploy": "vercel --prod"
   },
-  "keywords": ["portfolio", "electrical", "electronics", "engineer"],
+  "keywords": ["portfolio", "electrical", "electronics", "engineer", "vercel"],
   "author": "Sanjayraj N",
   "license": "MIT",
   "dependencies": {
@@ -23,6 +24,9 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "live-server": "^1.2.2"
+    "vercel": "^32.0.0"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
