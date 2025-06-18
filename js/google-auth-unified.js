@@ -241,6 +241,7 @@ class GoogleAuthUnified {
             }
 
             console.log('📤 Sending credential to backend...');
+            console.log('🌐 API URL:', `${window.location.origin}/api/auth/google`);
 
             // Send credential to backend
             const result = await fetch('/api/auth/google', {
@@ -258,9 +259,19 @@ class GoogleAuthUnified {
                 })
             });
 
+            console.log('📨 Response status:', result.status);
+            console.log('📨 Response headers:', Object.fromEntries(result.headers.entries()));
+
             if (!result.ok) {
                 const errorText = await result.text();
                 console.error('❌ Backend response not ok:', result.status, errorText);
+                
+                // Check if it's a 404 - API not found
+                if (result.status === 404) {
+                    console.error('🚨 API endpoint not found! Check Vercel deployment.');
+                    throw new Error('Google login service is not available. Please try again later.');
+                }
+                
                 throw new Error(`Server error: ${result.status} - ${errorText}`);
             }
 
