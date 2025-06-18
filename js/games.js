@@ -2683,8 +2683,8 @@ function initTetris() {
         villains.forEach(villain => {
             if (!villain.active) return;
             
-            // Move villain with fixed timestep
-            villain.x += villain.dx;
+            // Move villain with fixed timestep and mobile adjustment
+            villain.x += villain.dx * mobileSpeedFactor;
             
             // Bounce off walls
             if (villain.x <= 0 || villain.x + villain.width >= CANVAS_WIDTH) {
@@ -2721,9 +2721,9 @@ function initTetris() {
         projectiles.forEach(projectile => {
             if (!projectile.active) return;
             
-            // Move projectile with fixed timestep
-            projectile.x += projectile.dx;
-            projectile.y += projectile.dy;
+            // Move projectile with fixed timestep and mobile adjustment
+            projectile.x += projectile.dx * mobileSpeedFactor;
+            projectile.y += projectile.dy * mobileSpeedFactor;
             
             // Remove if off screen
             if (projectile.y < 0 || projectile.y > CANVAS_HEIGHT || 
@@ -2855,9 +2855,9 @@ function initTetris() {
             // Update spinning
             ball.spinning += ball.spinSpeed;
             
-            // Move ball with fixed timestep (deltaTime is now always 16.67ms)
-            ball.x += ball.dx;
-            ball.y += ball.dy;
+            // Move ball with fixed timestep and mobile adjustment
+            ball.x += ball.dx * mobileSpeedFactor;
+            ball.y += ball.dy * mobileSpeedFactor;
             
             // Wall collisions
             if (ball.x - ball.radius <= 0 || ball.x + ball.radius >= CANVAS_WIDTH) {
@@ -2894,7 +2894,7 @@ function initTetris() {
     function updatePowerUps(deltaTime) {
         for (let i = powerUps.length - 1; i >= 0; i--) {
             const powerUp = powerUps[i];
-            powerUp.y += powerUp.speed;
+            powerUp.y += powerUp.speed * mobileSpeedFactor;
             powerUp.rotation += powerUp.rotationSpeed;
             
             // Remove if off screen
@@ -4038,10 +4038,19 @@ function initTetris() {
         return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
     
-    // Game loop with consistent frame rate
+    // Game loop with device-aware frame rate
     const TARGET_FPS = 60;
     const FRAME_TIME = 1000 / TARGET_FPS; // 16.67ms per frame
     let accumulator = 0;
+    
+    // Detect mobile device and adjust speed accordingly
+    const isMobileDevice = isMobile() || ('ontouchstart' in window);
+    
+    // Mobile speed adjustment factor (reduce speed on mobile)
+    const mobileSpeedFactor = isMobileDevice ? 0.7 : 1.0;
+    
+    // Debug log
+    console.log('Brick Breaker - Mobile detected:', isMobileDevice, 'Speed factor:', mobileSpeedFactor);
     
     function gameLoop(currentTime = 0) {
         // Initialize lastTime on first frame

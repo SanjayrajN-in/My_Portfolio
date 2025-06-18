@@ -527,8 +527,11 @@ body {
     100% { opacity: 1; }
 }
 
-/* Hamburger menu consistency */
-.hamburger {
+/* Hamburger menu consistency - ensure it's available on all pages */
+.hamburger,
+body.dark-theme .hamburger,
+body.subpage .hamburger,
+body:not(.subpage) .hamburger {
     background: transparent !important;
     border: none !important;
     cursor: pointer !important;
@@ -686,8 +689,16 @@ body.menu-open {
 
 /* Mobile menu consistency */
 @media (max-width: 992px) {
-    .hamburger {
+    .hamburger,
+    header .hamburger,
+    .nav-container .hamburger,
+    body.dark-theme .hamburger,
+    body.subpage .hamburger,
+    body:not(.subpage) .hamburger {
         display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
     }
     
     .nav-links {
