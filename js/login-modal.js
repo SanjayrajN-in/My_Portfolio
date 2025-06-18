@@ -284,14 +284,17 @@ class LoginModal {
     }
 
     handleGoogleLogin() {
-        console.log('Google login button clicked - starting popup flow');
+        console.log('🔐 Google login button clicked');
         
-        // Check if Google Popup Auth is available
-        if (window.googlePopupAuth) {
-            console.log('Using Google Popup Auth');
+        // Check if unified Google Auth is available
+        if (window.googleAuth) {
+            console.log('✅ Using Unified Google Auth');
+            window.googleAuth.login();
+        } else if (window.googlePopupAuth) {
+            console.log('🔄 Using fallback Google Auth');
             window.googlePopupAuth.login();
         } else {
-            console.log('Google Popup Auth not available, falling back to redirect');
+            console.log('❌ Google Auth not available, using redirect fallback');
             this.fallbackGoogleLogin();
         }
     }
