@@ -13,10 +13,7 @@ class AuthSystem {
             this.updateUI();
         }
 
-        // Initialize forms if on login page
-        if (window.location.pathname.includes('login.html')) {
-            this.initLoginPage();
-        }
+        // Login page no longer exists - using modal system
 
         // Initialize profile page if on profile page
         if (window.location.pathname.includes('profile.html')) {
@@ -27,34 +24,10 @@ class AuthSystem {
         this.updateNavigation();
     }
 
-    initLoginPage() {
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-
-        if (loginForm) {
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleLogin(e);
-            });
-        }
-
-        if (registerForm) {
-            registerForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleRegister(e);
-            });
-        }
-
-        // If user is already logged in, redirect to home
-        if (this.currentUser) {
-            window.location.href = '../index.html';
-        }
-    }
-
     initProfilePage() {
-        // If user is not logged in, redirect to login
+        // If user is not logged in, redirect to home and show login modal
         if (!this.currentUser) {
-            window.location.href = 'login.html';
+            window.location.href = '../index.html';
             return;
         }
 
@@ -582,9 +555,8 @@ function protectProfilePage() {
     // Check authentication after a short delay
     setTimeout(() => {
         if (!authSystem.currentUser) {
-            // Not logged in - redirect to login
-            const loginUrl = 'login.html';
-            window.location.href = loginUrl;
+            // Not logged in - redirect to home
+            window.location.href = '../index.html';
         } else {
             // Logged in - hide auth check and load profile
             if (authCheck) {
@@ -602,7 +574,7 @@ function protectProfilePage() {
 if (window.location.pathname.includes('profile.html')) {
     // Immediate check - don't wait for DOM if user is not logged in
     if (!localStorage.getItem('currentUser')) {
-        window.location.href = 'login.html';
+        window.location.href = '../index.html';
     } else {
         document.addEventListener('DOMContentLoaded', protectProfilePage);
     }
