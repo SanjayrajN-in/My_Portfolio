@@ -14,9 +14,9 @@ class LoginModal {
         this.createModal();
         console.log('Modal HTML created');
         
-        // Initialize Google Sign-In
-        this.initGoogleSignIn();
-        console.log('Google Sign-In initialization started');
+        // Setup manual Google OAuth (no Google APIs loaded)
+        this.setupManualGoogleAuth();
+        console.log('Manual Google OAuth setup completed');
         
         // Bind events
         this.bindEvents();
@@ -290,143 +290,13 @@ class LoginModal {
         }
     }
 
-    initGoogleSignIn() {
-        console.log('=== Google Sign-In Initialization ===');
-        console.log('Current URL:', window.location.href);
-        console.log('Current origin:', window.location.origin);
-        console.log('Current hostname:', window.location.hostname);
-        
-        // Always use manual OAuth flow to avoid FedCM/CORS issues
-        console.log('Using manual OAuth flow to avoid FedCM/CORS issues');
-        this.showFallbackGoogleButton();
-        this.setupManualGoogleAuth();
-    }
-
     setupManualGoogleAuth() {
-        console.log('Setting up manual Google OAuth...');
-        // The fallback button will handle the OAuth flow manually
-        // This avoids all FedCM and CORS issues
-    }
-
-    setupGoogleSignIn() {
-        console.log('Setting up Google Sign-In...');
-        console.log('Current domain:', window.location.hostname);
-        console.log('Current origin:', window.location.origin);
-        
-        if (window.google && window.google.accounts) {
-            try {
-                console.log('Initializing Google Sign-In...');
-                window.google.accounts.id.initialize({
-                    client_id: '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com',
-                    callback: (response) => this.handleGoogleSignInResponse(response),
-                    auto_select: false,
-                    cancel_on_tap_outside: true,
-                    use_fedcm_for_prompt: false, // Disable FedCM to avoid CORS issues
-                    ux_mode: 'popup', // Use popup mode for better compatibility
-                    context: 'signin'
-                });
-
-                console.log('Google Sign-In initialized successfully');
-                // Render the Google Sign-In button
-                this.renderGoogleButton();
-            } catch (error) {
-                console.error('Google Sign-In setup error:', error);
-                
-                // Check if it's a domain authorization error
-                if (error.message && error.message.includes('origin')) {
-                    console.error('Domain authorization error - please check Google Cloud Console OAuth settings');
-                    this.showMessage('Google Sign-In is not configured for this domain. Please use email login.', 'info');
-                }
-                
-                // Show fallback message
-                this.showFallbackGoogleButton();
-            }
-        } else {
-            console.log('Google API not ready, retrying...');
-            // Retry after a short delay
-            setTimeout(() => this.setupGoogleSignIn(), 500);
-        }
-    }
-
-    renderGoogleButton() {
-        console.log('Attempting to render Google button...');
+        console.log('Setting up manual Google OAuth (no Google APIs)...');
+        // Ensure the Google button is visible and ready
         const googleBtn = document.getElementById('googleLoginBtn');
-        console.log('Google button element found:', !!googleBtn);
-        console.log('Google API available:', !!(window.google && window.google.accounts));
-        
-        if (googleBtn && window.google && window.google.accounts) {
-            console.log('Rendering official Google button...');
-            // Check if Google button container already exists
-            let googleContainer = document.getElementById('googleSignInButton');
-            if (!googleContainer) {
-                // Hide the custom button and render Google's button
-                googleBtn.style.display = 'none';
-                
-                // Create container for Google button
-                googleContainer = document.createElement('div');
-                googleContainer.id = 'googleSignInButton';
-                googleContainer.style.marginBottom = '16px';
-                googleBtn.parentNode.insertBefore(googleContainer, googleBtn);
-                console.log('Created Google button container');
-            }
-
-            try {
-                // Clear any existing content
-                googleContainer.innerHTML = '';
-                
-                // Add a small delay to ensure DOM is ready
-                setTimeout(() => {
-                    try {
-                        window.google.accounts.id.renderButton(
-                            googleContainer,
-                            {
-                                theme: 'outline',
-                                size: 'large',
-                                width: 320,
-                                text: 'continue_with',
-                                shape: 'rectangular',
-                                logo_alignment: 'left',
-                                type: 'standard'
-                            }
-                        );
-                        console.log('Google button rendered successfully');
-                    } catch (renderError) {
-                        console.error('Error rendering Google button:', renderError);
-                        this.showFallbackGoogleButton();
-                    }
-                }, 50);
-                
-            } catch (error) {
-                console.error('Error setting up Google button:', error);
-                // Fallback to custom button
-                this.showFallbackGoogleButton();
-            }
-        } else {
-            console.log('Using fallback Google button');
-            this.showFallbackGoogleButton();
-        }
-    }
-
-    showFallbackGoogleButton() {
-        console.log('Showing fallback Google button...');
-        const googleBtn = document.getElementById('googleLoginBtn');
-        const googleContainer = document.getElementById('googleSignInButton');
-        
-        if (googleContainer) {
-            googleContainer.remove();
-            console.log('Removed Google container');
-        }
-        
         if (googleBtn) {
             googleBtn.style.display = 'block';
-            console.log('Fallback Google button is now visible');
-            // Update the button text to indicate it might have issues
-            const buttonText = googleBtn.querySelector('span');
-            if (buttonText) {
-                buttonText.textContent = 'Continue with Google';
-            }
-        } else {
-            console.error('Could not find Google login button element!');
+            console.log('Google OAuth button ready');
         }
     }
 
@@ -475,63 +345,7 @@ class LoginModal {
                Math.random().toString(36).substring(2, 15);
     }
 
-    async handleGoogleSignInResponse(response) {
-        try {
-            this.setLoading(true);
-            this.clearMessage();
-            
-            console.log('Google sign-in response received:', response);
 
-            // Parse the JWT token to get user information
-            const userInfo = this.parseJWT(response.credential);
-            
-            if (!userInfo) {
-                throw new Error('Failed to parse Google user information');
-            }
-
-            console.log('Parsed user info:', userInfo);
-
-            // Create user object for our auth system
-            const googleUserInfo = {
-                googleId: userInfo.sub,
-                name: userInfo.name,
-                email: userInfo.email,
-                picture: userInfo.picture
-            };
-
-            // Use our local auth system for Google login
-            const result = authSystem.loginWithGoogle(googleUserInfo);
-
-            if (result.success) {
-                this.showMessage('Google login successful! Welcome.', 'success');
-                setTimeout(() => {
-                    this.close();
-                    window.location.reload();
-                }, 1500);
-            } else {
-                this.showMessage(result.message || 'Google login failed');
-            }
-        } catch (error) {
-            console.error('Google login error:', error);
-            this.showMessage(`Google login failed: ${error.message || 'Please try again.'}`);
-        } finally {
-            this.setLoading(false);
-        }
-    }
-
-    parseJWT(token) {
-        try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        } catch (error) {
-            console.error('JWT parsing error:', error);
-            return null;
-        }
-    }
 }
 
 // Global password toggle function
