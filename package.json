@@ -7,7 +7,8 @@
     "dev": "vercel dev",
     "build": "echo 'Static build completed'",
     "start": "vercel dev",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "test:auth": "node api/test/google-auth-test.js"
   },
   "keywords": [
     "portfolio",

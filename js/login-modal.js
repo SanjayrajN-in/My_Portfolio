@@ -14,9 +14,9 @@ class LoginModal {
         this.createModal();
         console.log('Modal HTML created');
         
-        // Setup manual Google OAuth (no Google APIs loaded)
-        this.setupManualGoogleAuth();
-        console.log('Manual Google OAuth setup completed');
+        // Setup Google OAuth
+        this.setupGoogleAuth();
+        console.log('Google OAuth setup completed');
         
         // Bind events
         this.bindEvents();
@@ -147,12 +147,6 @@ class LoginModal {
         this.overlay.classList.add('active');
         this.isOpen = true;
         
-        // Try to render Google button again when modal opens
-        setTimeout(() => {
-            console.log('Re-attempting Google button render after modal open...');
-            this.renderGoogleButton();
-        }, 100);
-        
         // Focus on first input after animation
         setTimeout(() => {
             const firstInput = this.modal.querySelector('input:not([type="hidden"])');
@@ -170,18 +164,6 @@ class LoginModal {
         document.getElementById('loginForm').reset();
         document.getElementById('registerForm').reset();
         this.clearMessage();
-        
-        // Clean up Google button container
-        const googleContainer = document.getElementById('googleSignInButton');
-        if (googleContainer) {
-            googleContainer.remove();
-        }
-        
-        // Show the original Google button
-        const googleBtn = document.getElementById('googleLoginBtn');
-        if (googleBtn) {
-            googleBtn.style.display = 'block';
-        }
         
         // Reset to login form if on register
         this.switchToLogin();
@@ -290,11 +272,8 @@ class LoginModal {
         }
     }
 
-    setupManualGoogleAuth() {
-        console.log('Setting up manual Google OAuth (no Google APIs)...');
-        
-        // Block any Google Identity Services from loading
-        this.blockGoogleIdentityServices();
+    setupGoogleAuth() {
+        console.log('Setting up Google OAuth...');
         
         // Ensure the Google button is visible and ready
         const googleBtn = document.getElementById('googleLoginBtn');
@@ -303,48 +282,11 @@ class LoginModal {
             console.log('Google OAuth button ready');
         }
     }
-    
-    blockGoogleIdentityServices() {
-        // Prevent Google Identity Services from loading
-        if (typeof window.google !== 'undefined') {
-            console.warn('Google APIs detected - attempting to disable Identity Services');
-            try {
-                if (window.google.accounts) {
-                    window.google.accounts = undefined;
-                }
-            } catch (e) {
-                console.log('Could not disable Google Identity Services:', e);
-            }
-        }
-        
-        // Block any future loading of Google Identity Services
-        const originalCreateElement = document.createElement;
-        document.createElement = function(tagName) {
-            const element = originalCreateElement.call(this, tagName);
-            if (tagName.toLowerCase() === 'script') {
-                const originalSetAttribute = element.setAttribute;
-                element.setAttribute = function(name, value) {
-                    if (name === 'src' && value && (
-                        value.includes('accounts.google.com') || 
-                        value.includes('gsi') ||
-                        value.includes('identity')
-                    )) {
-                        console.warn('🚫 Blocked Google Identity Services script:', value);
-                        return;
-                    }
-                    return originalSetAttribute.call(this, name, value);
-                };
-            }
-            return element;
-        };
-        
-        console.log('Google Identity Services blocking enabled');
-    }
 
     handleGoogleLogin() {
         console.log('Google login button clicked - starting OAuth flow');
         
-        // Create OAuth URL for Google
+        // Your Google Client ID (make sure this matches your Google Cloud Console)
         const clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
         
         // Use the correct redirect URI for your domain
@@ -385,8 +327,6 @@ class LoginModal {
         return Math.random().toString(36).substring(2, 15) + 
                Math.random().toString(36).substring(2, 15);
     }
-
-
 }
 
 // Global password toggle function
@@ -420,14 +360,6 @@ let loginModal;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing login modal...');
     loginModal = new LoginModal();
-    
-    // Additional check for Google API after a delay
-    setTimeout(() => {
-        if (loginModal && window.google && window.google.accounts) {
-            console.log('Google API detected after DOM load, re-initializing...');
-            loginModal.renderGoogleButton();
-        }
-    }, 2000);
 });
 
 // Global function to open login modal
