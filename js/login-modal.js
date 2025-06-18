@@ -296,12 +296,20 @@ class LoginModal {
         console.log('Current origin:', window.location.origin);
         console.log('Current hostname:', window.location.hostname);
         
-        // For now, just show the fallback button to avoid FedCM issues
-        console.log('Using fallback Google button to avoid FedCM/CORS issues');
-        this.showFallbackGoogleButton();
+        // Check if we're on localhost or production
+        const isLocalhost = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.hostname.includes('localhost');
         
-        // Update the fallback button to handle OAuth flow manually
-        this.setupManualGoogleAuth();
+        if (isLocalhost) {
+            console.log('Development environment detected - using fallback OAuth');
+            this.showFallbackGoogleButton();
+            this.setupManualGoogleAuth();
+        } else {
+            // Try to use Google Identity Services for production
+            console.log('Production environment - attempting Google Identity Services');
+            this.setupGoogleSignIn();
+        }
     }
 
     setupManualGoogleAuth() {
@@ -315,38 +323,42 @@ class LoginModal {
         console.log('Current domain:', window.location.hostname);
         console.log('Current origin:', window.location.origin);
         
-        if (window.google && window.google.accounts) {
-            try {
-                console.log('Initializing Google Sign-In...');
-                window.google.accounts.id.initialize({
-                    client_id: '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com',
-                    callback: (response) => this.handleGoogleSignInResponse(response),
-                    auto_select: false,
-                    cancel_on_tap_outside: true,
-                    use_fedcm_for_prompt: false, // Disable FedCM to avoid CORS issues
-                    ux_mode: 'popup', // Use popup mode for better compatibility
-                    context: 'signin'
-                });
-
-                console.log('Google Sign-In initialized successfully');
-                // Render the Google Sign-In button
-                this.renderGoogleButton();
-            } catch (error) {
-                console.error('Google Sign-In setup error:', error);
-                
-                // Check if it's a domain authorization error
-                if (error.message && error.message.includes('origin')) {
-                    console.error('Domain authorization error - please check Google Cloud Console OAuth settings');
-                    this.showMessage('Google Sign-In is not configured for this domain. Please use email login.', 'info');
-                }
-                
-                // Show fallback message
-                this.showFallbackGoogleButton();
-            }
-        } else {
+        // Wait for Google API to load
+        if (!window.google || !window.google.accounts) {
             console.log('Google API not ready, retrying...');
-            // Retry after a short delay
             setTimeout(() => this.setupGoogleSignIn(), 500);
+            return;
+        }
+
+        try {
+            console.log('Initializing Google Sign-In...');
+            window.google.accounts.id.initialize({
+                client_id: '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com',
+                callback: (response) => this.handleGoogleSignInResponse(response),
+                auto_select: false,
+                cancel_on_tap_outside: true,
+                use_fedcm_for_prompt: false, // Disable FedCM to avoid CORS issues
+                ux_mode: 'popup', // Use popup mode for better compatibility
+                context: 'signin',
+                itp_support: true // Enable Intelligent Tracking Prevention support
+            });
+
+            console.log('Google Sign-In initialized successfully');
+            // Render the Google Sign-In button
+            this.renderGoogleButton();
+        } catch (error) {
+            console.error('Google Sign-In setup error:', error);
+            
+            // Check if it's a domain authorization error
+            if (error.message && error.message.includes('origin')) {
+                console.error('Domain authorization error - please check Google Cloud Console OAuth settings');
+                this.showMessage('Google Sign-In is not configured for this domain. Please use email login.', 'info');
+            }
+            
+            // Fallback to manual OAuth flow
+            console.log('Falling back to manual OAuth flow');
+            this.showFallbackGoogleButton();
+            this.setupManualGoogleAuth();
         }
     }
 
@@ -437,7 +449,15 @@ class LoginModal {
         
         // Create OAuth URL for Google
         const clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
-        const redirectUri = window.location.origin + '/auth/google/callback';
+        
+        // Use the correct redirect URI based on environment
+        let redirectUri;
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            redirectUri = 'http://localhost:3000/auth/google/callback';
+        } else {
+            redirectUri = 'https://sanjayrajn.vercel.app/auth/google/callback';
+        }
+        
         const scope = 'openid email profile';
         const responseType = 'code';
         const state = this.generateRandomState();
@@ -461,19 +481,6 @@ class LoginModal {
             `prompt=select_account`;
         
         console.log('Full OAuth URL:', authUrl);
-        
-        // Show a confirmation dialog first
-        const confirmed = confirm(
-            `About to redirect to Google OAuth.\n\n` +
-            `Redirect URI: ${redirectUri}\n\n` +
-            `Make sure this exact URL is added to your Google Cloud Console under "Authorized redirect URIs".\n\n` +
-            `Click OK to continue, or Cancel to abort.`
-        );
-        
-        if (!confirmed) {
-            console.log('OAuth redirect cancelled by user');
-            return;
-        }
         
         // Show loading state
         this.setLoading(true);

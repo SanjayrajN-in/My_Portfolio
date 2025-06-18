@@ -4,11 +4,29 @@ const { OAuth2Client } = require('google-auth-library');
 const connectDB = require('../config/database');
 
 module.exports = async (req, res) => {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
     try {
         // Connect to database
         await connectDB();
         
         const { credential, code, redirect_uri } = req.body;
+        
+        console.log('Google OAuth request received:', {
+            hasCredential: !!credential,
+            hasCode: !!code,
+            redirectUri: redirect_uri,
+            method: req.method
+        });
         
         // Handle both JWT token (old method) and OAuth code (new method)
         let payload;
@@ -16,6 +34,11 @@ module.exports = async (req, res) => {
         if (code && redirect_uri) {
             // New OAuth code flow
             console.log('Processing OAuth code flow');
+            console.log('Environment variables check:', {
+                hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+                hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+                clientIdLength: process.env.GOOGLE_CLIENT_ID?.length || 0
+            });
             
             const client = new OAuth2Client(
                 process.env.GOOGLE_CLIENT_ID,
@@ -23,8 +46,15 @@ module.exports = async (req, res) => {
                 redirect_uri
             );
             
+            console.log('OAuth2Client created, exchanging code for tokens...');
+            
             // Exchange code for tokens
             const { tokens } = await client.getToken(code);
+            console.log('Tokens received:', {
+                hasIdToken: !!tokens.id_token,
+                hasAccessToken: !!tokens.access_token
+            });
+            
             client.setCredentials(tokens);
             
             // Verify the ID token
@@ -34,6 +64,11 @@ module.exports = async (req, res) => {
             });
             
             payload = ticket.getPayload();
+            console.log('Token verified, user payload received:', {
+                sub: payload.sub,
+                email: payload.email,
+                name: payload.name
+            });
             
         } else if (credential) {
             // Old JWT token flow (fallback)
