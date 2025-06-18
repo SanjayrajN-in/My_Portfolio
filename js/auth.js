@@ -160,12 +160,6 @@ class AuthSystem {
                         avatarPath = isInPagesFolder ? '../images/default-avatar.svg' : 'images/default-avatar.svg';
                     }
                     userAvatar.src = avatarPath;
-                    
-                    // Add error handling for avatar loading
-                    userAvatar.onerror = function() {
-                        console.log('Avatar failed to load, using default');
-                        this.src = isInPagesFolder ? '../images/default-avatar.svg' : 'images/default-avatar.svg';
-                    };
                 }
                 
                 // Show profile link in dropdown
@@ -174,9 +168,6 @@ class AuthSystem {
                     profileLink.style.display = 'flex';
                     profileLink.style.visibility = 'visible';
                 }
-                
-                // Setup dropdown functionality
-                this.setupUserDropdown();
             }
 
             // Remove login button if exists
@@ -211,64 +202,6 @@ class AuthSystem {
                 `;
                 navLinks.appendChild(loginBtn);
             }
-        }
-    }
-    
-    setupUserDropdown() {
-        const userAvatarContainer = document.querySelector('.user-avatar-container');
-        const userDropdown = document.querySelector('.user-dropdown');
-        
-        if (userAvatarContainer && userDropdown) {
-            // Remove any existing event listeners
-            userAvatarContainer.removeEventListener('click', this.toggleDropdown);
-            
-            // Add click event for mobile
-            userAvatarContainer.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.toggleDropdown();
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!userAvatarContainer.contains(e.target)) {
-                    this.closeDropdown();
-                }
-            });
-            
-            console.log('✅ User dropdown functionality setup complete');
-        }
-    }
-    
-    toggleDropdown() {
-        const userDropdown = document.querySelector('.user-dropdown');
-        if (userDropdown) {
-            const isVisible = userDropdown.style.opacity === '1' || userDropdown.classList.contains('show');
-            if (isVisible) {
-                this.closeDropdown();
-            } else {
-                this.openDropdown();
-            }
-        }
-    }
-    
-    openDropdown() {
-        const userDropdown = document.querySelector('.user-dropdown');
-        if (userDropdown) {
-            userDropdown.style.opacity = '1';
-            userDropdown.style.visibility = 'visible';
-            userDropdown.style.transform = 'translateY(0)';
-            userDropdown.classList.add('show');
-        }
-    }
-    
-    closeDropdown() {
-        const userDropdown = document.querySelector('.user-dropdown');
-        if (userDropdown) {
-            userDropdown.style.opacity = '0';
-            userDropdown.style.visibility = 'hidden';
-            userDropdown.style.transform = 'translateY(-10px)';
-            userDropdown.classList.remove('show');
         }
     }
 
@@ -685,16 +618,6 @@ function togglePassword(inputId) {
 function logout() {
     authSystem.logout();
 }
-
-// Initialize auth system
-let authSystem;
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initializing auth system...');
-    authSystem = new AuthSystem();
-    
-    // Make it globally available
-    window.authSystem = authSystem;
-});
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
