@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google OAuth</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .google-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            display: block;
+            width: 100%;
+        }
+        .google-btn:hover {
+            background: #3367d6;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Google OAuth Test</h1>
+        
+        <div class="info">
+            <h3>Current Configuration:</h3>
+            <p><strong>Domain:</strong> <span id="currentDomain"></span></p>
+            <p><strong>Redirect URI:</strong> <span id="redirectUri"></span></p>
+            <p><strong>Client ID:</strong> 1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com</p>
+        </div>
+
+        <button class="google-btn" onclick="testGoogleOAuth()">
+            🔐 Test Google OAuth Login
+        </button>
+
+        <div id="messages"></div>
+
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Make sure the redirect URI above is added to your Google Cloud Console</li>
+            <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a></li>
+            <li>Select your OAuth 2.0 Client ID</li>
+            <li>Add the redirect URI to "Authorized redirect URIs"</li>
+            <li>Click the test button above</li>
+        </ol>
+
+        <h3>Environment Variables Needed in Vercel:</h3>
+        <pre>
+GOOGLE_CLIENT_ID=1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+        </pre>
+    </div>
+
+    <script>
+        // Set current domain info
+        document.getElementById('currentDomain').textContent = window.location.hostname;
+        document.getElementById('redirectUri').textContent = window.location.origin + '/auth/google/callback';
+
+        function showMessage(message, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.innerHTML = message;
+            messagesDiv.appendChild(messageDiv);
+        }
+
+        function testGoogleOAuth() {
+            const clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
+            const redirectUri = window.location.origin + '/auth/google/callback';
+            const scope = 'openid email profile';
+            const responseType = 'code';
+            const state = Math.random().toString(36).substring(2, 15);
+
+            // Store state for verification
+            sessionStorage.setItem('google_oauth_state', state);
+
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+                `client_id=${encodeURIComponent(clientId)}&` +
+                `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+                `response_type=${responseType}&` +
+                `scope=${encodeURIComponent(scope)}&` +
+                `state=${state}&` +
+                `access_type=offline&` +
+                `prompt=select_account`;
+
+            showMessage('Redirecting to Google OAuth...', 'info');
+            console.log('OAuth URL:', authUrl);
+            
+            // Redirect to Google
+            window.location.href = authUrl;
+        }
+
+        // Check if we're returning from OAuth
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+
+        if (error) {
+            showMessage(`OAuth Error: ${error}`, 'error');
+        } else if (code) {
+            showMessage('OAuth code received! Testing backend...', 'success');
+            
+            // Test the backend API
+            fetch('/api/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code: code,
+                    redirect_uri: window.location.origin + '/auth/google/callback'
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showMessage('✅ Google OAuth working correctly!', 'success');
+                    showMessage(`Welcome ${result.user.name}!`, 'success');
+                } else {
+                    showMessage(`❌ Backend Error: ${result.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage(`❌ Network Error: ${error.message}`, 'error');
+            });
+        }
+    </script>
+</body>
+</html>

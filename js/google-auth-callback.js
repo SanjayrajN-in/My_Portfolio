@@ -37,14 +37,6 @@ class GoogleAuthCallback {
             // Show loading
             this.showMessage('Processing Google login...', 'info');
 
-            // Determine the correct redirect URI
-            let redirectUri;
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                redirectUri = 'http://localhost:3000/auth/google/callback';
-            } else {
-                redirectUri = 'https://sanjayrajn.vercel.app/auth/google/callback';
-            }
-
             // Send code to our backend
             const response = await fetch('/api/auth/google', {
                 method: 'POST',
@@ -53,7 +45,7 @@ class GoogleAuthCallback {
                 },
                 body: JSON.stringify({ 
                     code: code,
-                    redirect_uri: redirectUri
+                    redirect_uri: 'https://sanjayrajn.vercel.app/auth/google/callback'
                 })
             });
 

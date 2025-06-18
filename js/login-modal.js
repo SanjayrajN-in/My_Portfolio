@@ -296,20 +296,10 @@ class LoginModal {
         console.log('Current origin:', window.location.origin);
         console.log('Current hostname:', window.location.hostname);
         
-        // Check if we're on localhost or production
-        const isLocalhost = window.location.hostname === 'localhost' || 
-                           window.location.hostname === '127.0.0.1' ||
-                           window.location.hostname.includes('localhost');
-        
-        if (isLocalhost) {
-            console.log('Development environment detected - using fallback OAuth');
-            this.showFallbackGoogleButton();
-            this.setupManualGoogleAuth();
-        } else {
-            // Try to use Google Identity Services for production
-            console.log('Production environment - attempting Google Identity Services');
-            this.setupGoogleSignIn();
-        }
+        // Always use manual OAuth flow to avoid FedCM/CORS issues
+        console.log('Using manual OAuth flow to avoid FedCM/CORS issues');
+        this.showFallbackGoogleButton();
+        this.setupManualGoogleAuth();
     }
 
     setupManualGoogleAuth() {
@@ -323,42 +313,38 @@ class LoginModal {
         console.log('Current domain:', window.location.hostname);
         console.log('Current origin:', window.location.origin);
         
-        // Wait for Google API to load
-        if (!window.google || !window.google.accounts) {
-            console.log('Google API not ready, retrying...');
-            setTimeout(() => this.setupGoogleSignIn(), 500);
-            return;
-        }
+        if (window.google && window.google.accounts) {
+            try {
+                console.log('Initializing Google Sign-In...');
+                window.google.accounts.id.initialize({
+                    client_id: '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com',
+                    callback: (response) => this.handleGoogleSignInResponse(response),
+                    auto_select: false,
+                    cancel_on_tap_outside: true,
+                    use_fedcm_for_prompt: false, // Disable FedCM to avoid CORS issues
+                    ux_mode: 'popup', // Use popup mode for better compatibility
+                    context: 'signin'
+                });
 
-        try {
-            console.log('Initializing Google Sign-In...');
-            window.google.accounts.id.initialize({
-                client_id: '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com',
-                callback: (response) => this.handleGoogleSignInResponse(response),
-                auto_select: false,
-                cancel_on_tap_outside: true,
-                use_fedcm_for_prompt: false, // Disable FedCM to avoid CORS issues
-                ux_mode: 'popup', // Use popup mode for better compatibility
-                context: 'signin',
-                itp_support: true // Enable Intelligent Tracking Prevention support
-            });
-
-            console.log('Google Sign-In initialized successfully');
-            // Render the Google Sign-In button
-            this.renderGoogleButton();
-        } catch (error) {
-            console.error('Google Sign-In setup error:', error);
-            
-            // Check if it's a domain authorization error
-            if (error.message && error.message.includes('origin')) {
-                console.error('Domain authorization error - please check Google Cloud Console OAuth settings');
-                this.showMessage('Google Sign-In is not configured for this domain. Please use email login.', 'info');
+                console.log('Google Sign-In initialized successfully');
+                // Render the Google Sign-In button
+                this.renderGoogleButton();
+            } catch (error) {
+                console.error('Google Sign-In setup error:', error);
+                
+                // Check if it's a domain authorization error
+                if (error.message && error.message.includes('origin')) {
+                    console.error('Domain authorization error - please check Google Cloud Console OAuth settings');
+                    this.showMessage('Google Sign-In is not configured for this domain. Please use email login.', 'info');
+                }
+                
+                // Show fallback message
+                this.showFallbackGoogleButton();
             }
-            
-            // Fallback to manual OAuth flow
-            console.log('Falling back to manual OAuth flow');
-            this.showFallbackGoogleButton();
-            this.setupManualGoogleAuth();
+        } else {
+            console.log('Google API not ready, retrying...');
+            // Retry after a short delay
+            setTimeout(() => this.setupGoogleSignIn(), 500);
         }
     }
 
@@ -450,14 +436,8 @@ class LoginModal {
         // Create OAuth URL for Google
         const clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
         
-        // Use the correct redirect URI based on environment
-        let redirectUri;
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            redirectUri = 'http://localhost:3000/auth/google/callback';
-        } else {
-            redirectUri = 'https://sanjayrajn.vercel.app/auth/google/callback';
-        }
-        
+        // Use the correct redirect URI for your domain
+        const redirectUri = 'https://sanjayrajn.vercel.app/auth/google/callback';
         const scope = 'openid email profile';
         const responseType = 'code';
         const state = this.generateRandomState();

@@ -18,6 +18,10 @@
     {
       "source": "/auth/google/callback",
       "destination": "/auth/google/callback.html"
+    },
+    {
+      "source": "/test-oauth",
+      "destination": "/test-google-oauth.html"
     }
   ],
   "headers": [
