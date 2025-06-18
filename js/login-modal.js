@@ -159,6 +159,18 @@ class LoginModal {
         document.getElementById('registerForm').reset();
         this.clearMessage();
         
+        // Clean up Google button container
+        const googleContainer = document.getElementById('googleSignInButton');
+        if (googleContainer) {
+            googleContainer.remove();
+        }
+        
+        // Show the original Google button
+        const googleBtn = document.getElementById('googleLoginBtn');
+        if (googleBtn) {
+            googleBtn.style.display = 'block';
+        }
+        
         // Reset to login form if on register
         this.switchToLogin();
     }
@@ -274,7 +286,10 @@ class LoginModal {
             script.async = true;
             script.defer = true;
             script.onload = () => {
-                this.setupGoogleSignIn();
+                setTimeout(() => this.setupGoogleSignIn(), 100);
+            };
+            script.onerror = () => {
+                console.error('Failed to load Google Sign-In script');
             };
             document.head.appendChild(script);
         } else {
@@ -284,21 +299,82 @@ class LoginModal {
 
     setupGoogleSignIn() {
         if (window.google && window.google.accounts) {
-            window.google.accounts.id.initialize({
-                client_id: '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com',
-                callback: (response) => this.handleGoogleSignInResponse(response),
-                auto_select: false,
-                cancel_on_tap_outside: true
-            });
+            try {
+                window.google.accounts.id.initialize({
+                    client_id: '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com',
+                    callback: (response) => this.handleGoogleSignInResponse(response),
+                    auto_select: false,
+                    cancel_on_tap_outside: true,
+                    use_fedcm_for_prompt: true
+                });
+
+                // Render the Google Sign-In button
+                this.renderGoogleButton();
+            } catch (error) {
+                console.error('Google Sign-In setup error:', error);
+            }
+        } else {
+            // Retry after a short delay
+            setTimeout(() => this.setupGoogleSignIn(), 500);
+        }
+    }
+
+    renderGoogleButton() {
+        const googleBtn = document.getElementById('googleLoginBtn');
+        if (googleBtn && window.google && window.google.accounts) {
+            // Check if Google button container already exists
+            let googleContainer = document.getElementById('googleSignInButton');
+            if (!googleContainer) {
+                // Hide the custom button and render Google's button
+                googleBtn.style.display = 'none';
+                
+                // Create container for Google button
+                googleContainer = document.createElement('div');
+                googleContainer.id = 'googleSignInButton';
+                googleContainer.style.marginBottom = '16px';
+                googleBtn.parentNode.insertBefore(googleContainer, googleBtn);
+            }
+
+            try {
+                // Clear any existing content
+                googleContainer.innerHTML = '';
+                
+                window.google.accounts.id.renderButton(
+                    googleContainer,
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        width: '100%',
+                        text: 'continue_with',
+                        shape: 'rectangular'
+                    }
+                );
+            } catch (error) {
+                console.error('Error rendering Google button:', error);
+                // Fallback to custom button
+                googleBtn.style.display = 'block';
+                if (googleContainer) {
+                    googleContainer.remove();
+                }
+            }
         }
     }
 
     handleGoogleLogin() {
         if (window.google && window.google.accounts) {
-            window.google.accounts.id.prompt();
+            try {
+                window.google.accounts.id.prompt((notification) => {
+                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                        // Fallback: show a message or alternative login
+                        this.showMessage('Please click the Google Sign-In button above to continue.', 'info');
+                    }
+                });
+            } catch (error) {
+                console.error('Google prompt error:', error);
+                this.showMessage('Google Sign-In is not available right now. Please use email login.');
+            }
         } else {
-            // Fallback - show message to user
-            this.showMessage('Google Sign-In is not available right now. Please use email login.');
+            this.showMessage('Google Sign-In is loading. Please try again in a moment.');
         }
     }
 
@@ -306,9 +382,13 @@ class LoginModal {
         try {
             this.setLoading(true);
             this.clearMessage();
+            
+            console.log('Google sign-in response received:', response);
 
             // Send Google credential to backend for verification
             const result = await API.googleLogin(response.credential);
+            
+            console.log('Backend response:', result);
 
             if (result.success) {
                 // Store user data and token
@@ -321,11 +401,11 @@ class LoginModal {
                     window.location.reload();
                 }, 1500);
             } else {
-                this.showMessage(result.message);
+                this.showMessage(result.message || 'Google login failed');
             }
         } catch (error) {
             console.error('Google login error:', error);
-            this.showMessage('Google login failed. Please try again.');
+            this.showMessage(`Google login failed: ${error.message || 'Please try again.'}`);
         } finally {
             this.setLoading(false);
         }
