@@ -1,26 +1,9 @@
-# PowerShell scripts
-*.ps1
-
-# Development files
-.vscode/
-*.txt
-*.md
-!README.md
-
-# Backup files
-*_backup.*
-*_part*.*
-
-# Temporary files
-.DS_Store
-Thumbs.db
-
-# Git files
-.git/
-.gitignore
-
-# Node modules (if any)
+api/test/
+api/debug/
+api/models/
+api/config/
+api/test.js
 node_modules/
-
-# Logs
+.git/
 *.log
+.env

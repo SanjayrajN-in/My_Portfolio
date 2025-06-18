@@ -1,55 +1,22 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
+  "functions": {
+    "api/auth/google.js": {
+      "runtime": "@vercel/node"
     },
-    {
-      "src": "pages/*.html",
-      "use": "@vercel/static"
+    "api/auth/login.js": {
+      "runtime": "@vercel/node"
     },
-    {
-      "src": "css/*",
-      "use": "@vercel/static"
+    "api/auth/register.js": {
+      "runtime": "@vercel/node"
     },
-    {
-      "src": "js/*",
-      "use": "@vercel/static"
+    "api/contact/submit.js": {
+      "runtime": "@vercel/node"
     },
-    {
-      "src": "images/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "audio/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "auth/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/auth/google.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/auth/login.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/auth/register.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/contact/submit.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/users/update-game-stats.js",
-      "use": "@vercel/node"
+    "api/users/update-game-stats.js": {
+      "runtime": "@vercel/node"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/(.*)",
@@ -58,10 +25,6 @@
     {
       "src": "/auth/google/callback",
       "dest": "/auth/google/callback.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
     }
   ],
   "headers": [
@@ -78,66 +41,13 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, X-Requested-With, Accept, Cache-Control"
+          "value": "Content-Type, Authorization"
         },
         {
           "key": "Access-Control-Allow-Credentials",
           "value": "true"
-        },
-        {
-          "key": "Access-Control-Max-Age",
-          "value": "86400"
-        },
-        {
-          "key": "Vary",
-          "value": "Origin, Access-Control-Request-Headers"
-        },
-        {
-          "key": "Cross-Origin-Opener-Policy",
-          "value": "same-origin-allow-popups"
-        },
-        {
-          "key": "Cross-Origin-Embedder-Policy",
-          "value": "unsafe-none"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)\\.(css|js)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)\\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|mp3|wav|ogg)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
     }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  ]
 }
