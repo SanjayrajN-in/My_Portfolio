@@ -18,8 +18,7 @@
     {
       "source": "/auth/google/callback",
       "destination": "/auth/google/callback.html"
-    },
-
+    }
   ],
   "headers": [
     {
