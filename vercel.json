@@ -30,15 +30,23 @@
       "use": "@vercel/static"
     },
     {
-      "src": "api/auth/*.js",
+      "src": "api/auth/google.js",
       "use": "@vercel/node"
     },
     {
-      "src": "api/contact/*.js",
+      "src": "api/auth/login.js",
       "use": "@vercel/node"
     },
     {
-      "src": "api/users/*.js",
+      "src": "api/auth/register.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/contact/submit.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/users/update-game-stats.js",
       "use": "@vercel/node"
     }
   ],
