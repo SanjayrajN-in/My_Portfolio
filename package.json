@@ -7,8 +7,10 @@
     "dev": "vercel dev",
     "build": "echo 'Static build completed'",
     "start": "vercel dev",
-    "deploy": "vercel --prod",
-    "test:auth": "node api/test/google-auth-test.js"
+    "deploy": "node deploy.js",
+    "deploy:quick": "vercel --prod",
+    "test:auth": "node api/test/google-auth-test.js",
+    "test:api": "node -e \"console.log('Testing API...'); fetch('https://sanjayrajn.vercel.app/api/test').then(r=>r.json()).then(console.log).catch(console.error)\""
   },
   "keywords": [
     "portfolio",

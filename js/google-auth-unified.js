@@ -268,8 +268,22 @@ class GoogleAuthUnified {
                 
                 // Check if it's a 404 - API not found
                 if (result.status === 404) {
-                    console.error('🚨 API endpoint not found! Check Vercel deployment.');
-                    throw new Error('Google login service is not available. Please try again later.');
+                    console.error('🚨 API endpoint not found! Trying fallback...');
+                    
+                    // Try to test if any API endpoint works
+                    try {
+                        const testResponse = await fetch('/api/test', { method: 'GET' });
+                        if (testResponse.ok) {
+                            console.log('✅ Basic API works, but Google auth endpoint missing');
+                            throw new Error('Google authentication service is temporarily unavailable. Please try again in a few minutes.');
+                        } else {
+                            console.error('❌ No API endpoints working');
+                            throw new Error('Server is temporarily unavailable. Please try again later.');
+                        }
+                    } catch (testError) {
+                        console.error('❌ API test failed:', testError.message);
+                        throw new Error('Unable to connect to authentication server. Please check your internet connection and try again.');
+                    }
                 }
                 
                 throw new Error(`Server error: ${result.status} - ${errorText}`);

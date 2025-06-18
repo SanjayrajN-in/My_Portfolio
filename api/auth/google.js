@@ -1,15 +1,23 @@
+// Google OAuth Authentication Handler
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 const { OAuth2Client } = require('google-auth-library');
-const connectDB = require('../config/database');
+
+// Simple in-memory user storage for now (replace with database later)
+const users = new Map();
 
 module.exports = async (req, res) => {
-    // Set comprehensive CORS headers for popup mode
+    console.log('🔐 Google Auth API called:', {
+        method: req.method,
+        url: req.url,
+        origin: req.headers.origin,
+        timestamp: new Date().toISOString()
+    });
+
+    // Set comprehensive CORS headers
     const allowedOrigins = [
         'https://sanjayrajn.vercel.app',
         'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'https://accounts.google.com' // Allow Google's domain for popup
+        'http://127.0.0.1:3000'
     ];
     
     const origin = req.headers.origin;
@@ -22,22 +30,22 @@ module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Cache-Control');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
-    res.setHeader('Vary', 'Origin, Access-Control-Request-Headers'); // Important for FedCM and popup
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups'); // For popup auth
-    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none'); // Allow embedding
-    res.setHeader('X-Content-Type-Options', 'nosniff'); // Security header
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Prevent caching
+    res.setHeader('Access-Control-Max-Age', '86400');
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     
     // Handle preflight requests
     if (req.method === 'OPTIONS') {
-        console.log('CORS preflight request handled');
+        console.log('✅ CORS preflight request handled');
         res.status(200).end();
         return;
     }
 
     // Only allow POST requests
     if (req.method !== 'POST') {
+        console.log('❌ Method not allowed:', req.method);
         return res.status(405).json({
             success: false,
             message: 'Method not allowed'
@@ -45,125 +53,115 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // Connect to database
-        await connectDB();
+        console.log('📨 Processing Google OAuth request...');
         
-        console.log('Google OAuth API called:', {
-            method: req.method,
-            origin: req.headers.origin,
-            userAgent: req.headers['user-agent'],
-            body: req.body ? { ...req.body, code: req.body.code ? '[REDACTED]' : undefined } : null,
-            hasEnvVars: {
-                clientId: !!process.env.GOOGLE_CLIENT_ID,
-                clientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
-                jwtSecret: !!process.env.JWT_SECRET
-            }
-        });
+        // Get request body
+        const { credential, code, redirect_uri, popup_mode, callback_mode } = req.body;
         
-        const { credential, code, redirect_uri, popup_mode } = req.body;
-        
-        console.log('Request details:', {
+        console.log('📋 Request details:', {
             hasCredential: !!credential,
             hasCode: !!code,
             redirectUri: redirect_uri,
             isPopupMode: popup_mode,
-            userAgent: req.headers['user-agent']?.substring(0, 100)
+            isCallbackMode: callback_mode
         });
-        
-        // Validate required environment variables
-        if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-            console.error('Missing Google OAuth environment variables');
+
+        // Environment variables check
+        const googleClientId = process.env.GOOGLE_CLIENT_ID || '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
+        const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+        const jwtSecret = process.env.JWT_SECRET || 'fallback-jwt-secret-for-development';
+
+        console.log('🔧 Environment check:', {
+            hasClientId: !!googleClientId,
+            hasClientSecret: !!googleClientSecret,
+            hasJwtSecret: !!jwtSecret,
+            clientIdPrefix: googleClientId ? googleClientId.substring(0, 10) + '...' : 'none'
+        });
+
+        if (!googleClientId) {
+            console.error('❌ Missing GOOGLE_CLIENT_ID');
             return res.status(500).json({
                 success: false,
-                message: 'Server configuration error'
+                message: 'Server configuration error: Missing Google Client ID'
             });
         }
 
-        if (!process.env.JWT_SECRET) {
-            console.error('Missing JWT_SECRET environment variable');
-            return res.status(500).json({
-                success: false,
-                message: 'Server configuration error'
-            });
-        }
-        
-        // Handle both JWT token (old method) and OAuth code (new method)
         let payload;
         
-        if (code && redirect_uri) {
-            // New OAuth code flow
-            console.log('Processing OAuth code flow');
-            console.log('Redirect URI:', redirect_uri);
+        // Handle JWT credential (from Google Identity Services)
+        if (credential) {
+            console.log('🔍 Processing JWT credential...');
             
-            const client = new OAuth2Client(
-                process.env.GOOGLE_CLIENT_ID,
-                process.env.GOOGLE_CLIENT_SECRET,
-                redirect_uri
-            );
-            
-            console.log('Exchanging code for tokens...');
-            
-            try {
-                // Exchange code for tokens
-                const { tokens } = await client.getToken(code);
-                console.log('Tokens received:', { 
-                    hasIdToken: !!tokens.id_token,
-                    hasAccessToken: !!tokens.access_token,
-                    hasRefreshToken: !!tokens.refresh_token
-                });
-                
-                client.setCredentials(tokens);
-                
-                // Verify the ID token
-                const ticket = await client.verifyIdToken({
-                    idToken: tokens.id_token,
-                    audience: process.env.GOOGLE_CLIENT_ID,
-                });
-                
-                payload = ticket.getPayload();
-                console.log('User payload extracted:', { 
-                    sub: payload.sub, 
-                    email: payload.email, 
-                    name: payload.name,
-                    email_verified: payload.email_verified
-                });
-                
-            } catch (tokenError) {
-                console.error('Token exchange error:', tokenError);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid authorization code'
-                });
-            }
-            
-        } else if (credential) {
-            // Old JWT token flow (fallback)
-            console.log('Processing JWT credential flow');
-            
-            const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+            const client = new OAuth2Client(googleClientId);
             
             try {
                 const ticket = await client.verifyIdToken({
                     idToken: credential,
-                    audience: process.env.GOOGLE_CLIENT_ID,
+                    audience: googleClientId,
                 });
                 
                 payload = ticket.getPayload();
-                console.log('JWT payload extracted:', { 
+                console.log('✅ JWT credential verified:', { 
                     sub: payload.sub, 
                     email: payload.email, 
                     name: payload.name 
                 });
                 
             } catch (jwtError) {
-                console.error('JWT verification error:', jwtError);
+                console.error('❌ JWT verification error:', jwtError.message);
                 return res.status(400).json({
                     success: false,
-                    message: 'Invalid Google token'
+                    message: 'Invalid Google credential'
+                });
+            }
+        }
+        // Handle OAuth code (from redirect flow)
+        else if (code && redirect_uri) {
+            console.log('🔍 Processing OAuth code...');
+            
+            if (!googleClientSecret) {
+                console.error('❌ Missing GOOGLE_CLIENT_SECRET for OAuth flow');
+                return res.status(500).json({
+                    success: false,
+                    message: 'Server configuration error: OAuth not properly configured'
                 });
             }
             
-        } else {
+            const client = new OAuth2Client(
+                googleClientId,
+                googleClientSecret,
+                redirect_uri
+            );
+            
+            try {
+                const { tokens } = await client.getToken(code);
+                console.log('✅ Tokens received:', { 
+                    hasIdToken: !!tokens.id_token,
+                    hasAccessToken: !!tokens.access_token
+                });
+                
+                const ticket = await client.verifyIdToken({
+                    idToken: tokens.id_token,
+                    audience: googleClientId,
+                });
+                
+                payload = ticket.getPayload();
+                console.log('✅ OAuth code verified:', { 
+                    sub: payload.sub, 
+                    email: payload.email, 
+                    name: payload.name 
+                });
+                
+            } catch (oauthError) {
+                console.error('❌ OAuth code error:', oauthError.message);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid authorization code'
+                });
+            }
+        }
+        else {
+            console.error('❌ No credential or code provided');
             return res.status(400).json({
                 success: false,
                 message: 'Google credential or authorization code is required'
@@ -173,126 +171,83 @@ module.exports = async (req, res) => {
         // Extract user information
         const { sub: googleId, email, name, picture, email_verified } = payload;
 
-        // Validate required fields
         if (!googleId || !email || !name) {
-            console.error('Missing required user data from Google:', { googleId: !!googleId, email: !!email, name: !!name });
+            console.error('❌ Missing required user data:', { googleId: !!googleId, email: !!email, name: !!name });
             return res.status(400).json({
                 success: false,
                 message: 'Incomplete user data from Google'
             });
         }
 
-        console.log('Processing user data:', { googleId, email, name, hasAvatar: !!picture });
+        console.log('👤 Processing user:', { googleId, email, name, hasAvatar: !!picture });
 
-        // Check if user exists
-        let user = await User.findOne({ 
-            $or: [
-                { email: email },
-                { googleId: googleId }
-            ]
-        });
-
+        // Simple user management (in-memory for now)
+        let user = users.get(email);
+        
         if (user) {
-            console.log('Existing user found:', user._id);
-            // Update existing user with Google info if not already set
-            let updated = false;
-            
-            if (!user.googleId) {
-                user.googleId = googleId;
-                updated = true;
-            }
-            if (!user.avatar && picture) {
-                user.avatar = picture;
-                updated = true;
-            }
-            if (!user.isVerified && email_verified) {
-                user.isVerified = true;
-                updated = true;
-            }
-            
-            if (updated) {
-                await user.save();
-                console.log('User updated with Google info');
-            }
+            console.log('✅ Existing user found');
+            // Update user info
+            user.name = name;
+            user.avatar = picture || user.avatar;
+            user.lastLogin = new Date().toISOString();
         } else {
-            console.log('Creating new user');
-            // Create new user
-            user = new User({
+            console.log('🆕 Creating new user');
+            user = {
+                id: googleId,
+                googleId: googleId,
                 name: name,
                 email: email,
-                googleId: googleId,
                 avatar: picture || 'images/default-avatar.svg',
-                isVerified: email_verified || true, // Google accounts are typically pre-verified
+                isVerified: email_verified || true,
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString(),
                 gameStats: {
                     totalGamesPlayed: 0,
                     totalScore: 0,
                     achievements: [],
                     favoriteGame: null
                 }
-            });
-            
-            try {
-                await user.save();
-                console.log('New user created:', user._id);
-            } catch (saveError) {
-                console.error('Error saving new user:', saveError);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to create user account'
-                });
-            }
+            };
+            users.set(email, user);
         }
 
         // Generate JWT token
         const token = jwt.sign(
             { 
-                userId: user._id,
+                userId: user.id,
                 email: user.email,
                 name: user.name
             },
-            process.env.JWT_SECRET,
+            jwtSecret,
             { expiresIn: '7d' }
         );
 
-        console.log('Login successful for user:', user._id);
+        console.log('🎉 Login successful for user:', user.email);
 
-        res.json({
+        // Return success response
+        const response = {
             success: true,
             message: 'Google login successful',
             user: {
-                id: user._id,
+                id: user.id,
                 name: user.name,
                 email: user.email,
                 avatar: user.avatar,
                 gameStats: user.gameStats
             },
             token: token
-        });
+        };
+
+        console.log('📤 Sending response:', { success: true, userEmail: user.email });
+        res.json(response);
 
     } catch (error) {
-        console.error('Google OAuth error:', error);
+        console.error('💥 Google OAuth error:', error);
         
-        // Handle specific error types
-        if (error.message.includes('Token used too early') || 
-            error.message.includes('Token used too late') ||
-            error.message.includes('Invalid token signature')) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid Google token'
-            });
-        }
-
-        if (error.message.includes('Network Error') || error.message.includes('ENOTFOUND')) {
-            return res.status(503).json({
-                success: false,
-                message: 'Network error - please try again'
-            });
-        }
-
         res.status(500).json({
             success: false,
             message: 'Google authentication failed',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
         });
     }
 };
