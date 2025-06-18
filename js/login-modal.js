@@ -291,6 +291,11 @@ class LoginModal {
     }
 
     initGoogleSignIn() {
+        console.log('=== Google Sign-In Initialization ===');
+        console.log('Current URL:', window.location.href);
+        console.log('Current origin:', window.location.origin);
+        console.log('Current hostname:', window.location.hostname);
+        
         // Load Google Sign-In API
         if (!window.google) {
             console.log('Loading Google Sign-In script...');
@@ -300,6 +305,8 @@ class LoginModal {
             script.defer = true;
             script.onload = () => {
                 console.log('Google Sign-In script loaded successfully');
+                console.log('Google object available:', !!window.google);
+                console.log('Google accounts available:', !!(window.google && window.google.accounts));
                 setTimeout(() => this.setupGoogleSignIn(), 100);
             };
             script.onerror = () => {
@@ -309,6 +316,8 @@ class LoginModal {
             document.head.appendChild(script);
         } else {
             console.log('Google Sign-In script already loaded');
+            console.log('Google object available:', !!window.google);
+            console.log('Google accounts available:', !!(window.google && window.google.accounts));
             this.setupGoogleSignIn();
         }
     }
@@ -328,8 +337,7 @@ class LoginModal {
                     cancel_on_tap_outside: true,
                     use_fedcm_for_prompt: false, // Disable FedCM to avoid CORS issues
                     ux_mode: 'popup', // Use popup mode for better compatibility
-                    context: 'signin',
-                    allowed_parent_origin: window.location.origin // Explicitly set allowed origin
+                    context: 'signin'
                 });
 
                 console.log('Google Sign-In initialized successfully');
@@ -380,20 +388,30 @@ class LoginModal {
                 // Clear any existing content
                 googleContainer.innerHTML = '';
                 
-                window.google.accounts.id.renderButton(
-                    googleContainer,
-                    {
-                        theme: 'outline',
-                        size: 'large',
-                        width: 320, // Fixed width instead of 100%
-                        text: 'continue_with',
-                        shape: 'rectangular',
-                        logo_alignment: 'left'
+                // Add a small delay to ensure DOM is ready
+                setTimeout(() => {
+                    try {
+                        window.google.accounts.id.renderButton(
+                            googleContainer,
+                            {
+                                theme: 'outline',
+                                size: 'large',
+                                width: 320,
+                                text: 'continue_with',
+                                shape: 'rectangular',
+                                logo_alignment: 'left',
+                                type: 'standard'
+                            }
+                        );
+                        console.log('Google button rendered successfully');
+                    } catch (renderError) {
+                        console.error('Error rendering Google button:', renderError);
+                        this.showFallbackGoogleButton();
                     }
-                );
-                console.log('Google button rendered successfully');
+                }, 50);
+                
             } catch (error) {
-                console.error('Error rendering Google button:', error);
+                console.error('Error setting up Google button:', error);
                 // Fallback to custom button
                 this.showFallbackGoogleButton();
             }
@@ -427,23 +445,8 @@ class LoginModal {
     }
 
     handleGoogleLogin() {
-        if (window.google && window.google.accounts) {
-            try {
-                // Try to trigger the sign-in flow directly
-                window.google.accounts.id.prompt((notification) => {
-                    console.log('Google prompt notification:', notification);
-                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                        // If prompt doesn't work, show informative message
-                        this.showMessage('Please use the Google Sign-In button above, or try email login.', 'info');
-                    }
-                });
-            } catch (error) {
-                console.error('Google prompt error:', error);
-                this.showMessage('Google Sign-In encountered an issue. Please try email login or refresh the page.', 'error');
-            }
-        } else {
-            this.showMessage('Google Sign-In is still loading. Please wait a moment and try again.', 'info');
-        }
+        console.log('Fallback Google login button clicked');
+        this.showMessage('Please use the official Google Sign-In button above, or sign in with email.', 'info');
     }
 
     async handleGoogleSignInResponse(response) {
