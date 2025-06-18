@@ -285,7 +285,7 @@ class LoginModal {
     setupGoogleSignIn() {
         if (window.google && window.google.accounts) {
             window.google.accounts.id.initialize({
-                client_id: 'YOUR_GOOGLE_CLIENT_ID', // You'll need to replace this with your actual Google Client ID
+                client_id: '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com',
                 callback: (response) => this.handleGoogleSignInResponse(response),
                 auto_select: false,
                 cancel_on_tap_outside: true
@@ -302,20 +302,22 @@ class LoginModal {
         }
     }
 
-    handleGoogleSignInResponse(response) {
+    async handleGoogleSignInResponse(response) {
         try {
-            // Decode the JWT token to get user info
-            const userInfo = this.parseJWT(response.credential);
-            
-            // Create or login user with Google info
-            const result = authSystem.loginWithGoogle({
-                name: userInfo.name,
-                email: userInfo.email,
-                picture: userInfo.picture,
-                googleId: userInfo.sub
+            this.setLoading(true);
+            this.clearMessage();
+
+            // Send Google credential to backend for verification
+            const result = await API.makeRequest('/auth/google', {
+                method: 'POST',
+                body: JSON.stringify({ credential: response.credential })
             });
 
             if (result.success) {
+                // Store user data and token
+                localStorage.setItem('authToken', result.token);
+                localStorage.setItem('userData', JSON.stringify(result.user));
+                
                 this.showMessage('Google login successful! Welcome.', 'success');
                 setTimeout(() => {
                     this.close();
@@ -327,6 +329,8 @@ class LoginModal {
         } catch (error) {
             console.error('Google login error:', error);
             this.showMessage('Google login failed. Please try again.');
+        } finally {
+            this.setLoading(false);
         }
     }
 
