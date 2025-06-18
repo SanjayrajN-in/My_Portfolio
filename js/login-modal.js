@@ -308,10 +308,7 @@ class LoginModal {
             this.clearMessage();
 
             // Send Google credential to backend for verification
-            const result = await API.makeRequest('/auth/google', {
-                method: 'POST',
-                body: JSON.stringify({ credential: response.credential })
-            });
+            const result = await API.googleLogin(response.credential);
 
             if (result.success) {
                 // Store user data and token
