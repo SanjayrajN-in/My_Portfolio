@@ -1,9 +1,13 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { OAuth2Client } = require('google-auth-library');
+const connectDB = require('../config/database');
 
 module.exports = async (req, res) => {
     try {
+        // Connect to database
+        await connectDB();
+        
         const { credential, code, redirect_uri } = req.body;
         
         // Handle both JWT token (old method) and OAuth code (new method)

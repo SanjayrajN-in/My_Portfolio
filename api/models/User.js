@@ -31,8 +31,20 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function() {
+      // Password is only required if user doesn't have googleId
+      return !this.googleId;
+    },
     minlength: 6
+  },
+  googleId: {
+    type: String,
+    sparse: true, // Allow multiple null values but unique non-null values
+    unique: true
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
   },
   avatar: {
     type: String,
