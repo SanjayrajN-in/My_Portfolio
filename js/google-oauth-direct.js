@@ -5,8 +5,24 @@ class GoogleOAuthDirect {
   constructor() {
     // Google OAuth configuration
     this.clientId = '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
-    this.redirectUri = `${window.location.origin}/api/auth/callback`;
+    
+    // Use the correct redirect URI that matches what's configured in Google Cloud Console
+    // For Vercel deployment
+    if (window.location.hostname === 'sanjayrajn.vercel.app') {
+      this.redirectUri = 'https://sanjayrajn.vercel.app/api/auth/callback';
+    } 
+    // For localhost development
+    else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      this.redirectUri = 'http://localhost:3000/api/auth/callback';
+    } 
+    // Fallback
+    else {
+      this.redirectUri = `${window.location.origin}/api/auth/callback`;
+    }
+    
     this.scope = 'openid email profile';
+    
+    console.log('Google OAuth Direct initialized with redirect URI:', this.redirectUri);
     
     // Initialize
     this.init();

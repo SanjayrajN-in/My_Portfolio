@@ -1,8 +1,53 @@
 // Google OAuth Callback Handler
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
-import connectDB from '../config/database';
-import User from '../models/User';
+import mongoose from 'mongoose';
+// Import User model with correct path
+let User;
+try {
+  User = require('../models/User').default;
+} catch (error) {
+  console.error('Error importing User model from ../models/User:', error);
+  try {
+    User = require('../../api/models/User').default;
+  } catch (error) {
+    console.error('Error importing User model from ../../api/models/User:', error);
+    // Define a minimal User model as fallback
+    const userSchema = new mongoose.Schema({
+      name: String,
+      email: { type: String, unique: true },
+      googleId: { type: String, sparse: true, unique: true },
+      avatar: String,
+      isVerified: Boolean,
+      joinedDate: Date,
+      lastLogin: Date,
+      gameStats: Object
+    });
+    User = mongoose.models.User || mongoose.model('User', userSchema);
+  }
+}
+
+// Direct database connection for reliability
+const connectDB = async () => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 15000,
+        connectTimeoutMS: 30000,
+        socketTimeoutMS: 60000,
+        maxPoolSize: 10,
+        family: 4,
+        retryWrites: true,
+        w: 'majority'
+      });
+      console.log('MongoDB Connected directly');
+    }
+    return true;
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    return false;
+  }
+};
 
 export default async function handler(req, res) {
   console.log('🔄 Google OAuth Callback received:', {
