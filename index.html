@@ -602,6 +602,36 @@
                     // Ignore errors
                 }
             });
+            
+            // Remove any text containing "continue with email" or similar
+            const textNodes = document.evaluate(
+                "//text()[contains(., 'continue with email') or contains(., 'Continue with email') or contains(., 'or sign in with email') or contains(., 'Or sign in with email')]",
+                document,
+                null,
+                XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+                null
+            );
+            
+            for (let i = 0; i < textNodes.snapshotLength; i++) {
+                const textNode = textNodes.snapshotItem(i);
+                if (textNode && textNode.parentNode) {
+                    textNode.parentNode.removeChild(textNode);
+                    console.log('🗑️ Removed text node with "continue with email"');
+                }
+            }
+            
+            // Also remove any elements that contain this text
+            const elementsWithText = document.querySelectorAll('*');
+            elementsWithText.forEach(el => {
+                if (el.textContent && 
+                    (el.textContent.includes('continue with email') || 
+                     el.textContent.includes('Continue with email') ||
+                     el.textContent.includes('or sign in with email') ||
+                     el.textContent.includes('Or sign in with email'))) {
+                    el.style.display = 'none';
+                    console.log('🗑️ Hidden element containing "continue with email" text');
+                }
+            });
         }
         
         // Run cleanup when DOM is loaded
