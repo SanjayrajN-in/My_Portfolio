@@ -19,10 +19,17 @@ export default async (req, res) => {
         'http://127.0.0.1:3000'
     ];
     
+    // Get the origin from the request headers
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
+    
+    // Log the origin for debugging
+    console.log('🌐 Request origin:', origin);
+    
+    // Set the appropriate CORS headers based on the origin
+    if (origin && allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
     } else {
+        // Default to the production URL if origin is not in the allowed list
         res.setHeader('Access-Control-Allow-Origin', 'https://sanjayrajn.vercel.app');
     }
     

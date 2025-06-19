@@ -1,9 +1,9 @@
-const connectDB = require('../config/database');
-const User = require('../models/User');
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
+import connectDB from '../config/database';
+import User from '../models/User';
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
