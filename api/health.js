@@ -53,10 +53,7 @@ export default async function handler(req, res) {
       },
       apis: {
         testEndpoints: [
-          '/api/health',
-          '/api/env-test',
-          '/api/mongodb-test',
-          '/api/test-google-auth'
+          '/api/health'
         ]
       }
     });
