@@ -1,6 +1,17 @@
 // Configuration  
 // Use the global API configuration
-const API_BASE_URL = window.API ? window.API.baseURL : 'http://localhost:3000';
+const getAPIBaseURL = () => {
+    if (window.API && window.API.baseURL) {
+        return window.API.baseURL;
+    }
+    // Fallback - detect environment
+    const isProduction = window.location.hostname !== 'localhost' && 
+                        window.location.hostname !== '127.0.0.1' && 
+                        !window.location.hostname.includes('local');
+    return isProduction ? 'https://sanjayraj-n.onrender.com' : 'http://localhost:3000';
+};
+
+const API_BASE_URL = getAPIBaseURL();
 
 // Authentication System
 class AuthSystem {
