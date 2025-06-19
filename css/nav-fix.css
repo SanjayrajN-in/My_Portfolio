@@ -121,6 +121,26 @@ header .nav-links li a,
     gap: 1rem;
 }
 
+/* Login Link Styles */
+.login-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    background: rgba(0, 168, 255, 0.1);
+    border: 1px solid rgba(0, 168, 255, 0.3);
+}
+
+.login-link:hover {
+    background: rgba(0, 168, 255, 0.2);
+    color: var(--accent-color);
+    transform: translateY(-2px);
+}
+
 /* User Menu Styles - HIDDEN BY DEFAULT */
 .user-menu {
     position: relative;

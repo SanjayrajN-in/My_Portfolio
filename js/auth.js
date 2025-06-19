@@ -217,52 +217,66 @@ class AuthSystem {
     }
 
     updateNavigation() {
-        console.log('📍 updateNavigation called, currentUser:', this.currentUser);
+        console.log('📍 updateNavigation called, user logged in:', !!this.currentUser);
+        const navContainer = document.querySelector('.nav-container');
         const navLinks = document.querySelector('.nav-links');
-        const userMenu = document.querySelector('.user-menu');
+        const hamburger = document.querySelector('.hamburger');
         const isInPagesFolder = window.location.pathname.includes('pages/');
         
         if (this.currentUser) {
-            // User is logged in - show user menu and avatar
-            if (userMenu) {
-                userMenu.style.display = 'flex';
-                userMenu.style.visibility = 'visible';
-                userMenu.style.opacity = '1';
-                userMenu.classList.add('show');
+            // User is logged in - create or show user menu
+            let userMenu = document.querySelector('.user-menu');
+            
+            if (!userMenu) {
+                // Create user menu if it doesn't exist
+                userMenu = document.createElement('div');
+                userMenu.className = 'user-menu';
                 
-                console.log('✅ User menu shown for user:', this.currentUser.name);
+                const avatarPath = isInPagesFolder ? '../images/default-avatar.svg' : 'images/default-avatar.svg';
+                const profilePath = isInPagesFolder ? 'profile.html' : 'pages/profile.html';
                 
-                const userAvatar = document.getElementById('navUserAvatar');
-                if (userAvatar) {
-                    // Set correct avatar path based on current page location
-                    let avatarPath = this.currentUser.avatar;
-                    if (avatarPath) {
-                        // If we're in a subfolder and avatar path doesn't start with ../ add it
-                        if (isInPagesFolder && !avatarPath.startsWith('../') && !avatarPath.startsWith('http') && !avatarPath.startsWith('data:')) {
-                            avatarPath = '../' + avatarPath.replace(/^\//, '');
-                        } else if (!isInPagesFolder && avatarPath.startsWith('../')) {
-                            // If we're in root and avatar path starts with ../ remove it
-                            avatarPath = avatarPath.substring(3);
-                        }
-                    } else {
-                        // Default avatar path
-                        avatarPath = isInPagesFolder ? '../images/default-avatar.svg' : 'images/default-avatar.svg';
-                    }
-                    userAvatar.src = avatarPath;
-                    console.log('✅ User avatar set to:', avatarPath);
-                }
+                userMenu.innerHTML = `
+                    <div class="user-avatar-container">
+                        <img src="${avatarPath}" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                        <div class="user-dropdown">
+                            <a href="${profilePath}" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                <span>Profile</span>
+                            </a>
+                            <button onclick="authSystem.logout()" class="dropdown-item logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
                 
-                // Show profile link in dropdown (handle both class names)
-                const profileLink = userMenu.querySelector('a[href*="profile.html"]') || 
-                                  userMenu.querySelector('.user-dropdown-item[href*="profile.html"]') ||
-                                  userMenu.querySelector('.dropdown-item[href*="profile.html"]');
-                if (profileLink) {
-                    profileLink.style.display = 'flex';
-                    profileLink.style.visibility = 'visible';
-                }
-            } else {
-                console.log('❌ User menu element not found in DOM');
+                // Insert user menu before hamburger button
+                navContainer.insertBefore(userMenu, hamburger);
+                console.log('✅ User menu created and added to DOM');
             }
+            
+            // Show user menu with proper styles
+            userMenu.style.display = 'flex';
+            userMenu.style.visibility = 'visible';
+            userMenu.style.opacity = '1';
+            userMenu.style.alignItems = 'center';
+            userMenu.style.marginLeft = '1rem';
+            userMenu.classList.add('show');
+            
+            // Update avatar if user has one
+            const userAvatar = document.getElementById('navUserAvatar');
+            if (userAvatar && this.currentUser.avatar) {
+                let avatarPath = this.currentUser.avatar;
+                if (isInPagesFolder && !avatarPath.startsWith('../') && !avatarPath.startsWith('http') && !avatarPath.startsWith('data:')) {
+                    avatarPath = '../' + avatarPath.replace(/^\//, '');
+                } else if (!isInPagesFolder && avatarPath.startsWith('../')) {
+                    avatarPath = avatarPath.substring(3);
+                }
+                userAvatar.src = avatarPath;
+            }
+            
+            console.log('✅ User menu shown for user:', this.currentUser.name);
 
             // Remove login button if exists
             const loginBtn = document.querySelector('.login-btn');
@@ -270,21 +284,14 @@ class AuthSystem {
                 loginBtn.remove();
             }
         } else {
-            // User is NOT logged in - completely hide user menu and avatar
+            // User is NOT logged in - hide user menu
             console.log('❌ No user logged in, hiding user menu');
+            const userMenu = document.querySelector('.user-menu');
             if (userMenu) {
-                userMenu.style.display = 'none !important';
+                userMenu.style.display = 'none';
                 userMenu.style.visibility = 'hidden';
+                userMenu.style.opacity = '0';
                 userMenu.classList.remove('show');
-                
-                // Hide profile link completely (handle both class names)
-                const profileLink = userMenu.querySelector('a[href*="profile.html"]') || 
-                                  userMenu.querySelector('.user-dropdown-item[href*="profile.html"]') ||
-                                  userMenu.querySelector('.dropdown-item[href*="profile.html"]');
-                if (profileLink) {
-                    profileLink.style.display = 'none !important';
-                    profileLink.style.visibility = 'hidden';
-                }
             }
 
             // Add login button if not exists
@@ -292,10 +299,10 @@ class AuthSystem {
                 const loginBtn = document.createElement('li');
                 loginBtn.className = 'login-btn';
                 loginBtn.innerHTML = `
-                    <button onclick="openLoginModal()" class="btn primary-btn">
+                    <a href="#" onclick="openLoginModal(); return false;" class="login-link">
                         <i class="fas fa-sign-in-alt"></i>
                         <span>Login</span>
-                    </button>
+                    </a>
                 `;
                 navLinks.appendChild(loginBtn);
             }
