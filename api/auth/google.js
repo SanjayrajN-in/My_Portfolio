@@ -1,10 +1,10 @@
 // Google OAuth Authentication Handler
-const jwt = require('jsonwebtoken');
-const { OAuth2Client } = require('google-auth-library');
-const connectDB = require('../config/database');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
+import connectDB from '../config/database';
+import User from '../models/User';
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
     console.log('🔐 Google Auth API called:', {
         method: req.method,
         url: req.url,
@@ -180,67 +180,107 @@ module.exports = async (req, res) => {
 
         console.log('👤 Processing user:', { googleId, email, name, hasAvatar: !!picture });
 
-        // Connect to MongoDB
-        await connectDB();
-
-        // Find or create user in MongoDB
-        let user = await User.findOne({ 
-            $or: [
-                { email: email },
-                { googleId: googleId }
-            ]
-        });
-        
-        if (user) {
-            console.log('✅ Existing user found');
-            // Update user info
-            user.name = name;
-            user.avatar = picture || user.avatar;
-            user.lastLogin = new Date();
-            user.isVerified = true; // Google users are automatically verified
-            
-            // If user exists but doesn't have googleId, add it
-            if (!user.googleId) {
-                user.googleId = googleId;
-            }
-            
-            // Clear any pending OTP since this is Google auth
-            user.otp = null;
-            user.otpExpires = null;
-            
-            await user.save();
-        } else {
-            console.log('🆕 Creating new user');
-            user = new User({
-                googleId: googleId,
-                name: name,
-                email: email,
-                avatar: picture || 'images/default-avatar.svg',
-                isVerified: true, // Google users are automatically verified
-                joinedDate: new Date(),
-                lastLogin: new Date(),
-                gameStats: {
-                    totalGamesPlayed: 0,
-                    totalPlaytime: 0,
-                    gamesHistory: [],
-                    achievements: []
-                }
-            });
-            
-            await user.save();
+        // Connect to MongoDB with error handling
+        try {
+            console.log('🔄 Connecting to MongoDB...');
+            await connectDB();
+            console.log('✅ MongoDB connected successfully');
+        } catch (dbError) {
+            console.error('❌ MongoDB connection error:', dbError);
+            console.error('MongoDB error stack:', dbError.stack);
+            throw new Error(`Database connection failed: ${dbError.message}`);
         }
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { 
-                userId: user._id.toString(),
-                email: user.email,
-                name: user.name,
-                googleId: user.googleId
-            },
-            jwtSecret,
-            { expiresIn: '7d' }
-        );
+        // Find or create user in MongoDB
+        let user;
+        try {
+            console.log('🔍 Looking for existing user...');
+            user = await User.findOne({ 
+                $or: [
+                    { email: email },
+                    { googleId: googleId }
+                ]
+            });
+            console.log('✅ User query completed:', { found: !!user });
+        } catch (userError) {
+            console.error('❌ User lookup error:', userError);
+            throw new Error(`User lookup failed: ${userError.message}`);
+        }
+        
+        try {
+            if (user) {
+                console.log('✅ Existing user found');
+                // Update user info
+                user.name = name;
+                user.avatar = picture || user.avatar;
+                user.lastLogin = new Date();
+                user.isVerified = true; // Google users are automatically verified
+                
+                // If user exists but doesn't have googleId, add it
+                if (!user.googleId) {
+                    user.googleId = googleId;
+                }
+                
+                // Clear any pending OTP since this is Google auth
+                user.otp = null;
+                user.otpExpires = null;
+                
+                console.log('🔄 Saving updated user...');
+                await user.save();
+                console.log('✅ User updated successfully');
+            } else {
+                console.log('🆕 Creating new user');
+                user = new User({
+                    googleId: googleId,
+                    name: name,
+                    email: email,
+                    avatar: picture || 'images/default-avatar.svg',
+                    isVerified: true, // Google users are automatically verified
+                    joinedDate: new Date(),
+                    lastLogin: new Date(),
+                    gameStats: {
+                        totalGamesPlayed: 0,
+                        totalPlaytime: 0,
+                        gamesHistory: [],
+                        achievements: []
+                    }
+                });
+                
+                console.log('🔄 Saving new user...');
+                await user.save();
+                console.log('✅ New user created successfully');
+            }
+        } catch (saveError) {
+            console.error('❌ Error saving user:', saveError);
+            console.error('Save error stack:', saveError.stack);
+            throw new Error(`Failed to save user: ${saveError.message}`);
+        }
+
+        // Generate JWT token with error handling
+        let token;
+        try {
+            console.log('🔄 Generating JWT token...');
+            if (!jwtSecret) {
+                console.error('❌ Missing JWT_SECRET environment variable');
+                throw new Error('JWT_SECRET environment variable is not defined');
+            }
+            
+            token = jwt.sign(
+                { 
+                    userId: user._id.toString(),
+                    email: user.email,
+                    name: user.name,
+                    googleId: user.googleId
+                },
+                jwtSecret,
+                { expiresIn: '7d' }
+            );
+            console.log('✅ JWT token generated successfully');
+        } catch (jwtError) {
+            console.error('❌ JWT token generation error:', jwtError);
+            console.error('JWT error stack:', jwtError.stack);
+            throw new Error(`Failed to generate authentication token: ${jwtError.message}`);
+        }
 
         console.log('🎉 Login successful for user:', user.email);
 
@@ -265,6 +305,23 @@ module.exports = async (req, res) => {
 
     } catch (error) {
         console.error('💥 Google OAuth error:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            code: error.code,
+            status: error.status
+        });
+        
+        // Log environment variables (without exposing secrets)
+        console.log('Environment check:', {
+            hasMongoURI: !!process.env.MONGODB_URI,
+            hasJwtSecret: !!process.env.JWT_SECRET,
+            hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+            hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+            nodeEnv: process.env.NODE_ENV,
+            vercelEnv: process.env.VERCEL_ENV
+        });
         
         res.status(500).json({
             success: false,

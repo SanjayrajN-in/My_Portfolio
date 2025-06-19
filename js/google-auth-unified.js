@@ -270,8 +270,14 @@ class GoogleAuthUnified {
             console.log('📨 Response headers:', Object.fromEntries(result.headers.entries()));
 
             if (!result.ok) {
-                const errorText = await result.text();
-                console.error('❌ Backend response not ok:', result.status, errorText);
+                let errorText;
+                try {
+                    errorText = await result.text();
+                    console.error('❌ Backend response not ok:', result.status, errorText);
+                } catch (textError) {
+                    console.error('❌ Could not read error response:', textError);
+                    errorText = 'Unknown error';
+                }
                 
                 // Check if it's a 404 - API not found
                 if (result.status === 404) {
@@ -279,18 +285,45 @@ class GoogleAuthUnified {
                     
                     // Try to test if any API endpoint works
                     try {
-                        const testResponse = await fetch('/api/test', { method: 'GET' });
+                        const testUrl = `${window.location.origin}/api/test`;
+                        console.log('🔍 Testing API with:', testUrl);
+                        const testResponse = await fetch(testUrl, { 
+                            method: 'GET',
+                            headers: {
+                                'Cache-Control': 'no-cache',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        
                         if (testResponse.ok) {
                             console.log('✅ Basic API works, but Google auth endpoint missing');
                             throw new Error('Google authentication service is temporarily unavailable. Please try again in a few minutes.');
                         } else {
-                            console.error('❌ No API endpoints working');
+                            console.error('❌ No API endpoints working, status:', testResponse.status);
                             throw new Error('Server is temporarily unavailable. Please try again later.');
                         }
                     } catch (testError) {
                         console.error('❌ API test failed:', testError.message);
                         throw new Error('Unable to connect to authentication server. Please check your internet connection and try again.');
                     }
+                }
+                
+                // For 500 errors, provide more helpful message
+                if (result.status === 500) {
+                    console.error('🚨 Server error 500 detected');
+                    
+                    // Try to parse the error as JSON if possible
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        if (errorJson.error && errorJson.error.message) {
+                            throw new Error(`Server error: ${errorJson.error.message}`);
+                        }
+                    } catch (parseError) {
+                        // If parsing fails, just use the text
+                        console.log('Could not parse error JSON:', parseError);
+                    }
+                    
+                    throw new Error('The server encountered an error processing your login. Please try again later.');
                 }
                 
                 throw new Error(`Server error: ${result.status} - ${errorText}`);

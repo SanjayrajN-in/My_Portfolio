@@ -44,8 +44,12 @@ class GoogleAuthCallbackUnified {
             // Show processing message
             this.updateStatus('🔄 Verifying with Google...', 'info');
 
+            // Construct the API URL using the current origin
+            const apiUrl = `${window.location.origin}/api/auth/google`;
+            console.log('🌐 Using API URL:', apiUrl);
+            
             // Send code to our backend
-            const response = await fetch('/api/auth/google', {
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,9 +65,37 @@ class GoogleAuthCallbackUnified {
                 })
             });
 
+            console.log('📨 Response status:', response.status);
+            console.log('📨 Response headers:', Object.fromEntries(response.headers.entries()));
+
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Backend response not ok:', response.status, errorText);
+                let errorText;
+                try {
+                    errorText = await response.text();
+                    console.error('❌ Backend response not ok:', response.status, errorText);
+                } catch (textError) {
+                    console.error('❌ Could not read error response:', textError);
+                    errorText = 'Unknown error';
+                }
+                
+                // For 500 errors, provide more helpful message
+                if (response.status === 500) {
+                    console.error('🚨 Server error 500 detected');
+                    
+                    // Try to parse the error as JSON if possible
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        if (errorJson.error && errorJson.error.message) {
+                            throw new Error(`Server error: ${errorJson.error.message}`);
+                        }
+                    } catch (parseError) {
+                        // If parsing fails, just use the text
+                        console.log('Could not parse error JSON:', parseError);
+                    }
+                    
+                    throw new Error('The server encountered an error processing your login. Please try again later.');
+                }
+                
                 throw new Error(`Server error: ${response.status} - ${errorText}`);
             }
 

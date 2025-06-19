@@ -11,6 +11,9 @@
     { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/auth/google/callback", "destination": "/auth/google/callback.html" }
   ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"] }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
