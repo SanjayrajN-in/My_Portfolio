@@ -570,7 +570,7 @@
     <script>
         // Aggressive cleanup of any Google auth elements
         function removeGoogleAuthElements() {
-            // Remove Google auth buttons and iframes
+            // Remove Google auth buttons, iframes, and form dividers
             const googleSelectors = [
                 '[id*="google"]',
                 '[class*="google"]',
@@ -586,7 +586,11 @@
                 'iframe[src*="gsi"]',
                 '#googleSignInButton',
                 '#googleLoginBtn',
-                '.google-login-btn'
+                '.google-login-btn',
+                '.form-divider',
+                '.login-divider',
+                '.auth-divider',
+                'hr.divider'
             ];
             
             googleSelectors.forEach(selector => {
@@ -630,6 +634,21 @@
                      el.textContent.includes('Or sign in with email'))) {
                     el.style.display = 'none';
                     console.log('🗑️ Hidden element containing "continue with email" text');
+                }
+            });
+            
+            // Remove any divider elements that might separate login methods
+            const potentialDividers = document.querySelectorAll('div, hr, span, p');
+            potentialDividers.forEach(el => {
+                const text = el.textContent?.trim().toLowerCase();
+                if (text === 'or' || 
+                    text === 'or continue' || 
+                    text === 'continue' ||
+                    el.classList.contains('divider') ||
+                    el.classList.contains('separator') ||
+                    (el.tagName === 'HR' && el.parentElement?.querySelector('form'))) {
+                    el.style.display = 'none';
+                    console.log('🗑️ Hidden potential divider element');
                 }
             });
         }

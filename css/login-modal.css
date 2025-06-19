@@ -250,30 +250,7 @@
     left: 100%;
 }
 
-.form-divider {
-    position: relative;
-    text-align: center;
-    margin: 2rem 0;
-}
 
-.form-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.form-divider span {
-    background: linear-gradient(135deg, rgba(30, 30, 47, 0.95), rgba(20, 20, 35, 0.95));
-    padding: 0 1rem;
-    color: var(--text-color-light);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
 
 
 
@@ -388,7 +365,7 @@
     }
 }
 
-/* Hide any remaining Google auth elements */
+/* Hide any remaining Google auth elements and dividers */
 .google-login-btn,
 #googleSignInButton,
 #googleLoginBtn,
@@ -403,7 +380,12 @@ div[data-callback],
 .g-signin2,
 .g-signin,
 iframe[src*="google"],
-iframe[src*="gsi"] {
+iframe[src*="gsi"],
+.form-divider,
+.login-divider,
+.auth-divider,
+.social-divider,
+hr.divider {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
