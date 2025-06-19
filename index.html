@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -196,6 +196,16 @@
                 <li><a href="pages/about.html">
                     <i class="fas fa-user"></i>
                     <span>About</span>
+                </a></li>
+                <!-- User Profile Link (only visible when logged in) -->
+                <li class="auth-only" style="display: none;"><a href="pages/profile.html" class="user-profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="user-name">User</span>
+                </a></li>
+                <!-- Login Button (only visible when logged out) -->
+                <li class="guest-only"><a href="javascript:void(0);" class="login-button" onclick="window.loginModal.open()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
                 </a></li>
                 <li><a href="pages/skills.html">
                     <i class="fas fa-cogs"></i>
@@ -575,5 +585,6 @@
     <script src="js/auth.js"></script>
     <script src="js/google-auth-unified.js"></script>
     <script src="js/login-modal.js"></script>
+    <script src="js/auth-ui.js"></script>
 </body>
 </html>

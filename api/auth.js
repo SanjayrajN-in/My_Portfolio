@@ -40,9 +40,28 @@ const handleGoogleAuth = async (req, res) => {
     origin: req.headers.origin,
     timestamp: new Date().toISOString()
   });
-
+  
+  // Log request headers for debugging
+  console.log('📋 Request headers:', req.headers);
+  
   try {
+    // Log request body (without sensitive data)
+    const safeBody = { ...req.body };
+    if (safeBody.credential) safeBody.credential = `${safeBody.credential.substring(0, 10)}...`;
+    if (safeBody.code) safeBody.code = `${safeBody.code.substring(0, 10)}...`;
+    console.log('📋 Request body (sanitized):', safeBody);
+    
     console.log('📨 Processing Google OAuth request...');
+    
+    // Check if request body exists
+    if (!req.body) {
+      console.error('❌ Request body is missing');
+      return res.status(400).json({
+        success: false,
+        message: 'Request body is missing',
+        error: 'No request body provided'
+      });
+    }
     
     // Get request body
     const { credential, code, redirect_uri, popup_mode, callback_mode } = req.body;

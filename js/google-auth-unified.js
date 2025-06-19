@@ -423,25 +423,52 @@ class GoogleAuthUnified {
         if (data.user) {
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('currentUser', JSON.stringify(data.user));
+            console.log('💾 User data saved to localStorage');
         }
         if (data.token) {
             localStorage.setItem('token', data.token);
+            console.log('💾 Token saved to localStorage');
         }
 
         // Show success message
         this.showMessage('Login successful! Welcome back.', 'success');
         
-        // Close modal and reload
+        // Determine redirect URL
+        const redirectUrl = this.getRedirectUrl();
+        console.log('🔀 Will redirect to:', redirectUrl);
+        
+        // Close modal and redirect
         if (window.loginModal && typeof window.loginModal.close === 'function') {
             setTimeout(() => {
                 window.loginModal.close();
-                window.location.reload();
+                window.location.href = redirectUrl;
             }, 1500);
         } else {
             setTimeout(() => {
-                window.location.reload();
+                window.location.href = redirectUrl;
             }, 1500);
         }
+    }
+    
+    getRedirectUrl() {
+        // Check if there's a redirect parameter in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectParam = urlParams.get('redirect');
+        
+        if (redirectParam) {
+            // Make sure the redirect URL is on the same domain for security
+            try {
+                const redirectUrl = new URL(redirectParam, window.location.origin);
+                if (redirectUrl.origin === window.location.origin) {
+                    return redirectUrl.href;
+                }
+            } catch (e) {
+                console.error('Invalid redirect URL:', e);
+            }
+        }
+        
+        // Default redirect to home page
+        return window.location.origin + '/index.html';
     }
 
     handleLoginError(errorMessage) {

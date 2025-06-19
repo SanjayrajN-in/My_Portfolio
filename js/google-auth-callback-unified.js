@@ -114,9 +114,13 @@ class GoogleAuthCallbackUnified {
                     localStorage.setItem('token', result.token);
                 }
 
-                // Redirect to home page after a short delay
+                // Determine redirect URL
+                const redirectUrl = this.getRedirectUrl();
+                console.log('🔀 Will redirect to:', redirectUrl);
+                
+                // Redirect after a short delay
                 setTimeout(() => {
-                    window.location.href = '/';
+                    window.location.href = redirectUrl;
                 }, 1500);
             } else {
                 throw new Error(result.message || 'Login failed');
@@ -134,10 +138,31 @@ class GoogleAuthCallbackUnified {
         
         // Redirect back to home page after a delay
         setTimeout(() => {
-            window.location.href = '/';
+            window.location.href = window.location.origin + '/index.html';
         }, 3000);
     }
 
+    getRedirectUrl() {
+        // Check if there's a redirect parameter in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectParam = urlParams.get('redirect');
+        
+        if (redirectParam) {
+            // Make sure the redirect URL is on the same domain for security
+            try {
+                const redirectUrl = new URL(redirectParam, window.location.origin);
+                if (redirectUrl.origin === window.location.origin) {
+                    return redirectUrl.href;
+                }
+            } catch (e) {
+                console.error('Invalid redirect URL:', e);
+            }
+        }
+        
+        // Default redirect to home page
+        return window.location.origin + '/index.html';
+    }
+    
     updateStatus(message, type = 'info') {
         // Update the page content
         const container = document.querySelector('.container');
