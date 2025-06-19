@@ -2,7 +2,7 @@
 class GoogleAuthUnified {
     constructor() {
         this.clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
-        this.redirectUri = 'https://sanjayrajn.vercel.app/auth/google/callback';
+        this.redirectUri = window.location.origin + '/auth/google/callback';
         this.isInitialized = false;
         this.isLoading = false;
         
@@ -166,6 +166,9 @@ class GoogleAuthUnified {
         // Store state for verification
         sessionStorage.setItem('google_oauth_state', state);
         
+        // Log the redirect URI for debugging
+        console.log('🔄 Using redirect URI:', this.redirectUri);
+        
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
             `client_id=${encodeURIComponent(this.clientId)}&` +
             `redirect_uri=${encodeURIComponent(this.redirectUri)}&` +
@@ -243,8 +246,12 @@ class GoogleAuthUnified {
             console.log('📤 Sending credential to backend...');
             console.log('🌐 API URL:', `${window.location.origin}/api/auth/google`);
 
+            // Construct the API URL using the current origin
+            const apiUrl = `${window.location.origin}/api/auth/google`;
+            console.log('🌐 Using API URL:', apiUrl);
+            
             // Send credential to backend
-            const result = await fetch('/api/auth/google', {
+            const result = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

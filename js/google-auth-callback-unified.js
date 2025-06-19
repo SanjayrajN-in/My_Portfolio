@@ -56,7 +56,7 @@ class GoogleAuthCallbackUnified {
                 credentials: 'include',
                 body: JSON.stringify({ 
                     code: code,
-                    redirect_uri: 'https://sanjayrajn.vercel.app/auth/google/callback',
+                    redirect_uri: window.location.origin + '/auth/google/callback',
                     callback_mode: true
                 })
             });
