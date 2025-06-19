@@ -43,7 +43,8 @@ const corsOptions = {
             'http://localhost:8080',
             'http://127.0.0.1:5500',
             'http://localhost:5500',
-            'https://sanjayrajn.vercel.app'
+            'https://sanjayrajn.vercel.app',
+            'https://sanjayraj-n.vercel.app'
         ];
         
         if (allowedOrigins.indexOf(origin) !== -1) {

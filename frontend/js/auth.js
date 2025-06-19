@@ -951,24 +951,35 @@ class AuthSystem {
 
     // OTP Modal Methods
     showOTPModal(email, type) {
-        // Create OTP modal if it doesn't exist
-        let otpModal = document.getElementById('otpModal');
-        if (!otpModal) {
-            otpModal = this.createOTPModal();
-            document.body.appendChild(otpModal);
+        // Remove any existing modal first
+        const existingModal = document.getElementById('otpModal');
+        if (existingModal) {
+            existingModal.remove();
         }
+        
+        // Create fresh OTP modal
+        const otpModal = this.createOTPModal();
+        document.body.appendChild(otpModal);
 
         // Update modal content
         document.getElementById('otpEmail').textContent = email;
         document.getElementById('otpType').textContent = type === 'register' ? 'Registration' : 'Login';
         document.getElementById('otpInput').value = '';
         
-        // Show modal
+        // Show modal immediately
         console.log('👁️ Setting modal display to flex...');
         otpModal.style.display = 'flex';
+        otpModal.style.opacity = '1';
+        otpModal.style.pointerEvents = 'auto';
         
-        // Verify modal is visible
+        // Focus input after a small delay to ensure modal is rendered
         setTimeout(() => {
+            const otpInput = document.getElementById('otpInput');
+            if (otpInput) {
+                otpInput.focus();
+                otpInput.click(); // Trigger mobile keyboards
+            }
+            
             const modalCheck = document.getElementById('otpModal');
             console.log('🔍 Modal check:', {
                 exists: !!modalCheck,
@@ -976,9 +987,7 @@ class AuthSystem {
                 visibility: modalCheck?.style.visibility,
                 zIndex: modalCheck?.style.zIndex
             });
-        }, 100);
-        
-        document.getElementById('otpInput').focus();
+        }, 50);
         
         // Start timer
         this.startOTPTimer();
@@ -1013,6 +1022,9 @@ class AuthSystem {
                                 pattern="[0-9]{6}"
                                 required
                                 autocomplete="one-time-code"
+                                inputmode="numeric"
+                                onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                onpaste="return false"
                             >
                         </div>
                         
@@ -1035,6 +1047,38 @@ class AuthSystem {
             </div>
         `;
         
+        // Add event listeners after creating the modal
+        document.body.appendChild(modal);
+        
+        // Add input event listeners for better UX
+        const otpInput = modal.querySelector('#otpInput');
+        if (otpInput) {
+            // Auto-format and validate input
+            otpInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/[^0-9]/g, '');
+                if (value.length > 6) value = value.slice(0, 6);
+                e.target.value = value;
+                
+                // Auto-submit when 6 digits are entered
+                if (value.length === 6) {
+                    setTimeout(() => {
+                        const form = document.getElementById('otpForm');
+                        if (form) {
+                            form.requestSubmit();
+                        }
+                    }, 500);
+                }
+            });
+            
+            // Handle paste events
+            otpInput.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const paste = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+                this.value = paste;
+                this.dispatchEvent(new Event('input'));
+            });
+        }
+        
         // Add styles
         if (!document.getElementById('otpModalStyles')) {
             const styles = document.createElement('style');
@@ -1055,20 +1099,21 @@ class AuthSystem {
                 }
                 
                 .modal-content {
-                    background: white;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     border-radius: 15px;
                     padding: 0;
                     max-width: 90vw;
                     max-height: 90vh;
                     overflow-y: auto;
                     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-                    animation: modalSlideIn 0.3s ease-out;
+                    animation: modalSlideIn 0.15s ease-out;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
                 }
                 
                 @keyframes modalSlideIn {
                     from {
                         opacity: 0;
-                        transform: scale(0.8) translateY(-20px);
+                        transform: scale(0.95) translateY(-10px);
                     }
                     to {
                         opacity: 1;
@@ -1076,29 +1121,66 @@ class AuthSystem {
                     }
                 }
                 
+                @media (max-width: 768px) {
+                    .modal-content {
+                        max-width: 95vw;
+                        margin: 20px;
+                    }
+                    
+                    .modal-header {
+                        padding: 20px 25px 15px;
+                    }
+                    
+                    .modal-header h2 {
+                        font-size: 20px;
+                    }
+                    
+                    .modal-body {
+                        padding: 25px 20px;
+                    }
+                    
+                    #otpInput {
+                        width: 100%;
+                        max-width: 250px;
+                        font-size: 20px;
+                    }
+                    
+                    .otp-actions {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+                    
+                    .otp-actions .btn {
+                        max-width: none;
+                    }
+                }
+                
                 .modal-header {
                     padding: 25px 30px 20px;
-                    border-bottom: 1px solid #eee;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 15px 15px 0 0;
                 }
                 
                 .modal-header h2 {
                     margin: 0;
-                    color: #333;
+                    color: white;
                     font-size: 24px;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
                 }
                 
                 .close-btn {
-                    background: none;
+                    background: rgba(255, 255, 255, 0.2);
                     border: none;
                     font-size: 28px;
-                    color: #999;
+                    color: white;
                     cursor: pointer;
                     padding: 0;
-                    width: 30px;
-                    height: 30px;
+                    width: 35px;
+                    height: 35px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -1107,12 +1189,14 @@ class AuthSystem {
                 }
                 
                 .close-btn:hover {
-                    background: #f0f0f0;
-                    color: #333;
+                    background: rgba(255, 255, 255, 0.3);
+                    transform: scale(1.1);
                 }
                 
                 .modal-body {
                     padding: 30px;
+                    background: rgba(255, 255, 255, 0.95);
+                    border-radius: 0 0 15px 15px;
                 }
                 
                 .otp-modal {
@@ -1147,12 +1231,24 @@ class AuthSystem {
                     border-radius: 8px;
                     font-family: 'Courier New', monospace;
                     font-weight: bold;
+                    background: #fff;
+                    color: #333;
+                    transition: all 0.3s ease;
+                    -webkit-appearance: none;
+                    -moz-appearance: textfield;
                 }
                 
                 #otpInput:focus {
-                    border-color: var(--primary-color);
+                    border-color: #667eea;
                     outline: none;
-                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+                    background: #fff;
+                }
+                
+                #otpInput::placeholder {
+                    color: #999;
+                    font-size: 14px;
+                    letter-spacing: normal;
                 }
                 
                 .otp-actions {
@@ -1165,6 +1261,39 @@ class AuthSystem {
                 .otp-actions .btn {
                     flex: 1;
                     max-width: 150px;
+                    padding: 12px 20px;
+                    border: none;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                }
+                
+                .otp-actions .primary-btn {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+                }
+                
+                .otp-actions .primary-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+                }
+                
+                .otp-actions .secondary-btn {
+                    background: rgba(102, 126, 234, 0.1);
+                    color: #667eea;
+                    border: 1px solid rgba(102, 126, 234, 0.3);
+                }
+                
+                .otp-actions .secondary-btn:hover {
+                    background: rgba(102, 126, 234, 0.2);
+                    transform: translateY(-1px);
                 }
                 
                 .otp-timer {
@@ -1184,6 +1313,11 @@ class AuthSystem {
             document.head.appendChild(styles);
         }
         
+        // Remove the modal from body since we already added it above
+        if (modal.parentNode) {
+            modal.parentNode.removeChild(modal);
+        }
+        
         return modal;
     }
 
@@ -1191,9 +1325,16 @@ class AuthSystem {
         const modal = document.getElementById('otpModal');
         if (modal) {
             modal.style.display = 'none';
+            modal.remove(); // Completely remove the modal
         }
         // Clear pending registration data
         sessionStorage.removeItem('pendingRegistration');
+        
+        // Clear any running timers
+        if (this.otpTimer) {
+            clearInterval(this.otpTimer);
+            this.otpTimer = null;
+        }
     }
 
     async handleOTPSubmit(e) {
@@ -1274,7 +1415,7 @@ class AuthSystem {
         try {
             this.showMessage('Resending code...', 'info');
             
-            const response = await fetch('/api/auth/send-otp', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1285,7 +1426,14 @@ class AuthSystem {
                 })
             });
 
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('JSON parse error:', jsonError);
+                this.showMessage('Server response error. Please try again.', 'error');
+                return;
+            }
 
             if (response.ok) {
                 this.showMessage('New verification code sent!', 'success');
@@ -1664,7 +1812,7 @@ class AuthSystem {
         try {
             this.showMessage('Resending code...', 'info');
             
-            const response = await fetch('/api/auth/send-otp', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
