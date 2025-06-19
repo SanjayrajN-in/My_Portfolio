@@ -17,13 +17,21 @@ const connectDB = async () => {
       throw new Error('MONGODB_URI environment variable is not defined');
     }
 
-    console.log('Connecting to MongoDB...');
+    // Log the MongoDB URI (with password masked)
+    const mongoUri = process.env.MONGODB_URI;
+    const maskedUri = mongoUri.replace(/:([^:@]+)@/, ':****@');
+    console.log('MongoDB URI (masked):', maskedUri);
+
+    console.log('Connecting to MongoDB Atlas...');
     
-    // Important: Remove deprecated options and use the new connection syntax
-    // that works well with Vercel serverless functions
+    // Important: Use the new connection syntax with optimized options for MongoDB Atlas
     if (mongoose.connection.readyState !== 1) {
-      await mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      await mongoose.connect(mongoUri, {
+        serverSelectionTimeoutMS: 10000, // Timeout after 10s
+        connectTimeoutMS: 15000,         // Connection timeout
+        socketTimeoutMS: 45000,          // Socket timeout
+        maxPoolSize: 10,                 // Maintain up to 10 socket connections
+        family: 4                        // Use IPv4, skip trying IPv6
       });
     }
     
@@ -34,7 +42,19 @@ const connectDB = async () => {
     return mongoose;
   } catch (error) {
     console.error('Database connection error:', error);
-    throw error;
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      codeName: error.codeName
+    });
+    
+    // Throw a more descriptive error
+    if (error.name === 'MongoServerSelectionError') {
+      throw new Error(`Could not connect to MongoDB Atlas: ${error.message}. Please check your connection string and network.`);
+    } else {
+      throw error;
+    }
   }
 };
 
