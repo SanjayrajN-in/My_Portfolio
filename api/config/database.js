@@ -12,16 +12,28 @@ const connectDB = async () => {
 
   try {
     // Check if MONGODB_URI is defined
-    if (!process.env.MONGODB_URI) {
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
       console.error('MONGODB_URI environment variable is not defined');
-      throw new Error('MONGODB_URI environment variable is not defined');
+      
+      // In development, we can use a dummy URI for testing
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Using dummy MongoDB URI for development');
+        // This will fail to connect but won't throw an error during initialization
+        return null;
+      } else {
+        throw new Error('MONGODB_URI environment variable is not defined');
+      }
     }
 
     // Log the MongoDB URI (with password masked)
-    const mongoUri = process.env.MONGODB_URI;
-    const maskedUri = mongoUri.replace(/:([^:@]+)@/, ':****@');
-    console.log('MongoDB URI (masked):', maskedUri);
-    console.log('MongoDB URI first 20 chars:', mongoUri.substring(0, 20) + '...');
+    try {
+      const maskedUri = mongoUri.replace(/:([^:@]+)@/, ':****@');
+      console.log('MongoDB URI (masked):', maskedUri);
+      console.log('MongoDB URI first 20 chars:', mongoUri.substring(0, 20) + '...');
+    } catch (error) {
+      console.error('Error masking MongoDB URI:', error.message);
+    }
 
     console.log('Connecting to MongoDB Atlas...');
     

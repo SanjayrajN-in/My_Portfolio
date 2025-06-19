@@ -261,6 +261,16 @@ class GoogleAuthUnified {
         console.log('📨 Google credential response received');
         this.isLoading = true;
         
+        // Add a timeout to prevent hanging if the server doesn't respond
+        this.loginTimeout = setTimeout(() => {
+            if (this.isLoading) {
+                console.log('⏱️ Login request timed out');
+                this.isLoading = false;
+                this.showMessage('Login request timed out. Please try again.', 'error');
+                this.formSubmissionFallback(response.credential);
+            }
+        }, 15000); // 15 second timeout
+        
         try {
             // Show loading state
             this.showLoadingState();
@@ -512,6 +522,12 @@ class GoogleAuthUnified {
             console.error('❌ Google login error:', error);
             this.handleLoginError(error.message || 'Login failed');
         } finally {
+            // Clear the timeout
+            if (this.loginTimeout) {
+                clearTimeout(this.loginTimeout);
+                this.loginTimeout = null;
+            }
+            
             this.isLoading = false;
             this.hideLoadingState();
         }

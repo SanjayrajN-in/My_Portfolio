@@ -4,7 +4,13 @@ import { OAuth2Client } from 'google-auth-library';
 import connectDB from '../config/database';
 import User from '../models/User';
 
+// Fallback values for development
+const FALLBACK_JWT_SECRET = 'fallback-jwt-secret-for-development-only';
+const FALLBACK_CLIENT_ID = '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
+
 export default async function handler(req, res) {
+  // Add error handling for the entire function
+  try {
     console.log('🔐 Google Auth API called:', {
         method: req.method,
         url: req.url,
@@ -65,23 +71,39 @@ export default async function handler(req, res) {
             isCallbackMode: callback_mode
         });
 
-        // Environment variables check
-        const googleClientId = process.env.GOOGLE_CLIENT_ID || '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
-        const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-        const jwtSecret = process.env.JWT_SECRET || 'fallback-jwt-secret-for-development';
+        // Environment variables check with fallbacks for development
+        const googleClientId = process.env.GOOGLE_CLIENT_ID || FALLBACK_CLIENT_ID;
+        const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || 'dummy-secret-for-development';
+        const jwtSecret = process.env.JWT_SECRET || FALLBACK_JWT_SECRET;
+        const mongodbUri = process.env.MONGODB_URI || 'mongodb+srv://dummy:dummy@cluster0.mongodb.net/portfolio?retryWrites=true&w=majority';
 
         console.log('🔧 Environment check:', {
             hasClientId: !!googleClientId,
             hasClientSecret: !!googleClientSecret,
             hasJwtSecret: !!jwtSecret,
-            clientIdPrefix: googleClientId ? googleClientId.substring(0, 10) + '...' : 'none'
+            hasMongodbUri: !!mongodbUri,
+            clientIdPrefix: googleClientId ? googleClientId.substring(0, 10) + '...' : 'none',
+            mongodbUriPrefix: mongodbUri ? mongodbUri.substring(0, 20) + '...' : 'none'
         });
 
+        // For development environment, we'll use fallbacks
+        // For production, we'll require the actual environment variables
+        const isProduction = process.env.NODE_ENV === 'production';
+        
         if (!googleClientId) {
             console.error('❌ Missing GOOGLE_CLIENT_ID');
             return res.status(500).json({
                 success: false,
                 message: 'Server configuration error: Missing Google Client ID'
+            });
+        }
+        
+        // In production, we require the actual client secret
+        if (isProduction && !process.env.GOOGLE_CLIENT_SECRET) {
+            console.error('❌ Missing GOOGLE_CLIENT_SECRET in production');
+            return res.status(500).json({
+                success: false,
+                message: 'Server configuration error: Missing Google Client Secret'
             });
         }
 
@@ -212,7 +234,16 @@ export default async function handler(req, res) {
             console.log('✅ User query completed:', { found: !!user });
         } catch (userError) {
             console.error('❌ User lookup error:', userError);
-            throw new Error(`User lookup failed: ${userError.message}`);
+            console.error('User lookup error stack:', userError.stack);
+            
+            // Return a specific error response instead of throwing
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to look up user in database',
+                error: userError.message,
+                errorType: 'database_query',
+                timestamp: new Date().toISOString()
+            });
         }
         
         try {
@@ -261,7 +292,15 @@ export default async function handler(req, res) {
         } catch (saveError) {
             console.error('❌ Error saving user:', saveError);
             console.error('Save error stack:', saveError.stack);
-            throw new Error(`Failed to save user: ${saveError.message}`);
+            
+            // Return a specific error response instead of throwing
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to save user data',
+                error: saveError.message,
+                errorType: 'database_save',
+                timestamp: new Date().toISOString()
+            });
         }
 
         // Generate JWT token with error handling
@@ -287,7 +326,15 @@ export default async function handler(req, res) {
         } catch (jwtError) {
             console.error('❌ JWT token generation error:', jwtError);
             console.error('JWT error stack:', jwtError.stack);
-            throw new Error(`Failed to generate authentication token: ${jwtError.message}`);
+            
+            // Return a specific error response instead of throwing
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to generate authentication token',
+                error: jwtError.message,
+                errorType: 'jwt_generation',
+                timestamp: new Date().toISOString()
+            });
         }
 
         console.log('🎉 Login successful for user:', user.email);
@@ -357,4 +404,16 @@ export default async function handler(req, res) {
             timestamp: new Date().toISOString()
         });
     }
+  } catch (outerError) {
+    // This is a fallback error handler in case something goes wrong in the main error handler
+    console.error('CRITICAL ERROR in Google Auth handler:', outerError);
+    
+    // Send a simple error response
+    res.status(500).json({
+      success: false,
+      message: 'A critical error occurred in the authentication service',
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
 };

@@ -1,5 +1,7 @@
 // Enhanced health check endpoint
 export default async function handler(req, res) {
+  // Add error handling for the entire function
+  try {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -65,6 +67,18 @@ export default async function handler(req, res) {
       success: false,
       message: 'Health check failed',
       error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+  } catch (outerError) {
+    // This is a fallback error handler in case something goes wrong in the main error handler
+    console.error('CRITICAL ERROR in Health Check handler:', outerError);
+    
+    // Send a simple error response
+    res.status(500).json({
+      success: false,
+      message: 'A critical error occurred in the health check service',
+      error: 'Internal server error',
       timestamp: new Date().toISOString()
     });
   }
