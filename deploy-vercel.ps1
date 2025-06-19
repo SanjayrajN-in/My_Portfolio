@@ -68,6 +68,7 @@ if (Test-Path vercel.json) {
     
     # Validate vercel.json configuration
     $vercelConfig = Get-Content -Raw vercel.json | ConvertFrom-Json
+    $configErrors = $false
     
     # Check for configuration conflicts
     if (($vercelConfig.PSObject.Properties.Name -contains "routes") -and 
@@ -80,6 +81,7 @@ if (Test-Path vercel.json) {
         Write-Host "❌ Configuration error in vercel.json:" -ForegroundColor Red
         Write-Host "   If 'rewrites', 'redirects', 'headers', 'cleanUrls' or 'trailingSlash' are used," -ForegroundColor Red
         Write-Host "   then 'routes' cannot be present." -ForegroundColor Red
+        $configErrors = $true
         
         $fixConfig = Read-Host "Do you want to automatically fix this issue? (y/n)"
         if ($fixConfig -eq "y") {
@@ -103,11 +105,70 @@ if (Test-Path vercel.json) {
                 # Save updated config
                 $vercelConfig | ConvertTo-Json -Depth 10 | Set-Content vercel.json
                 Write-Host "✅ vercel.json configuration fixed" -ForegroundColor Green
+                $configErrors = $false
+                
+                # Reload the config after changes
+                $vercelConfig = Get-Content -Raw vercel.json | ConvertFrom-Json
             }
         } else {
             Write-Host "Deployment cancelled. Please fix vercel.json manually." -ForegroundColor Red
             exit
         }
+    }
+    
+    # Check for function runtime version issues
+    if ($vercelConfig.PSObject.Properties.Name -contains "functions") {
+        $runtimeIssues = $false
+        $functionsToFix = @{}
+        
+        foreach ($functionPath in $vercelConfig.functions.PSObject.Properties.Name) {
+            $runtime = $vercelConfig.functions.$functionPath.runtime
+            
+            # Check if runtime doesn't have a version
+            if ($runtime -and -not $runtime.Contains('@')) {
+                $runtimeIssues = $true
+                $functionsToFix[$functionPath] = $runtime
+            }
+        }
+        
+        if ($runtimeIssues) {
+            Write-Host "❌ Function runtime version error in vercel.json:" -ForegroundColor Red
+            Write-Host "   Function Runtimes must have a valid version, for example '@vercel/node@1.15.4'" -ForegroundColor Red
+            $configErrors = $true
+            
+            $fixRuntimes = Read-Host "Do you want to automatically fix this issue? (y/n)"
+            if ($fixRuntimes -eq "y") {
+                foreach ($functionPath in $functionsToFix.Keys) {
+                    $runtime = $functionsToFix[$functionPath]
+                    
+                    # Add version to runtime
+                    if ($runtime -eq "@vercel/node") {
+                        $vercelConfig.functions.$functionPath.runtime = "@vercel/node@1.15.4"
+                    } elseif ($runtime -eq "@vercel/python") {
+                        $vercelConfig.functions.$functionPath.runtime = "@vercel/python@3.1.0"
+                    } elseif ($runtime -eq "@vercel/go") {
+                        $vercelConfig.functions.$functionPath.runtime = "@vercel/go@1.2.3"
+                    } elseif ($runtime -eq "@vercel/ruby") {
+                        $vercelConfig.functions.$functionPath.runtime = "@vercel/ruby@1.2.6"
+                    } else {
+                        # Default to adding version 1.0.0 for unknown runtimes
+                        $vercelConfig.functions.$functionPath.runtime = "$runtime@1.0.0"
+                    }
+                }
+                
+                # Save updated config
+                $vercelConfig | ConvertTo-Json -Depth 10 | Set-Content vercel.json
+                Write-Host "✅ Function runtime versions fixed" -ForegroundColor Green
+                $configErrors = $false
+            } else {
+                Write-Host "Deployment cancelled. Please fix vercel.json manually." -ForegroundColor Red
+                exit
+            }
+        }
+    }
+    
+    if (-not $configErrors) {
+        Write-Host "✅ vercel.json configuration validated" -ForegroundColor Green
     }
 } else {
     Write-Host "❌ vercel.json not found" -ForegroundColor Red

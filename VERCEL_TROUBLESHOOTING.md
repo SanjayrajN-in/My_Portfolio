@@ -33,6 +33,39 @@ Error: If `rewrites`, `redirects`, `headers`, `cleanUrls` or `trailingSlash` are
 
 - Run the `deploy-vercel.ps1` script which can automatically fix this issue
 
+### 2. Invalid Function Runtime Version
+
+**Error Message:**
+```
+Error: Function Runtimes must have a valid version, for example `now-php@1.0.0`.
+```
+
+**Solution:**
+- You need to specify a version for each function runtime in your `vercel.json` file
+- Update your function definitions to include version numbers:
+
+```json
+// INCORRECT
+"functions": {
+  "api/auth/google.js": {
+    "runtime": "@vercel/node"
+  }
+}
+
+// CORRECT
+"functions": {
+  "api/auth/google.js": {
+    "runtime": "@vercel/node@1.15.4"
+  }
+}
+```
+
+- Common runtime versions:
+  - `@vercel/node@1.15.4` - For Node.js functions
+  - `@vercel/python@3.1.0` - For Python functions
+  - `@vercel/go@1.2.3` - For Go functions
+  - `@vercel/ruby@1.2.6` - For Ruby functions
+
 ### 2. Missing Environment Variables
 
 **Error Message:**
