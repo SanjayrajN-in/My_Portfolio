@@ -6,10 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
-    "build": "node vercel-build.js",
-    "start": "vercel dev",
-    "test:auth": "node api/test/google-auth-test.js",
-    "test:db": "node --experimental-modules api/test/db-connection.js"
+    "build": "echo 'No build step needed'",
+    "start": "vercel dev"
   },
   "keywords": [
     "portfolio",
