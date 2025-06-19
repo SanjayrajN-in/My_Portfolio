@@ -23,16 +23,19 @@ This guide will help you deploy your full-stack application (frontend + backend 
 1. Go to your Vercel dashboard
 2. Select your project (or import it from GitHub if not already done)
 3. Go to "Settings" > "Environment Variables"
-4. Add the following environment variables:
-   - `MONGODB_URI`: Your MongoDB connection string
+4. Add the following environment variables (copy values from your local .env file):
+   - `MONGODB_URI`: Your MongoDB connection string (e.g., mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority)
    - `JWT_SECRET`: A secure random string for JWT token generation
    - `GOOGLE_CLIENT_ID`: Your Google OAuth client ID (if using Google Auth)
    - `GOOGLE_CLIENT_SECRET`: Your Google OAuth client secret (if using Google Auth)
-   - `FRONTEND_URL`: The URL of your deployed frontend (e.g., https://your-app.vercel.app)
-   - `OAUTH_CALLBACK_URL`: The callback URL for OAuth (e.g., https://your-app.vercel.app/auth/google/callback)
+   - `FRONTEND_URL`: The URL of your deployed frontend (e.g., https://sanjayrajn.vercel.app)
+   - `OAUTH_CALLBACK_URL`: The callback URL for OAuth (e.g., https://sanjayrajn.vercel.app/auth/google/callback)
    - `EMAIL_USER`: Your email address for sending emails
    - `EMAIL_PASS`: Your email app password
-   - `APP_NAME`: Your application name
+   - `APP_NAME`: Your application name (optional)
+
+5. **IMPORTANT**: Make sure to add these variables directly in the Vercel dashboard, not in the vercel.json file
+6. You can verify your environment variables after deployment by visiting `/api/debug/check-env-vars`
 
 ## Step 3: Deploy to Vercel
 
@@ -54,6 +57,15 @@ This guide will help you deploy your full-stack application (frontend + backend 
 
 ## Troubleshooting
 
+### Environment Variable Issues
+
+If you're getting errors about missing environment variables:
+
+1. Visit `/api/debug/check-env-vars` to see which environment variables are set
+2. Go to Vercel dashboard > Project Settings > Environment Variables to add any missing variables
+3. Make sure to add the variables to all environments (Production, Preview, Development)
+4. After adding variables, redeploy your application for changes to take effect
+
 ### MongoDB Connection Issues
 
 If you're having trouble connecting to MongoDB:
@@ -62,6 +74,8 @@ If you're having trouble connecting to MongoDB:
 2. Ensure your MongoDB Atlas cluster is running and accessible
 3. Verify that your IP whitelist in MongoDB Atlas includes `0.0.0.0/0` to allow connections from Vercel
 4. Check the logs in Vercel for any connection errors
+5. Visit `/api/test/db-connection` to test your database connection
+6. Make sure your MongoDB Atlas account is active and not suspended
 
 ### API Endpoint Issues
 
@@ -71,6 +85,7 @@ If your API endpoints are not working:
 2. Verify that all API files are using ES modules syntax (export default)
 3. Make sure your `vercel.json` file is correctly configured
 4. Test endpoints locally using `vercel dev` before deploying
+5. Check that your MongoDB connection is working
 
 ### CORS Issues
 
@@ -79,6 +94,7 @@ If you're experiencing CORS errors:
 1. Check that your `vercel.json` file has the correct CORS headers
 2. Ensure the `Access-Control-Allow-Origin` header is set correctly
 3. For development, you can set it to `*` but for production, set it to your specific domain
+4. Make sure your frontend is making requests to the correct API URL
 
 ## Additional Resources
 

@@ -40,16 +40,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret",
-    "GOOGLE_CLIENT_ID": "@google_client_id",
-    "GOOGLE_CLIENT_SECRET": "@google_client_secret",
-    "FRONTEND_URL": "@frontend_url",
-    "OAUTH_CALLBACK_URL": "@oauth_callback_url",
-    "EMAIL_USER": "@email_user",
-    "EMAIL_PASS": "@email_pass",
-    "APP_NAME": "@app_name"
-  }
+  ]
 }
