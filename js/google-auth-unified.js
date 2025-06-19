@@ -6,6 +6,17 @@ class GoogleAuthUnified {
         this.isInitialized = false;
         this.isLoading = false;
         
+        // Check for previously successful endpoint
+        try {
+            this.savedEndpoint = localStorage.getItem('successful_google_auth_endpoint');
+            if (this.savedEndpoint) {
+                console.log('🔄 Found previously successful endpoint:', this.savedEndpoint);
+            }
+        } catch (e) {
+            console.warn('⚠️ Could not access localStorage:', e);
+            this.savedEndpoint = null;
+        }
+        
         // Log configuration for debugging
         console.log('🔧 Google Auth Configuration:');
         console.log('🔧 Client ID:', this.clientId);
@@ -251,18 +262,64 @@ class GoogleAuthUnified {
 
             console.log('📤 Sending credential to backend...');
             
-            // Use the API configuration from api-config.js if available
-            // Otherwise, fall back to a standard endpoint format
-            let apiUrl;
-            if (window.API) {
-                // Use the endpoint defined in api-config.js
-                apiUrl = `${window.API.apiURL}/auth/google`;
-                console.log('✅ Using API config from api-config.js');
-            } else {
-                // Fallback to standard endpoint
-                console.warn('⚠️ API configuration not found, using fallback endpoint');
-                apiUrl = `${window.location.origin}/api/auth/google`;
+            // Try multiple API endpoint formats to find one that works
+            // This handles different server configurations
+            const possibleEndpoints = [];
+            
+            // 0. If we have a previously successful endpoint, try it first
+            if (this.savedEndpoint) {
+                possibleEndpoints.push({
+                    url: this.savedEndpoint,
+                    description: 'Previously successful endpoint'
+                });
             }
+            
+            // 1. Try API config if available
+            if (window.API) {
+                // Only add if not already added
+                const apiConfigUrl = `${window.API.apiURL}/auth/google`;
+                if (!possibleEndpoints.some(e => e.url === apiConfigUrl)) {
+                    possibleEndpoints.push({
+                        url: apiConfigUrl,
+                        description: 'API config endpoint'
+                    });
+                }
+            }
+            
+            // 2. Add common endpoint formats as fallbacks
+            const additionalEndpoints = [
+                {
+                    url: `${window.location.origin}/api/auth/google`,
+                    description: 'Standard API endpoint'
+                },
+                {
+                    url: `${window.location.origin}/api/auth?endpoint=google`,
+                    description: 'Query parameter endpoint'
+                },
+                {
+                    url: `${window.location.origin}/api/google-auth`,
+                    description: 'Direct endpoint'
+                },
+                {
+                    url: `${window.location.origin}/api/auth/google-signin`,
+                    description: 'Alternative endpoint'
+                }
+            ];
+            
+            // Add each additional endpoint if not already in the list
+            additionalEndpoints.forEach(endpoint => {
+                if (!possibleEndpoints.some(e => e.url === endpoint.url)) {
+                    possibleEndpoints.push(endpoint);
+                }
+            });
+            
+            console.log('🔍 Will try these endpoints in order:', possibleEndpoints.map(e => e.url));
+            
+            // Start with the first endpoint
+            let apiUrl = possibleEndpoints[0].url;
+            console.log(`🌐 Trying endpoint: ${apiUrl} (${possibleEndpoints[0].description})`);
+            
+            // We'll try other endpoints if this one fails (in the error handling section)
             console.log('🌐 API URL:', apiUrl);
             console.log('🌐 Using API URL:', apiUrl);
             
@@ -295,45 +352,60 @@ class GoogleAuthUnified {
                     errorText = 'Unknown error';
                 }
                 
-                // Check if it's a 404 - API not found
-                if (result.status === 404) {
-                    console.error('🚨 API endpoint not found! Trying alternative endpoint...');
+                // Try alternative endpoints if the current one failed
+                // This handles both 404 (not found) and 500 (server error) cases
+                const currentEndpointIndex = possibleEndpoints.findIndex(e => e.url === apiUrl);
+                
+                // If we have more endpoints to try
+                if (currentEndpointIndex < possibleEndpoints.length - 1) {
+                    console.error(`🚨 Endpoint ${apiUrl} failed with status ${result.status}. Trying next alternative...`);
                     
-                    // Try alternative endpoint format
-                    try {
-                        // Try a different endpoint format
-                        const alternativeUrl = window.API 
-                            ? `${window.API.baseURL}/api/auth?endpoint=google` 
-                            : `${window.location.origin}/api/auth?endpoint=google`;
+                    // Try each remaining endpoint in sequence
+                    for (let i = currentEndpointIndex + 1; i < possibleEndpoints.length; i++) {
+                        const nextEndpoint = possibleEndpoints[i];
+                        console.log(`🔄 Trying alternative endpoint: ${nextEndpoint.url} (${nextEndpoint.description})`);
+                        
+                        try {
+                            const alternativeResult = await fetch(nextEndpoint.url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Cache-Control': 'no-cache'
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify({ 
+                                    credential: response.credential,
+                                    popup_mode: true
+                                })
+                            });
                             
-                        console.log('🔄 Trying alternative endpoint:', alternativeUrl);
-                        
-                        const alternativeResult = await fetch(alternativeUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Cache-Control': 'no-cache'
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({ 
-                                credential: response.credential,
-                                popup_mode: true
-                            })
-                        });
-                        
-                        if (alternativeResult.ok) {
-                            console.log('✅ Alternative endpoint worked!');
-                            return alternativeResult; // Return the successful response
-                        } else {
-                            console.error('❌ Alternative endpoint also failed:', alternativeResult.status);
-                            throw new Error('Google authentication service is temporarily unavailable. Please try again in a few minutes.');
+                            console.log(`📨 Alternative endpoint response status: ${alternativeResult.status}`);
+                            
+                            if (alternativeResult.ok) {
+                                console.log(`✅ Alternative endpoint ${nextEndpoint.url} worked!`);
+                                
+                                // Store this successful endpoint in localStorage for future use
+                                try {
+                                    localStorage.setItem('successful_google_auth_endpoint', nextEndpoint.url);
+                                    console.log('💾 Saved successful endpoint for future use');
+                                } catch (storageError) {
+                                    console.warn('⚠️ Could not save endpoint to localStorage:', storageError);
+                                }
+                                
+                                return alternativeResult; // Return the successful response
+                            }
+                            
+                            console.error(`❌ Alternative endpoint ${nextEndpoint.url} also failed:`, alternativeResult.status);
+                        } catch (altError) {
+                            console.error(`❌ Error with endpoint ${nextEndpoint.url}:`, altError.message);
                         }
-                    } catch (altError) {
-                        console.error('❌ Alternative endpoint error:', altError.message);
-                        throw new Error('Unable to connect to authentication server. Please check your internet connection and try again.');
                     }
+                    
+                    // If we've tried all endpoints and none worked, try form submission as last resort
+                    console.error('❌ All API endpoints failed, trying form submission fallback');
+                    return this.formSubmissionFallback(response.credential);
                 }
                 
                 // For 500 errors, provide more helpful message
@@ -349,8 +421,15 @@ class GoogleAuthUnified {
                             // Check if this is a MongoDB connection error
                             if (errorJson.error.message.includes('MongoDB') || 
                                 errorJson.error.message.includes('database') ||
-                                errorJson.error.message.includes('connection')) {
-                                throw new Error('Database connection error. Please try again later.');
+                                errorJson.error.message.includes('connection') ||
+                                errorJson.error.message.includes('ECONNREFUSED')) {
+                                console.error('🚨 Database connection error detected');
+                                
+                                // For Vercel deployments with MongoDB
+                                console.log('💡 Suggestion for Vercel + MongoDB: Check your MongoDB connection string in Vercel environment variables');
+                                console.log('💡 Make sure your MongoDB Atlas IP whitelist includes Vercel deployment IPs');
+                                
+                                throw new Error('Database connection error. Please try again later or contact support.');
                             }
                             
                             throw new Error(`Server error: ${errorJson.error.message}`);
@@ -362,6 +441,9 @@ class GoogleAuthUnified {
                     
                     // Suggest checking Vercel logs
                     console.log('💡 Suggestion: Check Vercel deployment logs for more details on the 500 error');
+                    console.log('💡 For Vercel deployments: Make sure your API routes are properly configured');
+                    console.log('💡 Common issues: Missing environment variables, incorrect API route handlers, or MongoDB connection problems');
+                    
                     throw new Error('The server encountered an error processing your login. Please try again later.');
                 }
                 
@@ -513,6 +595,98 @@ class GoogleAuthUnified {
     handleLoginError(errorMessage) {
         console.error('❌ Google login error:', errorMessage);
         this.showMessage(`Google login failed: ${errorMessage}`, 'error');
+    }
+
+    // Last resort fallback that uses form submission
+    formSubmissionFallback(credential) {
+        console.log('🔄 Using form submission fallback for Google auth');
+        
+        return new Promise((resolve, reject) => {
+            // Create a hidden form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `${window.location.origin}/api/auth/google-token`;
+            form.target = '_blank';
+            form.style.display = 'none';
+            
+            // Add credential as hidden input
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'credential';
+            input.value = credential;
+            form.appendChild(input);
+            
+            // Add a flag to indicate this is from the fallback
+            const fallbackFlag = document.createElement('input');
+            fallbackFlag.type = 'hidden';
+            fallbackFlag.name = 'fallback';
+            fallbackFlag.value = 'true';
+            form.appendChild(fallbackFlag);
+            
+            // Add form to body
+            document.body.appendChild(form);
+            
+            // Create a popup window
+            const popup = window.open('about:blank', 'google-auth-fallback', 
+                'width=500,height=600,scrollbars=yes,resizable=yes');
+            
+            if (!popup) {
+                document.body.removeChild(form);
+                this.showMessage('Popup blocked. Please allow popups for this site.', 'error');
+                reject(new Error('Popup blocked'));
+                return;
+            }
+            
+            // Set form target to the popup
+            form.target = 'google-auth-fallback';
+            
+            // Submit the form
+            form.submit();
+            
+            // Remove form
+            document.body.removeChild(form);
+            
+            // Show message
+            this.showMessage('Processing login in a new window...', 'info');
+            
+            // Monitor the popup
+            const checkClosed = setInterval(() => {
+                if (popup.closed) {
+                    clearInterval(checkClosed);
+                    console.log('🔒 Auth popup closed');
+                    
+                    // Check if login was successful
+                    setTimeout(() => {
+                        const user = localStorage.getItem('user');
+                        const token = localStorage.getItem('token');
+                        
+                        if (user && token) {
+                            console.log('✅ Login successful via fallback popup');
+                            resolve({ 
+                                ok: true, 
+                                json: () => Promise.resolve({ 
+                                    success: true, 
+                                    user: JSON.parse(user), 
+                                    token 
+                                }) 
+                            });
+                        } else {
+                            console.log('❌ Fallback popup closed without successful login');
+                            reject(new Error('Login failed'));
+                        }
+                    }, 1000);
+                }
+            }, 1000);
+            
+            // Timeout after 2 minutes
+            setTimeout(() => {
+                if (!popup.closed) {
+                    popup.close();
+                    clearInterval(checkClosed);
+                    reject(new Error('Login timeout. Please try again.'));
+                }
+            }, 120000);
+        });
     }
 
     showMessage(message, type = 'info') {
