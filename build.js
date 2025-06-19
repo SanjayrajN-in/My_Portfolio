@@ -68,51 +68,8 @@ if (fs.existsSync('api')) {
     }
   });
   
-  // List of files to remove from deployment
-  const filesToRemove = [
-    'api/auth/google.js',
-    'api/auth/login.js',
-    'api/auth/register.js',
-    'api/auth/send-otp.js',
-    'api/auth/verify-otp.js',
-    'api/contact/submit.js',
-    'api/users/update-game-stats.js',
-    'api/hello.js',
-    'api/test.js',
-    'api/db-test.js'
-  ];
-  
-  // Process each file
-  filesToRemove.forEach(filePath => {
-    const fullPath = path.join(process.cwd(), filePath);
-    
-    // Check if file exists
-    if (fs.existsSync(fullPath)) {
-      // Determine backup path
-      const relativePath = filePath.replace('api/', '');
-      const backupPath = path.join(backupDir, relativePath);
-      
-      try {
-        // Create parent directory if it doesn't exist
-        const parentDir = path.dirname(backupPath);
-        if (!fs.existsSync(parentDir)) {
-          fs.mkdirSync(parentDir, { recursive: true });
-        }
-        
-        // Copy file to backup
-        fs.copyFileSync(fullPath, backupPath);
-        console.log(`Backed up: ${filePath} → ${backupPath}`);
-        
-        // Remove original file
-        fs.unlinkSync(fullPath);
-        console.log(`Removed: ${filePath}`);
-      } catch (error) {
-        console.error(`Error processing ${filePath}:`, error.message);
-      }
-    } else {
-      console.log(`File not found: ${filePath}`);
-    }
-  });
+  // Skip file removal since they've already been removed
+  console.log('Skipping API file cleanup - files already consolidated');
   
   console.log('API file cleanup completed');
 }

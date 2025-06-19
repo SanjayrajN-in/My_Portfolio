@@ -52,6 +52,38 @@ const handleTest = async (req, res) => {
   });
 };
 
+// Handle Debug endpoint
+const handleDebug = async (req, res) => {
+  // Return detailed debug information
+  res.json({
+    success: true,
+    message: 'Debug information',
+    timestamp: new Date().toISOString(),
+    request: {
+      method: req.method,
+      url: req.url,
+      query: req.query,
+      headers: {
+        origin: req.headers.origin,
+        'content-type': req.headers['content-type'],
+        'user-agent': req.headers['user-agent']
+      }
+    },
+    environment: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      env: process.env.NODE_ENV || 'development',
+      vercelEnv: process.env.VERCEL_ENV || 'local'
+    },
+    auth: {
+      hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+      hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      hasMongoUri: !!process.env.MONGODB_URI
+    }
+  });
+};
+
 // Handle DB Test endpoint
 const handleDbTest = async (req, res) => {
   try {
@@ -117,18 +149,45 @@ export default async function handler(req, res) {
   // Get the endpoint from the query
   const { endpoint } = req.query;
 
+  // Log request details
+  console.log('🔄 Utils API handler called:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    endpoint: endpoint,
+    timestamp: new Date().toISOString()
+  });
+
+  // If no endpoint is specified, return API info
+  if (!endpoint) {
+    console.log('ℹ️ No endpoint specified, returning API info');
+    return res.status(200).json({
+      success: true,
+      message: 'Utils API root',
+      endpoints: ['hello', 'test', 'debug', 'db-test'],
+      timestamp: new Date().toISOString()
+    });
+  }
+
   // Route to the appropriate handler based on the endpoint
   switch (endpoint) {
     case 'hello':
+      console.log('✅ Routing to Hello handler');
       return handleHello(req, res);
     case 'test':
+      console.log('✅ Routing to Test handler');
       return handleTest(req, res);
+    case 'debug':
+      console.log('✅ Routing to Debug handler');
+      return handleDebug(req, res);
     case 'db-test':
+      console.log('✅ Routing to DB Test handler');
       return handleDbTest(req, res);
     default:
+      console.log('❌ Endpoint not found:', endpoint);
       return res.status(404).json({ 
         success: false,
-        message: 'Endpoint not found' 
+        message: `Endpoint not found: ${endpoint}` 
       });
   }
 }

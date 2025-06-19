@@ -244,11 +244,11 @@ class GoogleAuthUnified {
             }
 
             console.log('📤 Sending credential to backend...');
-            console.log('🌐 API URL:', `${window.location.origin}/api/auth/google`);
-
+            
             // Construct the API URL using the current origin
             // Note: We're using the consolidated API endpoint
             const apiUrl = `${window.location.origin}/api/auth?endpoint=google`;
+            console.log('🌐 API URL:', apiUrl);
             console.log('🌐 Using API URL:', apiUrl);
             
             // Send credential to backend

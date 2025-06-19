@@ -710,34 +710,65 @@ const validatePassword = (password) => {
 
 // Main handler
 export default async function handler(req, res) {
+  console.log('🔄 Auth API handler called:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    headers: {
+      origin: req.headers.origin,
+      'content-type': req.headers['content-type']
+    },
+    timestamp: new Date().toISOString()
+  });
+
   // Set CORS headers
   setCorsHeaders(req, res);
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('✅ Handling OPTIONS request');
     res.status(200).end();
     return;
   }
 
   // Get the endpoint from the query
   const { endpoint } = req.query;
+  
+  console.log('🔍 Requested endpoint:', endpoint);
+
+  // If no endpoint is specified, return API info
+  if (!endpoint) {
+    console.log('ℹ️ No endpoint specified, returning API info');
+    return res.status(200).json({
+      success: true,
+      message: 'Auth API root',
+      endpoints: ['google', 'login', 'register', 'send-otp', 'verify-otp'],
+      timestamp: new Date().toISOString()
+    });
+  }
 
   // Route to the appropriate handler based on the endpoint
   switch (endpoint) {
     case 'google':
+      console.log('✅ Routing to Google auth handler');
       return handleGoogleAuth(req, res);
     case 'login':
+      console.log('✅ Routing to login handler');
       return handleLogin(req, res);
     case 'register':
+      console.log('✅ Routing to register handler');
       return handleRegister(req, res);
     case 'send-otp':
+      console.log('✅ Routing to send-otp handler');
       return handleSendOTP(req, res);
     case 'verify-otp':
+      console.log('✅ Routing to verify-otp handler');
       return handleVerifyOTP(req, res);
     default:
+      console.log('❌ Endpoint not found:', endpoint);
       return res.status(404).json({ 
         success: false,
-        message: 'Endpoint not found' 
+        message: `Endpoint not found: ${endpoint}` 
       });
   }
 }
