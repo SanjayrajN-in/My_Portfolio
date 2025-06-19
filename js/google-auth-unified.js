@@ -330,6 +330,10 @@ class GoogleAuthUnified {
                     description: 'Standard API endpoint'
                 },
                 {
+                    url: `${window.location.origin}/api/auth-google`,
+                    description: 'Direct auth-google endpoint'
+                },
+                {
                     url: `${window.location.origin}/api/google-auth`,
                     description: 'Direct endpoint'
                 },

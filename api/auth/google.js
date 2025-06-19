@@ -180,7 +180,7 @@ export default async (req, res) => {
 
         console.log('👤 Processing user:', { googleId, email, name, hasAvatar: !!picture });
 
-        // Connect to MongoDB with error handling
+        // Connect to MongoDB with improved error handling
         try {
             console.log('🔄 Connecting to MongoDB...');
             await connectDB();
@@ -188,7 +188,15 @@ export default async (req, res) => {
         } catch (dbError) {
             console.error('❌ MongoDB connection error:', dbError);
             console.error('MongoDB error stack:', dbError.stack);
-            throw new Error(`Database connection failed: ${dbError.message}`);
+            
+            // Return a specific error response instead of throwing
+            return res.status(500).json({
+                success: false,
+                message: 'Database connection failed',
+                error: dbError.message,
+                errorType: 'database_connection',
+                timestamp: new Date().toISOString()
+            });
         }
 
         // Find or create user in MongoDB
@@ -316,17 +324,37 @@ export default async (req, res) => {
         // Log environment variables (without exposing secrets)
         console.log('Environment check:', {
             hasMongoURI: !!process.env.MONGODB_URI,
+            mongoURIPrefix: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 20) + '...' : 'not set',
             hasJwtSecret: !!process.env.JWT_SECRET,
             hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
             hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+            hasOauthCallbackUrl: !!process.env.OAUTH_CALLBACK_URL,
+            oauthCallbackUrl: process.env.OAUTH_CALLBACK_URL || 'not set',
             nodeEnv: process.env.NODE_ENV,
             vercelEnv: process.env.VERCEL_ENV
         });
         
+        // Provide more detailed error information
+        let errorMessage = 'Google authentication failed';
+        let errorType = 'unknown';
+        
+        if (error.message.includes('MongoDB')) {
+            errorType = 'database';
+            errorMessage = 'Database connection issue';
+        } else if (error.message.includes('verify') || error.message.includes('token') || error.message.includes('credential')) {
+            errorType = 'google_auth';
+            errorMessage = 'Google authentication verification failed';
+        } else if (error.message.includes('JWT')) {
+            errorType = 'jwt';
+            errorMessage = 'Token generation failed';
+        }
+        
         res.status(500).json({
             success: false,
-            message: 'Google authentication failed',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+            message: errorMessage,
+            errorType: errorType,
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+            timestamp: new Date().toISOString()
         });
     }
 };

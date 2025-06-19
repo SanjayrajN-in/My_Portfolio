@@ -33,7 +33,7 @@ const setCorsHeaders = (req, res) => {
 };
 
 // Handle Google OAuth
-const handleGoogleAuth = async (req, res) => {
+export const handleGoogleAuth = async (req, res) => {
   console.log('🔐 Google Auth API called:', {
     method: req.method,
     url: req.url,

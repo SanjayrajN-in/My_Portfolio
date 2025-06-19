@@ -45,11 +45,41 @@ export default async function handler(req, res) {
     
   } catch (error) {
     console.error('MongoDB connection test error:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      codeName: error.codeName
+    });
+    
+    // Provide more specific error information
+    let errorType = 'unknown';
+    let errorMessage = 'Unknown error occurred';
+    
+    if (error.name === 'MongoServerSelectionError') {
+      errorType = 'connection';
+      errorMessage = 'Could not connect to MongoDB server';
+    } else if (error.name === 'MongoParseError') {
+      errorType = 'uri_format';
+      errorMessage = 'Invalid MongoDB connection string format';
+    } else if (error.name === 'MongoNetworkError') {
+      errorType = 'network';
+      errorMessage = 'Network connectivity issue';
+    } else if (error.name === 'MongoError' && error.code === 18) {
+      errorType = 'authentication';
+      errorMessage = 'Invalid MongoDB credentials';
+    } else if (error.name === 'MongoError' && error.code === 13) {
+      errorType = 'authorization';
+      errorMessage = 'Insufficient MongoDB permissions';
+    }
     
     res.status(500).json({
       success: false,
       message: 'MongoDB connection test failed',
-      error: error.message,
+      error: errorMessage,
+      errorType: errorType,
+      errorDetails: error.message,
+      mongodbUri: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 20) + '...' : 'Not set',
       timestamp: new Date().toISOString()
     });
   }
