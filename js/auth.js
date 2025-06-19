@@ -84,17 +84,15 @@ class AuthSystem {
                     localStorage.setItem('token', data.token);
                 }
                 
+                // Update navigation immediately to show avatar
+                this.updateNavigation();
+                
                 this.showMessage('Login successful! Welcome back.', 'success');
                 
                 // Close modal if it's open
                 if (typeof loginModal !== 'undefined' && loginModal) {
                     setTimeout(() => {
                         loginModal.close();
-                        window.location.reload(); // Refresh to update navigation
-                    }, 1500);
-                } else {
-                    setTimeout(() => {
-                        window.location.reload();
                     }, 1500);
                 }
             } else {
@@ -219,6 +217,7 @@ class AuthSystem {
     }
 
     updateNavigation() {
+        console.log('📍 updateNavigation called, currentUser:', this.currentUser);
         const navLinks = document.querySelector('.nav-links');
         const userMenu = document.querySelector('.user-menu');
         const isInPagesFolder = window.location.pathname.includes('pages/');
@@ -228,7 +227,10 @@ class AuthSystem {
             if (userMenu) {
                 userMenu.style.display = 'flex';
                 userMenu.style.visibility = 'visible';
-                userMenu.classList.add('show'); // For mobile
+                userMenu.style.opacity = '1';
+                userMenu.classList.add('show');
+                
+                console.log('✅ User menu shown for user:', this.currentUser.name);
                 
                 const userAvatar = document.getElementById('navUserAvatar');
                 if (userAvatar) {
@@ -247,14 +249,19 @@ class AuthSystem {
                         avatarPath = isInPagesFolder ? '../images/default-avatar.svg' : 'images/default-avatar.svg';
                     }
                     userAvatar.src = avatarPath;
+                    console.log('✅ User avatar set to:', avatarPath);
                 }
                 
-                // Show profile link in dropdown
-                const profileLink = userMenu.querySelector('a[href*="profile.html"]');
+                // Show profile link in dropdown (handle both class names)
+                const profileLink = userMenu.querySelector('a[href*="profile.html"]') || 
+                                  userMenu.querySelector('.user-dropdown-item[href*="profile.html"]') ||
+                                  userMenu.querySelector('.dropdown-item[href*="profile.html"]');
                 if (profileLink) {
                     profileLink.style.display = 'flex';
                     profileLink.style.visibility = 'visible';
                 }
+            } else {
+                console.log('❌ User menu element not found in DOM');
             }
 
             // Remove login button if exists
@@ -264,13 +271,16 @@ class AuthSystem {
             }
         } else {
             // User is NOT logged in - completely hide user menu and avatar
+            console.log('❌ No user logged in, hiding user menu');
             if (userMenu) {
                 userMenu.style.display = 'none !important';
                 userMenu.style.visibility = 'hidden';
                 userMenu.classList.remove('show');
                 
-                // Hide profile link completely
-                const profileLink = userMenu.querySelector('a[href*="profile.html"]');
+                // Hide profile link completely (handle both class names)
+                const profileLink = userMenu.querySelector('a[href*="profile.html"]') || 
+                                  userMenu.querySelector('.user-dropdown-item[href*="profile.html"]') ||
+                                  userMenu.querySelector('.dropdown-item[href*="profile.html"]');
                 if (profileLink) {
                     profileLink.style.display = 'none !important';
                     profileLink.style.visibility = 'hidden';
@@ -822,17 +832,16 @@ class AuthSystem {
                 }
 
                 this.closeOTPModal();
+                
+                // Update navigation immediately to show avatar
+                this.updateNavigation();
+                
                 this.showMessage(data.message || 'Verification successful!', 'success');
                 
-              // Close modal if it's open and refresh
+                // Close modal if it's open
                 if (typeof loginModal !== 'undefined' && loginModal) {
                     setTimeout(() => {
                         loginModal.close();
-                          window.location.reload();
-                    }, 1500);
-                } else {
-                    setTimeout(() => {
-                        window.location.reload();
                     }, 1500);
                 }
             } else {
