@@ -40,12 +40,12 @@ class AuthUIManager {
 
     createLoginButton() {
         // Check if login button container already exists
-        let loginContainer = document.getElementById('google-login-container');
+        let loginContainer = document.getElementById('login-container');
         if (loginContainer) return;
 
         // Create login button container
         loginContainer = document.createElement('div');
-        loginContainer.id = 'google-login-container';
+        loginContainer.id = 'login-container';
         loginContainer.className = 'auth-login-container';
         loginContainer.style.cssText = `
             display: none;
@@ -317,7 +317,7 @@ class AuthUIManager {
     }
 
     showLoginButton() {
-        const loginContainer = document.getElementById('google-login-container');
+        const loginContainer = document.getElementById('login-container');
         const userProfile = document.getElementById('user-profile-container');
         
         if (loginContainer) {
@@ -353,7 +353,7 @@ class AuthUIManager {
     }
 
     showUserProfile(user) {
-        const loginContainer = document.getElementById('google-login-container');
+        const loginContainer = document.getElementById('login-container');
         const userProfile = document.getElementById('user-profile-container');
         
         if (loginContainer) {

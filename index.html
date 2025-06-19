@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -92,7 +92,7 @@
                                 value.includes('google-analytics.com') ||
                                 value.includes('googlesyndication.com') ||
                                 value.includes('doubleclick.net') ||
-                                (value.includes('google.com') && !value.includes('accounts.google.com/gsi'))
+                                value.includes('google.com')
                             ) {
                                 console.warn('🚫 Blocked unwanted Google script:', value);
                                 return;

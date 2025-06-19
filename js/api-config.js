@@ -57,12 +57,7 @@ class APIConfig {
         });
     }
 
-    async googleLogin(credential) {
-        return this.makeRequest('/auth/google', {
-            method: 'POST',
-            body: JSON.stringify({ credential })
-        });
-    }
+
 
     // Contact endpoint
     async submitContact(contactData) {
