@@ -21,17 +21,20 @@ const connectDB = async () => {
     const mongoUri = process.env.MONGODB_URI;
     const maskedUri = mongoUri.replace(/:([^:@]+)@/, ':****@');
     console.log('MongoDB URI (masked):', maskedUri);
+    console.log('MongoDB URI first 20 chars:', mongoUri.substring(0, 20) + '...');
 
     console.log('Connecting to MongoDB Atlas...');
     
     // Important: Use the new connection syntax with optimized options for MongoDB Atlas
     if (mongoose.connection.readyState !== 1) {
       await mongoose.connect(mongoUri, {
-        serverSelectionTimeoutMS: 10000, // Timeout after 10s
-        connectTimeoutMS: 15000,         // Connection timeout
-        socketTimeoutMS: 45000,          // Socket timeout
+        serverSelectionTimeoutMS: 15000, // Increased timeout to 15s
+        connectTimeoutMS: 30000,         // Increased connection timeout
+        socketTimeoutMS: 60000,          // Increased socket timeout
         maxPoolSize: 10,                 // Maintain up to 10 socket connections
-        family: 4                        // Use IPv4, skip trying IPv6
+        family: 4,                       // Use IPv4, skip trying IPv6
+        retryWrites: true,
+        w: 'majority'
       });
     }
     
@@ -49,12 +52,22 @@ const connectDB = async () => {
       codeName: error.codeName
     });
     
-    // Throw a more descriptive error
+    // More detailed error handling
     if (error.name === 'MongoServerSelectionError') {
-      throw new Error(`Could not connect to MongoDB Atlas: ${error.message}. Please check your connection string and network.`);
-    } else {
-      throw error;
+      console.error('MongoDB Server Selection Error - Could not connect to any MongoDB server');
+      console.error('This usually indicates network issues or incorrect connection string');
+    } else if (error.name === 'MongoParseError') {
+      console.error('MongoDB Parse Error - Invalid connection string format');
+    } else if (error.name === 'MongoNetworkError') {
+      console.error('MongoDB Network Error - Network connectivity issue');
+    } else if (error.name === 'MongoError' && error.code === 18) {
+      console.error('MongoDB Authentication Error - Invalid credentials');
+    } else if (error.name === 'MongoError' && error.code === 13) {
+      console.error('MongoDB Authorization Error - Insufficient permissions');
     }
+    
+    // Return a more graceful error that won't crash the application
+    throw new Error(`MongoDB connection failed: ${error.message}. Please check your connection string, credentials, and network.`);
   }
 };
 

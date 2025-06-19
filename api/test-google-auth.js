@@ -1,4 +1,4 @@
-// Simple Google OAuth credentials test
+// Enhanced Google OAuth credentials test
 import { OAuth2Client } from 'google-auth-library';
 
 export default async function handler(req, res) {
@@ -14,11 +14,24 @@ export default async function handler(req, res) {
 
   try {
     console.log('Testing Google OAuth credentials...');
+    console.log('Request headers:', req.headers);
+    console.log('Request URL:', req.url);
     
     // Get Google credentials
     const googleClientId = process.env.GOOGLE_CLIENT_ID;
     const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = process.env.OAUTH_CALLBACK_URL;
+    const mongodbUri = process.env.MONGODB_URI;
+    
+    console.log('Environment variables check:', {
+      hasGoogleClientId: !!googleClientId,
+      hasGoogleClientSecret: !!googleClientSecret,
+      hasRedirectUri: !!redirectUri,
+      hasMongodbUri: !!mongodbUri,
+      googleClientIdPrefix: googleClientId ? googleClientId.substring(0, 10) + '...' : 'Not set',
+      redirectUri: redirectUri || 'Not set',
+      mongodbUriPrefix: mongodbUri ? mongodbUri.substring(0, 20) + '...' : 'Not set'
+    });
     
     // Check if credentials are set
     if (!googleClientId) {
@@ -37,6 +50,10 @@ export default async function handler(req, res) {
       });
     }
     
+    if (!redirectUri) {
+      console.warn('⚠️ Warning: OAUTH_CALLBACK_URL is not configured');
+    }
+    
     // Create OAuth client
     const client = new OAuth2Client(
       googleClientId,
@@ -51,15 +68,24 @@ export default async function handler(req, res) {
       prompt: 'consent'
     });
     
-    // Return success response
+    // Verify client ID format
+    const isValidClientIdFormat = googleClientId.endsWith('.apps.googleusercontent.com');
+    
+    // Return success response with detailed information
     res.status(200).json({
       success: true,
       message: 'Google OAuth credentials test successful',
       credentials: {
         hasClientId: true,
         hasClientSecret: true,
+        hasRedirectUri: !!redirectUri,
         clientIdPrefix: googleClientId.substring(0, 10) + '...',
+        clientIdFormat: isValidClientIdFormat ? 'Valid' : 'Invalid format',
         redirectUri: redirectUri || 'Not configured'
+      },
+      environment: {
+        nodeEnv: process.env.NODE_ENV || 'Not set',
+        vercelEnv: process.env.VERCEL_ENV || 'Not set'
       },
       authUrl: authUrl,
       timestamp: new Date().toISOString()
@@ -67,11 +93,30 @@ export default async function handler(req, res) {
     
   } catch (error) {
     console.error('Google OAuth credentials test error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code
+    });
+    
+    // Determine error type
+    let errorType = 'unknown';
+    if (error.message.includes('invalid_client')) {
+      errorType = 'invalid_client_credentials';
+    } else if (error.message.includes('redirect_uri_mismatch')) {
+      errorType = 'redirect_uri_mismatch';
+    }
     
     res.status(500).json({
       success: false,
       message: 'Google OAuth credentials test failed',
       error: error.message,
+      errorType: errorType,
+      environment: {
+        nodeEnv: process.env.NODE_ENV || 'Not set',
+        vercelEnv: process.env.VERCEL_ENV || 'Not set'
+      },
       timestamp: new Date().toISOString()
     });
   }
