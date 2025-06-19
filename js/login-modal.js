@@ -300,24 +300,13 @@ class LoginModal {
     handleGoogleLogin() {
         console.log('🔐 Google login button clicked');
         
-        // Check if unified Google Auth is available
-        if (window.googleAuth) {
-            console.log('✅ Using Unified Google Auth');
-            window.googleAuth.login();
+        // Use the simplified Google Auth
+        if (window.googleAuthSimple) {
+            console.log('✅ Using Simple Google Auth');
+            window.googleAuthSimple.login();
         } else {
             console.log('❌ Google Auth not available, using redirect fallback');
             this.fallbackGoogleLogin();
-            
-            // Try to initialize Google Auth if it's not available
-            if (typeof GoogleAuthUnified === 'function') {
-                console.log('🔄 Attempting to initialize Google Auth');
-                window.googleAuth = new GoogleAuthUnified();
-                setTimeout(() => {
-                    if (window.googleAuth) {
-                        window.googleAuth.login();
-                    }
-                }, 1000);
-            }
         }
     }
 
