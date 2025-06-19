@@ -106,7 +106,7 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
                 const tempUser = new User({
                     email: email.toLowerCase(),
                     name: 'Temporary', // Will be updated on verification
-                    password: 'temporary' // Will be updated on verification
+                    password: 'TempPass123!' // Will be updated on verification - meets validation requirements
                 });
                 otpCode = tempUser.setEmailVerificationOTP();
                 await tempUser.save();

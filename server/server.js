@@ -11,6 +11,9 @@ const emailService = require('./utils/emailService');
 
 const app = express();
 
+// Trust proxy for rate limiting behind Render's proxy
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
