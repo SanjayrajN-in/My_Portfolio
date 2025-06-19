@@ -293,8 +293,42 @@ class LoginModal {
         const googleBtn = document.getElementById('googleLoginBtn');
         if (googleBtn) {
             googleBtn.style.display = 'block';
+            
+            // Add the google-login-button class for our simplified Google auth
+            googleBtn.classList.add('google-login-button');
+            
+            // Add click event listener
+            googleBtn.addEventListener('click', () => {
+                this.handleGoogleLogin();
+            });
+            
             console.log('Google OAuth button ready');
         }
+        
+        // Add a direct Google login button as a fallback
+        setTimeout(() => {
+            const modalBody = document.querySelector('.login-modal-body');
+            if (modalBody) {
+                const directGoogleBtn = document.createElement('button');
+                directGoogleBtn.className = 'google-login-btn direct-google-btn';
+                directGoogleBtn.innerHTML = '<i class="fab fa-google"></i><span>Direct Google Login</span>';
+                directGoogleBtn.addEventListener('click', () => {
+                    if (window.googleAuthSimple) {
+                        window.googleAuthSimple.useOAuthFallback();
+                    } else {
+                        this.fallbackGoogleLogin();
+                    }
+                });
+                
+                // Insert after the regular Google button
+                const formDivider = document.querySelector('.form-divider');
+                if (formDivider) {
+                    modalBody.insertBefore(directGoogleBtn, formDivider);
+                }
+                
+                console.log('Direct Google login button added');
+            }
+        }, 1000); // Delay to ensure DOM is ready
     }
 
     handleGoogleLogin() {
