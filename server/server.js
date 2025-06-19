@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
 const emailService = require('./utils/emailService');
 
 const app = express();
@@ -39,6 +40,8 @@ const corsOptions = {
             'http://localhost:8080',
             'http://127.0.0.1:5500',
             'http://localhost:5500',
+            'https://sanjayrajn.vercel.app',
+            'https://your-frontend-domain.vercel.app', // Update this with your actual frontend domain
             // Add your production domain here
         ];
         
@@ -84,6 +87,7 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

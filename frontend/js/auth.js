@@ -1,5 +1,6 @@
-// Configuration
-const API_BASE_URL = 'http://localhost:3000';
+// Configuration  
+// Use the global API configuration
+const API_BASE_URL = window.API ? window.API.baseURL : 'http://localhost:3000';
 
 // Authentication System
 class AuthSystem {
@@ -134,7 +135,7 @@ class AuthSystem {
             this.showMessage('Sending verification code...', 'info');
             
             // First, send OTP for email verification
-            const otpResponse = await fetch('http://localhost:3000/api/auth/send-otp', {
+            const otpResponse = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -176,7 +177,7 @@ class AuthSystem {
     async logout() {
         try {
             // Call logout API to invalidate session on server
-            const response = await fetch('http://localhost:3000/api/auth/logout', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -575,7 +576,7 @@ class AuthSystem {
 
         try {
             // Send game stats to API
-            const response = await fetch('/api/users/update-game-stats', {
+            const response = await fetch(`${API_BASE_URL}/api/users/update-game-stats`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -829,7 +830,7 @@ class AuthSystem {
         try {
             this.showMessage('Verifying code...', 'info');
             
-            const response = await fetch('http://localhost:3000/api/auth/verify-otp', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -990,7 +991,7 @@ class AuthSystem {
     // Forgot password functionality
     async forgotPassword(email) {
         try {
-            const response = await fetch('/api/auth/send-otp', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1233,7 +1234,7 @@ class AuthSystem {
         try {
             this.showMessage('Resetting password...', 'info');
             
-            const response = await fetch('/api/auth/verify-otp', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

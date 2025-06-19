@@ -6,7 +6,7 @@ class APIConfig {
                            window.location.hostname !== '127.0.0.1' && 
                            !window.location.hostname.includes('local');
         
-        this.baseURL = this.isProduction ? '' : 'http://localhost:3000';
+        this.baseURL = this.isProduction ? 'https://YOUR_RENDER_APP_NAME.onrender.com' : 'http://localhost:3000';
         this.apiVersion = '/api';
     }
 
