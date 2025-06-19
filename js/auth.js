@@ -78,6 +78,7 @@ class AuthSystem {
             if (response.ok && data.user) {
                 // Login successful
                 this.currentUser = data.user;
+                console.log('🎉 Login successful! User set:', this.currentUser);
                 
                 // Only store token for session management, no user data in localStorage
                 if (data.token) {
@@ -85,7 +86,9 @@ class AuthSystem {
                 }
                 
                 // Update navigation immediately to show avatar
+                console.log('🔄 About to call updateNavigation...');
                 this.updateNavigation();
+                console.log('✅ updateNavigation called');
                 
                 this.showMessage('Login successful! Welcome back.', 'success');
                 
@@ -99,7 +102,7 @@ class AuthSystem {
                 this.showMessage(data.message || 'Login failed', 'error');
             }
         } catch (error) {
-            console.error('Login error:', error);
+            console.error('❌ Login error:', error);
             this.showMessage('Network error. Please try again.', 'error');
         }
     }
@@ -223,6 +226,11 @@ class AuthSystem {
         const hamburger = document.querySelector('.hamburger');
         const isInPagesFolder = window.location.pathname.includes('pages/');
         
+        console.log('🔍 DOM elements found:');
+        console.log('  navContainer:', !!navContainer);
+        console.log('  navLinks:', !!navLinks);
+        console.log('  hamburger:', !!hamburger);
+        
         if (this.currentUser) {
             // User is logged in - create or show user menu
             let userMenu = document.querySelector('.user-menu');
@@ -254,12 +262,13 @@ class AuthSystem {
                 // Insert user menu before hamburger button
                 navContainer.insertBefore(userMenu, hamburger);
                 console.log('✅ User menu created and added to DOM');
+                console.log('User menu HTML:', userMenu.outerHTML);
             }
             
-            // Show user menu with proper styles
-            userMenu.style.display = 'flex';
-            userMenu.style.visibility = 'visible';
-            userMenu.style.opacity = '1';
+            // Show user menu with proper styles (need !important to override CSS)
+            userMenu.style.setProperty('display', 'flex', 'important');
+            userMenu.style.setProperty('visibility', 'visible', 'important');
+            userMenu.style.setProperty('opacity', '1', 'important');
             userMenu.style.alignItems = 'center';
             userMenu.style.marginLeft = '1rem';
             userMenu.classList.add('show');
@@ -277,6 +286,11 @@ class AuthSystem {
             }
             
             console.log('✅ User menu shown for user:', this.currentUser.name);
+            console.log('User menu styles:', {
+                display: userMenu.style.display,
+                visibility: userMenu.style.visibility,
+                opacity: userMenu.style.opacity
+            });
 
             // Remove login button if exists
             const loginBtn = document.querySelector('.login-btn');
@@ -1366,6 +1380,7 @@ class AuthSystem {
 
 // Initialize auth system
 const authSystem = new AuthSystem();
+console.log('🔧 AuthSystem initialized:', authSystem);
 
 // Immediately ensure user menu is hidden on page load if not logged in
 document.addEventListener('DOMContentLoaded', function() {
@@ -1455,6 +1470,8 @@ function togglePassword(inputId) {
 function logout() {
     authSystem.logout();
 }
+
+
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
