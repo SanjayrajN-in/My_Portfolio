@@ -395,9 +395,23 @@
 [id*="google"],
 [class*="google"],
 [id*="gsi"],
-[class*="gsi"] {
+[class*="gsi"],
+div[data-client-id],
+div[data-ux_mode],
+div[data-callback],
+.g_id_signin,
+.g-signin2,
+.g-signin,
+iframe[src*="google"],
+iframe[src*="gsi"] {
     display: none !important;
     visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
     opacity: 0 !important;
     height: 0 !important;
     overflow: hidden !important;

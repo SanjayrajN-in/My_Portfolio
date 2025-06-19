@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     
-    <!-- Google OAuth Configuration -->
-    <meta name="google-client-id" content="962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com">
+
 
     <title>Sanjayraj N | Electrical & Electronics Engineer</title>
     <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
@@ -86,13 +85,15 @@
                     const originalSetAttribute = element.setAttribute;
                     element.setAttribute = function(name, value) {
                         if (name === 'src' && value) {
-                            // Block unwanted Google scripts (ads, analytics, etc.)
+                            // Block unwanted Google scripts (ads, analytics, auth, etc.)
                             if (
                                 value.includes('googletagmanager.com') ||
                                 value.includes('google-analytics.com') ||
                                 value.includes('googlesyndication.com') ||
                                 value.includes('doubleclick.net') ||
-                                value.includes('google.com')
+                                value.includes('accounts.google.com') ||
+                                value.includes('gsi.googleapis.com') ||
+                                (value.includes('google.com') && !value.includes('fonts.googleapis.com'))
                             ) {
                                 console.warn('🚫 Blocked unwanted Google script:', value);
                                 return;
@@ -564,5 +565,64 @@
 
 
     <script src="js/auth-ui-manager.js"></script>
+    
+    <!-- Final Google Auth Cleanup -->
+    <script>
+        // Aggressive cleanup of any Google auth elements
+        function removeGoogleAuthElements() {
+            // Remove Google auth buttons and iframes
+            const googleSelectors = [
+                '[id*="google"]',
+                '[class*="google"]',
+                '[id*="gsi"]',
+                '[class*="gsi"]',
+                'div[data-client-id]',
+                'div[data-ux_mode]',
+                'div[data-callback]',
+                '.g_id_signin',
+                '.g-signin2',
+                '.g-signin',
+                'iframe[src*="google"]',
+                'iframe[src*="gsi"]',
+                '#googleSignInButton',
+                '#googleLoginBtn',
+                '.google-login-btn'
+            ];
+            
+            googleSelectors.forEach(selector => {
+                try {
+                    const elements = document.querySelectorAll(selector);
+                    elements.forEach(el => {
+                        if (el && el.parentNode) {
+                            el.parentNode.removeChild(el);
+                            console.log('🗑️ Removed Google auth element:', selector);
+                        }
+                    });
+                } catch (e) {
+                    // Ignore errors
+                }
+            });
+        }
+        
+        // Run cleanup when DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', removeGoogleAuthElements);
+        } else {
+            removeGoogleAuthElements();
+        }
+        
+        // Run cleanup periodically to catch dynamically added elements
+        setInterval(removeGoogleAuthElements, 1000);
+        
+        // Override Google's global functions if they exist
+        if (typeof window.google !== 'undefined') {
+            window.google = {};
+        }
+        if (typeof window.gapi !== 'undefined') {
+            window.gapi = {};
+        }
+        
+        console.log('🛡️ Google auth cleanup initialized');
+    </script>
 </body>
 </html>

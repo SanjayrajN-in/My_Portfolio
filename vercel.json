@@ -12,7 +12,7 @@
     { "source": "/api/contact/:endpoint", "destination": "/api/contact-user?endpoint=:endpoint" },
     { "source": "/api/users/:endpoint", "destination": "/api/contact-user?endpoint=:endpoint" },
     { "source": "/api/:endpoint", "destination": "/api/utils?endpoint=:endpoint" },
-    { "source": "/auth/google/callback", "destination": "/auth/google/callback.html" }
+
   ],
   "headers": [
     {
