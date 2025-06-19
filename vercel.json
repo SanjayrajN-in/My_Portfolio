@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "functions": {
     "api/**/*.js": {
       "runtime": "@vercel/node@2.15.6"
