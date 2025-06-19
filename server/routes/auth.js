@@ -68,7 +68,7 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
             });
         }
 
-        if (!type || !['register', 'forgot-password'].includes(type)) {
+        if (!type || !['register', 'forgot-password', 'login_verification'].includes(type)) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid OTP type'
@@ -92,6 +92,19 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
                     message: 'No account found with this email address'
                 });
             }
+        } else if (type === 'login_verification') {
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No account found with this email address'
+                });
+            }
+            if (user.isEmailVerified) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Account is already verified. Please try logging in normally.'
+                });
+            }
         }
 
         // Generate and send OTP
@@ -111,8 +124,11 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
                 otpCode = tempUser.setEmailVerificationOTP();
                 await tempUser.save();
             }
-        } else {
+        } else if (type === 'forgot-password') {
             otpCode = user.setPasswordResetOTP();
+            await user.save();
+        } else if (type === 'login_verification') {
+            otpCode = user.setEmailVerificationOTP();
             await user.save();
         }
 
@@ -271,7 +287,8 @@ router.post('/login', authLimiter, async (req, res) => {
         if (!user.isEmailVerified) {
             return res.status(401).json({
                 success: false,
-                message: 'Please verify your email first'
+                message: 'Account not verified. Please check your email for verification code.',
+                requiresVerification: true
             });
         }
 
@@ -408,6 +425,8 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
             isValidOTP = user.verifyPasswordResetOTP(otp);
         } else if (type === 'register') {
             isValidOTP = user.verifyEmailOTP(otp);
+        } else if (type === 'login_verification') {
+            isValidOTP = user.verifyEmailOTP(otp);
         }
 
         if (!isValidOTP) {
@@ -417,10 +436,71 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
             });
         }
 
-        res.json({
-            success: true,
-            message: 'OTP verified successfully'
-        });
+        // Handle different verification types
+        if (type === 'register') {
+            // Update user data from request
+            const { userData } = req.body;
+            if (userData) {
+                user.name = userData.name;
+                if (userData.password) {
+                    user.password = userData.password;
+                }
+            }
+            
+            // Mark email as verified
+            user.isEmailVerified = true;
+            user.emailVerificationOTP = undefined;
+            user.emailVerificationOTPExpires = undefined;
+            await user.save();
+
+            // Generate JWT token
+            const token = generateToken(user._id);
+
+            res.json({
+                success: true,
+                message: 'Registration successful! Welcome to the platform.',
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    avatar: user.avatar,
+                    isEmailVerified: user.isEmailVerified,
+                    gameStats: user.gameStats
+                }
+            });
+        } else if (type === 'login_verification') {
+            // Mark email as verified (in case it wasn't)
+            user.isEmailVerified = true;
+            user.emailVerificationOTP = undefined;
+            user.emailVerificationOTPExpires = undefined;
+            
+            // Update last login
+            user.lastLogin = new Date();
+            await user.save();
+
+            // Generate JWT token
+            const token = generateToken(user._id);
+
+            res.json({
+                success: true,
+                message: 'Login successful! Welcome back.',
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    avatar: user.avatar,
+                    isEmailVerified: user.isEmailVerified,
+                    gameStats: user.gameStats
+                }
+            });
+        } else {
+            res.json({
+                success: true,
+                message: 'OTP verified successfully'
+            });
+        }
 
     } catch (error) {
         console.error('Verify OTP error:', error);
@@ -485,6 +565,246 @@ router.post('/reset-password', authLimiter, async (req, res) => {
             success: false,
             message: 'Server error. Please try again later.'
         });
+    }
+});
+
+// Google OAuth routes
+const { OAuth2Client } = require('google-auth-library');
+
+// @route   GET /api/auth/google/init
+// @desc    Get Google Client ID for frontend initialization
+// @access  Public
+router.get('/google/init', (req, res) => {
+    try {
+        const clientId = process.env.GOOGLE_CLIENT_ID;
+        
+        if (!clientId) {
+            return res.status(500).json({
+                success: false,
+                message: 'Google OAuth not configured'
+            });
+        }
+
+        res.json({
+            success: true,
+            clientId: clientId
+        });
+    } catch (error) {
+        console.error('Google init error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
+// @route   POST /api/auth/google/verify
+// @desc    Verify Google credential and login/register user
+// @access  Public
+router.post('/google/verify', async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({
+                success: false,
+                message: 'Google credential is required'
+            });
+        }
+
+        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+        
+        // Verify the Google credential
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        const { email, name, picture, email_verified } = payload;
+
+        if (!email_verified) {
+            return res.status(400).json({
+                success: false,
+                message: 'Google account email is not verified'
+            });
+        }
+
+        // Check if user exists
+        let user = await User.findOne({ email: email.toLowerCase() });
+
+        if (user) {
+            // User exists, update last login and Google info
+            user.lastLogin = new Date();
+            if (!user.avatar && picture) {
+                user.avatar = picture;
+            }
+            if (!user.googleId) {
+                user.googleId = payload.sub;
+            }
+            await user.save();
+        } else {
+            // Create new user
+            user = new User({
+                name: name,
+                email: email.toLowerCase(),
+                avatar: picture,
+                googleId: payload.sub,
+                isEmailVerified: true, // Google accounts are pre-verified
+                password: 'GoogleAuth_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + '!1A'
+            });
+            await user.save();
+        }
+
+        // Generate JWT token
+        const token = generateToken(user._id);
+
+        res.json({
+            success: true,
+            message: user.lastLogin ? 'Welcome back!' : 'Account created successfully!',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+                isEmailVerified: user.isEmailVerified,
+                gameStats: user.gameStats
+            }
+        });
+
+    } catch (error) {
+        console.error('Google verify error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Google authentication failed'
+        });
+    }
+});
+
+// @route   GET /api/auth/google/login
+// @desc    Google OAuth popup login (fallback)
+// @access  Public
+router.get('/google/login', (req, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+    
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${redirectUri}&` +
+        `response_type=code&` +
+        `scope=email profile&` +
+        `access_type=offline`;
+    
+    res.redirect(googleAuthUrl);
+});
+
+// @route   GET /api/auth/google/callback
+// @desc    Google OAuth callback
+// @access  Public
+router.get('/google/callback', async (req, res) => {
+    try {
+        const { code } = req.query;
+        
+        if (!code) {
+            return res.send(`
+                <script>
+                    window.opener.postMessage({
+                        type: 'GOOGLE_LOGIN_ERROR',
+                        message: 'Authorization code not received'
+                    }, '*');
+                    window.close();
+                </script>
+            `);
+        }
+
+        // Exchange code for tokens
+        const client = new OAuth2Client(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            `${req.protocol}://${req.get('host')}/api/auth/google/callback`
+        );
+
+        const { tokens } = await client.getToken(code);
+        client.setCredentials(tokens);
+
+        // Get user info
+        const ticket = await client.verifyIdToken({
+            idToken: tokens.id_token,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        const { email, name, picture, email_verified } = payload;
+
+        if (!email_verified) {
+            return res.send(`
+                <script>
+                    window.opener.postMessage({
+                        type: 'GOOGLE_LOGIN_ERROR',
+                        message: 'Google account email is not verified'
+                    }, '*');
+                    window.close();
+                </script>
+            `);
+        }
+
+        // Check if user exists or create new user (same logic as above)
+        let user = await User.findOne({ email: email.toLowerCase() });
+
+        if (user) {
+            user.lastLogin = new Date();
+            if (!user.avatar && picture) {
+                user.avatar = picture;
+            }
+            if (!user.googleId) {
+                user.googleId = payload.sub;
+            }
+            await user.save();
+        } else {
+            user = new User({
+                name: name,
+                email: email.toLowerCase(),
+                avatar: picture,
+                googleId: payload.sub,
+                isEmailVerified: true,
+                password: 'GoogleAuth_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + '!1A'
+            });
+            await user.save();
+        }
+
+        const token = generateToken(user._id);
+
+        // Send success message to popup
+        res.send(`
+            <script>
+                window.opener.postMessage({
+                    type: 'GOOGLE_LOGIN_SUCCESS',
+                    user: {
+                        id: '${user._id}',
+                        name: '${user.name}',
+                        email: '${user.email}',
+                        avatar: '${user.avatar || ''}',
+                        isEmailVerified: ${user.isEmailVerified},
+                        gameStats: ${JSON.stringify(user.gameStats)}
+                    },
+                    token: '${token}'
+                }, '*');
+                window.close();
+            </script>
+        `);
+
+    } catch (error) {
+        console.error('Google callback error:', error);
+        res.send(`
+            <script>
+                window.opener.postMessage({
+                    type: 'GOOGLE_LOGIN_ERROR',
+                    message: 'Google authentication failed'
+                }, '*');
+                window.close();
+            </script>
+        `);
     }
 });
 

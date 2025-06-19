@@ -113,6 +113,41 @@ class AuthSystem {
                         loginModal.close();
                     }, 1500);
                 }
+            } else if (data.requiresVerification) {
+                // Account exists but is not verified
+                console.log('📧 Account requires verification, sending OTP...');
+                this.showMessage('Account not verified. Sending verification code...', 'info');
+                
+                // Send OTP for login verification
+                try {
+                    const otpResponse = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            email: email, 
+                            type: 'login_verification' 
+                        }),
+                    });
+                    
+                    const otpData = await otpResponse.json();
+                    
+                    if (otpResponse.ok) {
+                        this.showMessage('Verification code sent to your email!', 'success');
+                        // Store login verification data in session
+                        sessionStorage.setItem('pendingRegistration', JSON.stringify({
+                            email: email,
+                            type: 'login_verification'
+                        }));
+                        this.showOTPModal(email, 'login_verification');
+                    } else {
+                        this.showMessage(otpData.message || 'Failed to send verification code', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ OTP sending error:', error);
+                    this.showMessage('Failed to send verification code. Please try again.', 'error');
+                }
             } else {
                 this.showMessage(data.message || 'Login failed', 'error');
             }
@@ -457,6 +492,136 @@ class AuthSystem {
         userMenu.style.setProperty('visibility', 'visible', 'important');
         userMenu.style.setProperty('opacity', '1', 'important');
         userMenu.classList.add('show');
+    }
+
+    // Google Login functionality
+    async handleGoogleLogin() {
+        try {
+            this.showMessage('Initializing Google login...', 'info');
+            
+            // Check if Google API is loaded
+            if (!window.google) {
+                this.showMessage('Google API not loaded. Please try again.', 'error');
+                return;
+            }
+
+            // Initialize Google login
+            const response = await fetch(`${API_BASE_URL}/api/auth/google/init`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                this.showMessage(data.message || 'Google login not available', 'error');
+                return;
+            }
+
+            // Use Google Identity Services
+            window.google.accounts.id.initialize({
+                client_id: data.clientId,
+                callback: this.handleGoogleCallback.bind(this)
+            });
+
+            // Show Google One Tap prompt
+            window.google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    // Fallback to popup
+                    this.showGooglePopup(data.clientId);
+                }
+            });
+
+        } catch (error) {
+            console.error('❌ Google login error:', error);
+            this.showMessage('Google login failed. Please try again.', 'error');
+        }
+    }
+
+    showGooglePopup(clientId) {
+        // Create a popup window for Google login
+        const popup = window.open(
+            `${API_BASE_URL}/api/auth/google/login`,
+            'google-login',
+            'width=500,height=600,scrollbars=yes,resizable=yes'
+        );
+
+        // Listen for popup messages
+        const messageListener = (event) => {
+            if (event.origin !== window.location.origin) return;
+            
+            if (event.data.type === 'GOOGLE_LOGIN_SUCCESS') {
+                window.removeEventListener('message', messageListener);
+                popup.close();
+                this.handleGoogleLoginSuccess(event.data.user, event.data.token);
+            } else if (event.data.type === 'GOOGLE_LOGIN_ERROR') {
+                window.removeEventListener('message', messageListener);
+                popup.close();
+                this.showMessage(event.data.message || 'Google login failed', 'error');
+            }
+        };
+
+        window.addEventListener('message', messageListener);
+
+        // Check if popup is closed manually
+        const checkClosed = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(checkClosed);
+                window.removeEventListener('message', messageListener);
+            }
+        }, 1000);
+    }
+
+    async handleGoogleCallback(credentialResponse) {
+        try {
+            this.showMessage('Verifying Google credentials...', 'info');
+            
+            const response = await fetch(`${API_BASE_URL}/api/auth/google/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    credential: credentialResponse.credential
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.user) {
+                this.handleGoogleLoginSuccess(data.user, data.token);
+            } else {
+                this.showMessage(data.message || 'Google login failed', 'error');
+            }
+        } catch (error) {
+            console.error('❌ Google callback error:', error);
+            this.showMessage('Google login verification failed', 'error');
+        }
+    }
+
+    handleGoogleLoginSuccess(user, token) {
+        // Login successful
+        this.currentUser = user;
+        console.log('🎉 Google login successful! User set:', this.currentUser);
+        
+        // Store token
+        if (token) {
+            localStorage.setItem('token', token);
+        }
+        
+        // Update navigation immediately to show avatar
+        this.updateNavigation();
+        
+        this.showMessage('Google login successful! Welcome!', 'success');
+        
+        // Close modal if it's open
+        if (typeof loginModal !== 'undefined' && loginModal) {
+            setTimeout(() => {
+                loginModal.close();
+            }, 1500);
+        }
     }
 
     updateUI() {

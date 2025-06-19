@@ -58,6 +58,15 @@ class LoginModal {
                             
                             <button type="submit" class="submit-btn">Sign In</button>
                             
+                            <div class="divider">
+                                <span>or</span>
+                            </div>
+                            
+                            <button type="button" class="google-login-btn" onclick="authSystem.handleGoogleLogin()">
+                                <i class="fab fa-google"></i>
+                                Continue with Google
+                            </button>
+                            
                             <div class="forgot-password-link">
                                 <a href="#" onclick="authSystem.showForgotPasswordForm(); return false;">Forgot Password?</a>
                             </div>
@@ -113,6 +122,15 @@ class LoginModal {
                             </div>
                             
                             <button type="submit" class="submit-btn">Create Account</button>
+                            
+                            <div class="divider">
+                                <span>or</span>
+                            </div>
+                            
+                            <button type="button" class="google-login-btn" onclick="authSystem.handleGoogleLogin()">
+                                <i class="fab fa-google"></i>
+                                Sign up with Google
+                            </button>
                         </form>
                         
                         <!-- Form Switch -->
