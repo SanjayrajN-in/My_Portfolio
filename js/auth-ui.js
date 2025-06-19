@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const userAvatarElements = document.querySelectorAll('.user-avatar');
     const authOnlyElements = document.querySelectorAll('.auth-only');
     const guestOnlyElements = document.querySelectorAll('.guest-only');
-    const userMenu = document.querySelector('.user-menu');
+    
+    // We'll create the user menu dynamically if needed
+    let userMenu = document.querySelector('.user-menu');
     
     // Update UI based on auth status
     if (currentUser && token) {
@@ -53,8 +55,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             
-            // Show user menu if it exists
-            if (userMenu) {
+            // Create user menu if it doesn't exist
+            if (!userMenu) {
+                console.log('🔄 Creating user menu');
+                userMenu = document.createElement('div');
+                userMenu.className = 'user-menu';
+                userMenu.innerHTML = `
+                    <div class="user-avatar-container">
+                        <img src="${user.avatar || 'images/default-avatar.svg'}" alt="User Avatar" class="user-avatar" id="navUserAvatar">
+                        <div class="user-dropdown">
+                            <a href="pages/profile.html" class="user-dropdown-item">
+                                <i class="fas fa-user"></i>
+                                <span>Profile</span>
+                            </a>
+                            <a href="javascript:void(0);" class="user-dropdown-item logout-button">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                // Add to navigation container
+                const navContainer = document.querySelector('.nav-container');
+                if (navContainer) {
+                    navContainer.insertBefore(userMenu, document.querySelector('.hamburger'));
+                    console.log('✅ User menu added to navigation');
+                    
+                    // Add logout event listener to the new button
+                    const newLogoutButton = userMenu.querySelector('.logout-button');
+                    if (newLogoutButton) {
+                        newLogoutButton.addEventListener('click', handleLogout);
+                    }
+                }
+            } else {
                 userMenu.style.display = '';
                 console.log('✅ User menu displayed');
             }

@@ -96,20 +96,46 @@ document.addEventListener('DOMContentLoaded', function() {
             { name: 'Utils Debug', url: '/api/debug' }
         ];
         
-        for (const endpoint of endpoints) {
+        // Test each endpoint one at a time
+        for (let i = 0; i < endpoints.length; i++) {
+            const endpoint = endpoints[i];
             try {
                 const method = endpoint.method || 'GET';
                 resultsContent.innerHTML += `<p>Testing ${endpoint.name} (${method} ${endpoint.url})...</p>`;
                 
-                const response = await fetch(endpoint.url, { method });
+                // Add a small delay between requests to avoid overwhelming the server
+                if (i > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+                
+                const response = await fetch(endpoint.url, { 
+                    method,
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
                 const status = response.status;
                 
                 let responseText;
                 try {
+                    // Try to parse as JSON first
                     const responseData = await response.json();
                     responseText = JSON.stringify(responseData, null, 2);
                 } catch (e) {
-                    responseText = await response.text();
+                    try {
+                        // If JSON parsing fails, make a new request for text
+                        const textResponse = await fetch(endpoint.url, { 
+                            method,
+                            headers: {
+                                'Cache-Control': 'no-cache',
+                                'Pragma': 'no-cache'
+                            }
+                        });
+                        responseText = await textResponse.text();
+                    } catch (textError) {
+                        responseText = `Error reading response: ${textError.message}`;
+                    }
                 }
                 
                 const statusColor = status >= 200 && status < 300 ? 'green' : 'red';

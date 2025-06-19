@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -198,16 +198,6 @@
                     <i class="fas fa-user"></i>
                     <span>About</span>
                 </a></li>
-                <!-- User Profile Link (only visible when logged in) -->
-                <li class="auth-only" style="display: none;"><a href="pages/profile.html" class="user-profile">
-                    <i class="fas fa-user-circle"></i>
-                    <span class="user-name">User</span>
-                </a></li>
-                <!-- Login Button (only visible when logged out) -->
-                <li class="guest-only"><a href="javascript:void(0);" class="login-button" onclick="window.loginModal.open()">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span>Login</span>
-                </a></li>
                 <li><a href="pages/skills.html">
                     <i class="fas fa-cogs"></i>
                     <span>Skills</span>
@@ -250,22 +240,7 @@
                 </li>
             </ul>
             
-            <!-- User Menu -->
-            <div class="user-menu" style="display: none;">
-                <div class="user-avatar-container">
-                    <img src="images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
-                    <div class="user-dropdown">
-                        <a href="pages/profile.html" class="user-dropdown-item" style="display: none;">
-                            <i class="fas fa-user"></i>
-                            <span>Profile</span>
-                        </a>
-                        <a href="javascript:void(0);" class="user-dropdown-item logout-button">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Logout</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <!-- User Menu will be dynamically added by auth-ui.js when user is logged in -->
             
             <button class="hamburger" aria-label="Toggle navigation menu">
                 <span></span>
