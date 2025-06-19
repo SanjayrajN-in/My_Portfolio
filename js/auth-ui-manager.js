@@ -308,8 +308,8 @@ class AuthUIManager {
     }
 
     updateAuthUI() {
-        if (window.googleAuth && window.googleAuth.isSignedIn()) {
-            const user = window.googleAuth.getCurrentUser();
+        if (window.authSystem && window.authSystem.isLoggedIn()) {
+            const user = window.authSystem.getCurrentUser();
             this.showUserProfile(user);
         } else {
             this.showLoginButton();
@@ -323,17 +323,28 @@ class AuthUIManager {
         if (loginContainer) {
             loginContainer.style.display = 'block';
             
-            // Render Google Sign-In button
-            if (window.googleAuth && window.googleAuth.isInitialized) {
-                setTimeout(() => {
-                    window.googleAuth.renderSignInButton('google-signin-button', {
-                        theme: 'outline',
-                        size: 'large',
-                        text: 'signin_with',
-                        width: 250
-                    });
-                }, 100);
-            }
+            // Create a simple login button instead
+            const simpleLoginBtn = document.createElement('button');
+            simpleLoginBtn.textContent = 'Sign In';
+            simpleLoginBtn.className = 'simple-login-btn';
+            simpleLoginBtn.style.cssText = `
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 16px;
+                width: 100%;
+                margin: 10px 0;
+            `;
+            simpleLoginBtn.onclick = () => {
+                if (window.loginModal) {
+                    window.loginModal.open();
+                }
+            };
+            loginContainer.innerHTML = '';
+            loginContainer.appendChild(simpleLoginBtn);
         }
         
         if (userProfile) {
@@ -380,9 +391,9 @@ class AuthUIManager {
         // Close dropdown
         document.getElementById('userDropdown').classList.remove('show');
         
-        // Sign out using Google Auth
-        if (window.googleAuth) {
-            await window.googleAuth.signOut();
+        // Sign out using auth system
+        if (window.authSystem) {
+            window.authSystem.logout();
         }
     }
 }
