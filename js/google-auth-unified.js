@@ -259,6 +259,38 @@ class GoogleAuthUnified {
             if (!response || !response.credential) {
                 throw new Error('Invalid credential response from Google');
             }
+            
+            // Check if the server is available at all
+            try {
+                console.log('🔍 Checking server availability...');
+                const serverCheckUrl = `${window.location.origin}/api/health`;
+                const serverCheckResponse = await fetch(serverCheckUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    timeout: 5000 // 5 second timeout
+                }).catch(e => {
+                    console.error('❌ Server health check failed:', e);
+                    return { ok: false, status: 0 };
+                });
+                
+                if (!serverCheckResponse.ok) {
+                    console.error('❌ Server health check failed with status:', serverCheckResponse.status);
+                    
+                    // If server is completely down, go straight to fallback
+                    if (serverCheckResponse.status === 0 || serverCheckResponse.status >= 500) {
+                        console.log('🚨 Server appears to be down or having issues, using fallback immediately');
+                        return this.formSubmissionFallback(response.credential);
+                    }
+                } else {
+                    console.log('✅ Server health check passed');
+                }
+            } catch (healthCheckError) {
+                console.error('❌ Error during server health check:', healthCheckError);
+                // Continue with normal flow even if health check fails
+            }
 
             console.log('📤 Sending credential to backend...');
             
@@ -403,8 +435,19 @@ class GoogleAuthUnified {
                         }
                     }
                     
-                    // If we've tried all endpoints and none worked, try form submission as last resort
-                    console.error('❌ All API endpoints failed, trying form submission fallback');
+                    // If we've tried all endpoints and none worked, try direct OAuth fallback
+                    console.error('❌ All API endpoints failed, trying direct OAuth fallback');
+                    
+                    // Show a more detailed error message in the console for debugging
+                    console.error('🚨 Server-side API issue detected:');
+                    console.error('- All API endpoints returned 500 errors');
+                    console.error('- This indicates a server-side configuration issue');
+                    console.error('- Check your Vercel deployment logs and API routes');
+                    console.error('- Verify your MongoDB connection is working');
+                    
+                    // Show a user-friendly message
+                    this.showMessage('Server is experiencing technical difficulties. Trying an alternative login method...', 'info');
+                    
                     return this.formSubmissionFallback(response.credential);
                 }
                 
@@ -444,7 +487,15 @@ class GoogleAuthUnified {
                     console.log('💡 For Vercel deployments: Make sure your API routes are properly configured');
                     console.log('💡 Common issues: Missing environment variables, incorrect API route handlers, or MongoDB connection problems');
                     
-                    throw new Error('The server encountered an error processing your login. Please try again later.');
+                    // For Vercel + MongoDB specific suggestions
+                    console.log('💡 Vercel + MongoDB troubleshooting:');
+                    console.log('1. Check if your MongoDB Atlas cluster is running');
+                    console.log('2. Verify your connection string in Vercel environment variables');
+                    console.log('3. Make sure your IP whitelist in MongoDB Atlas includes Vercel IPs (or use 0.0.0.0/0 for testing)');
+                    console.log('4. Check if your database user has the correct permissions');
+                    console.log('5. Verify that your API route is correctly handling the Google credential');
+                    
+                    throw new Error('The server is currently experiencing technical difficulties. Please try again later or contact support.');
                 }
                 
                 throw new Error(`Server error: ${result.status} - ${errorText}`);
@@ -597,95 +648,110 @@ class GoogleAuthUnified {
         this.showMessage(`Google login failed: ${errorMessage}`, 'error');
     }
 
-    // Last resort fallback that uses form submission
+    // Last resort fallback that uses direct redirection
     formSubmissionFallback(credential) {
-        console.log('🔄 Using form submission fallback for Google auth');
+        console.log('🔄 Using direct redirection fallback for Google auth');
         
         return new Promise((resolve, reject) => {
-            // Create a hidden form
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `${window.location.origin}/api/auth/google-token`;
-            form.target = '_blank';
-            form.style.display = 'none';
+            // Show a user-friendly message about server issues
+            this.showMessage('Server is experiencing issues. Trying an alternative login method...', 'info');
             
-            // Add credential as hidden input
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'credential';
-            input.value = credential;
-            form.appendChild(input);
-            
-            // Add a flag to indicate this is from the fallback
-            const fallbackFlag = document.createElement('input');
-            fallbackFlag.type = 'hidden';
-            fallbackFlag.name = 'fallback';
-            fallbackFlag.value = 'true';
-            form.appendChild(fallbackFlag);
-            
-            // Add form to body
-            document.body.appendChild(form);
-            
-            // Create a popup window
-            const popup = window.open('about:blank', 'google-auth-fallback', 
-                'width=500,height=600,scrollbars=yes,resizable=yes');
-            
-            if (!popup) {
-                document.body.removeChild(form);
-                this.showMessage('Popup blocked. Please allow popups for this site.', 'error');
-                reject(new Error('Popup blocked'));
-                return;
+            // Create a temporary storage for the credential
+            try {
+                sessionStorage.setItem('google_credential_temp', credential);
+                console.log('💾 Saved credential to session storage for fallback');
+            } catch (e) {
+                console.error('❌ Could not save credential to session storage:', e);
             }
             
-            // Set form target to the popup
-            form.target = 'google-auth-fallback';
+            // Create a hidden div with instructions
+            const instructionsDiv = document.createElement('div');
+            instructionsDiv.id = 'google-auth-fallback-instructions';
+            instructionsDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 2rem;
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+                z-index: 10000;
+                max-width: 500px;
+                text-align: center;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            `;
             
-            // Submit the form
-            form.submit();
+            instructionsDiv.innerHTML = `
+                <h3 style="margin-top: 0; color: #4285f4;">Google Login Alternative</h3>
+                <p>We're experiencing some server issues with our normal login process.</p>
+                <p>Please click the button below to try an alternative login method:</p>
+                <button id="google-auth-fallback-button" style="
+                    background: #4285f4;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 4px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    margin: 1rem 0;
+                ">Continue with Google</button>
+                <p style="font-size: 12px; color: #666;">You'll be redirected to Google to complete your login.</p>
+                <button id="google-auth-fallback-close" style="
+                    background: none;
+                    border: none;
+                    color: #666;
+                    text-decoration: underline;
+                    cursor: pointer;
+                    font-size: 14px;
+                    margin-top: 1rem;
+                ">Cancel</button>
+            `;
             
-            // Remove form
-            document.body.removeChild(form);
+            document.body.appendChild(instructionsDiv);
             
-            // Show message
-            this.showMessage('Processing login in a new window...', 'info');
+            // Add event listeners
+            document.getElementById('google-auth-fallback-button').addEventListener('click', () => {
+                // Use the OAuth2 flow as a fallback
+                const clientId = this.clientId;
+                const redirectUri = this.redirectUri;
+                const scope = 'openid email profile';
+                const responseType = 'code';
+                const state = this.generateRandomState();
+                
+                // Store state for verification
+                sessionStorage.setItem('google_oauth_state', state);
+                
+                const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+                    `client_id=${encodeURIComponent(clientId)}&` +
+                    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+                    `response_type=${responseType}&` +
+                    `scope=${encodeURIComponent(scope)}&` +
+                    `state=${state}&` +
+                    `access_type=offline&` +
+                    `prompt=select_account`;
+                
+                console.log('🔄 Redirecting to Google OAuth:', authUrl);
+                
+                // Remove the instructions div
+                document.body.removeChild(instructionsDiv);
+                
+                // Redirect to Google OAuth
+                window.location.href = authUrl;
+            });
             
-            // Monitor the popup
-            const checkClosed = setInterval(() => {
-                if (popup.closed) {
-                    clearInterval(checkClosed);
-                    console.log('🔒 Auth popup closed');
-                    
-                    // Check if login was successful
-                    setTimeout(() => {
-                        const user = localStorage.getItem('user');
-                        const token = localStorage.getItem('token');
-                        
-                        if (user && token) {
-                            console.log('✅ Login successful via fallback popup');
-                            resolve({ 
-                                ok: true, 
-                                json: () => Promise.resolve({ 
-                                    success: true, 
-                                    user: JSON.parse(user), 
-                                    token 
-                                }) 
-                            });
-                        } else {
-                            console.log('❌ Fallback popup closed without successful login');
-                            reject(new Error('Login failed'));
-                        }
-                    }, 1000);
-                }
-            }, 1000);
+            document.getElementById('google-auth-fallback-close').addEventListener('click', () => {
+                document.body.removeChild(instructionsDiv);
+                reject(new Error('Login cancelled by user'));
+            });
             
-            // Timeout after 2 minutes
+            // Reject the promise after a timeout if user doesn't interact
             setTimeout(() => {
-                if (!popup.closed) {
-                    popup.close();
-                    clearInterval(checkClosed);
+                if (document.getElementById('google-auth-fallback-instructions')) {
+                    document.body.removeChild(instructionsDiv);
                     reject(new Error('Login timeout. Please try again.'));
                 }
-            }, 120000);
+            }, 60000);
         });
     }
 
