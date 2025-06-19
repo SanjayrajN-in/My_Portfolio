@@ -5,18 +5,36 @@ class AuthSystem {
         this.init();
     }
 
-    init() {
-        // Check if user is logged in (support both old and new format)
-        const userData = localStorage.getItem('currentUser') || localStorage.getItem('user');
+    async init() {
+        // Check if user is logged in via token validation
         const token = localStorage.getItem('token');
         
-        if (userData) {
-            this.currentUser = JSON.parse(userData);
-            // If we have a token
-            if (token) {
-                this.currentUser.token = token;
+        if (token) {
+            try {
+                // Validate token with server
+                const response = await fetch('/api/auth/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    this.currentUser = userData.user;
+                    console.log('User authenticated from server:', this.currentUser);
+                } else {
+                    // Token is invalid, clear it
+                    console.log('Token invalid, clearing storage');
+                    localStorage.clear();
+                    sessionStorage.clear();
+                }
+            } catch (error) {
+                console.error('Token validation error:', error);
+                localStorage.clear();
+                sessionStorage.clear();
             }
-            this.updateUI();
         }
 
         // Initialize profile page if on profile page
@@ -142,18 +160,50 @@ class AuthSystem {
         }
     }
 
-    logout() {
-        this.currentUser = null;
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('user'); // Remove user data
-        localStorage.removeItem('token'); // Remove auth token
-        
-        // Redirect to home page
-        if (window.location.pathname.includes('profile.html')) {
-            window.location.href = '../index.html';
-        } else {
-            window.location.reload();
+    async logout() {
+        try {
+            // Call logout API to invalidate session on server
+            const response = await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                }
+            });
+
+            const data = await response.json();
+            console.log('Logout response:', data);
+        } catch (error) {
+            console.error('Logout API error:', error);
         }
+
+        // Clear all client-side data regardless of API response
+        this.currentUser = null;
+        
+        // Clear all local storage items
+        localStorage.clear();
+        
+        // Clear session storage as well
+        sessionStorage.clear();
+        
+        // Clear any cookies if they exist
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        console.log('User logged out, all storage cleared');
+        
+        // Show logout message
+        this.showMessage('You have been logged out successfully.', 'success');
+        
+        // Redirect to home page after a brief delay
+        setTimeout(() => {
+            if (window.location.pathname.includes('profile.html')) {
+                window.location.href = '../index.html';
+            } else {
+                window.location.reload();
+            }
+        }, 1000);
     }
 
     updateNavigation() {
@@ -351,16 +401,97 @@ class AuthSystem {
     }
 
     showMessage(message, type) {
+        // Try to show message in modal first
+        const modalMessageDiv = document.getElementById('modalMessage');
+        if (modalMessageDiv && document.querySelector('.login-modal-overlay.active')) {
+            modalMessageDiv.innerHTML = `<div class="${type}-message">${message}</div>`;
+            return;
+        }
+
+        // Fallback to auth message div
         const messageDiv = document.getElementById('authMessage');
-        if (!messageDiv) return;
+        if (messageDiv) {
+            messageDiv.className = `auth-message ${type}`;
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
 
-        messageDiv.className = `auth-message ${type}`;
-        messageDiv.textContent = message;
-        messageDiv.style.display = 'block';
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+            return;
+        }
 
+        // Create a floating notification if no message container is found
+        this.showFloatingNotification(message, type);
+    }
+
+    showFloatingNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `floating-notification ${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        // Add styles if not already present
+        if (!document.getElementById('floatingNotificationStyles')) {
+            const styles = document.createElement('style');
+            styles.id = 'floatingNotificationStyles';
+            styles.textContent = `
+                .floating-notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 10000000;
+                    padding: 1rem 1.5rem;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                    backdrop-filter: blur(10px);
+                    opacity: 0;
+                    transform: translateX(100%);
+                    transition: all 0.3s ease;
+                }
+                .floating-notification.success {
+                    background: rgba(40, 167, 69, 0.9);
+                    color: white;
+                    border: 1px solid rgba(40, 167, 69, 0.3);
+                }
+                .floating-notification.error {
+                    background: rgba(220, 53, 69, 0.9);
+                    color: white;
+                    border: 1px solid rgba(220, 53, 69, 0.3);
+                }
+                .floating-notification.info {
+                    background: rgba(0, 123, 255, 0.9);
+                    color: white;
+                    border: 1px solid rgba(0, 123, 255, 0.3);
+                }
+                .floating-notification.show {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                .notification-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+            `;
+            document.head.appendChild(styles);
+        }
+
+        document.body.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => notification.classList.add('show'), 100);
+        
+        // Hide notification
         setTimeout(() => {
-            messageDiv.style.display = 'none';
-        }, 5000);
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
     }
 
     // Game tracking methods

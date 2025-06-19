@@ -10,11 +10,15 @@ class LoginModal {
     init() {
         console.log('Initializing LoginModal...');
         
+        // Remove existing modal if it exists
+        const existingModal = document.getElementById('loginModalOverlay');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
         // Create modal HTML
         this.createModal();
         console.log('Modal HTML created');
-        
-
         
         // Bind events
         this.bindEvents();
@@ -230,19 +234,10 @@ class LoginModal {
         const password = document.getElementById('loginPassword').value;
 
         try {
-            const result = authSystem.login(email, password);
-            
-            if (result.success) {
-                this.showMessage('Login successful! Welcome back.', 'success');
-                setTimeout(() => {
-                    this.close();
-                    // Refresh page to update navigation
-                    window.location.reload();
-                }, 1500);
-            } else {
-                this.showMessage(result.message);
-            }
+            // Call the auth system's handleLogin method (database-based)
+            await authSystem.handleLogin(e);
         } catch (error) {
+            console.error('Login error:', error);
             this.showMessage('An error occurred. Please try again.');
         } finally {
             this.setLoading(false);
@@ -274,19 +269,10 @@ class LoginModal {
         }
 
         try {
-            const result = await authSystem.handleRegister(e);
-            
-            if (result.success) {
-                this.showMessage('Account created successfully! You are now logged in.', 'success');
-                setTimeout(() => {
-                    this.close();
-                    // Refresh page to update navigation
-                    window.location.reload();
-                }, 1500);
-            } else {
-                this.showMessage(result.message);
-            }
+            // Call the auth system's handleRegister method (database-based)
+            await authSystem.handleRegister(e);
         } catch (error) {
+            console.error('Registration error:', error);
             this.showMessage('An error occurred. Please try again.');
         } finally {
             this.setLoading(false);
@@ -582,5 +568,21 @@ document.addEventListener('DOMContentLoaded', function() {
 function openLoginModal() {
     if (loginModal) {
         loginModal.open();
+    } else {
+        // Reinitialize if needed
+        loginModal = new LoginModal();
+        loginModal.open();
     }
+}
+
+// Global function to reinitialize login modal (for development)
+function reinitializeLoginModal() {
+    if (loginModal) {
+        const existingModal = document.getElementById('loginModalOverlay');
+        if (existingModal) {
+            existingModal.remove();
+        }
+    }
+    loginModal = new LoginModal();
+    console.log('Login modal reinitialized');
 }
