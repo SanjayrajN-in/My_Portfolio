@@ -62,13 +62,22 @@ export default async function handler(req, res) {
     const googleClientId = process.env.GOOGLE_CLIENT_ID || '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
     const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const jwtSecret = process.env.JWT_SECRET || 'fallback-jwt-secret-for-development';
-    const redirectUri = process.env.OAUTH_CALLBACK_URL || `${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/auth/callback`;
+    
+    // Use a fixed redirect URI that matches what's in Google Cloud Console
+    let redirectUri;
+    const host = req.headers.host || '';
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+      redirectUri = 'http://localhost:3000/api/auth/callback';
+    } else {
+      redirectUri = 'https://sanjayrajn.vercel.app/api/auth/callback';
+    }
 
     console.log('🔧 Environment check:', {
       hasClientId: !!googleClientId,
       hasClientSecret: !!googleClientSecret,
       hasJwtSecret: !!jwtSecret,
-      redirectUri
+      redirectUri,
+      host
     });
 
     if (!googleClientId || !googleClientSecret) {

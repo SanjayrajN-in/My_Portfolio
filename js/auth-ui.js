@@ -9,9 +9,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let token = null;
     
     try {
-        currentUser = localStorage.getItem('currentUser');
+        // Check for both possible user storage keys
+        currentUser = localStorage.getItem('currentUser') || localStorage.getItem('user');
         token = localStorage.getItem('token');
         console.log('🔐 Auth check - currentUser:', !!currentUser, 'token:', !!token);
+        
+        // If we have a user from 'user' key but not in 'currentUser', copy it
+        if (!localStorage.getItem('currentUser') && localStorage.getItem('user')) {
+            localStorage.setItem('currentUser', localStorage.getItem('user'));
+            console.log('🔄 Copied user data from "user" to "currentUser" key');
+        }
     } catch (error) {
         console.error('❌ Error accessing localStorage:', error);
         // Clear potentially corrupted data

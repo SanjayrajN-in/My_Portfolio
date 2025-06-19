@@ -320,7 +320,15 @@ class LoginModal {
         const clientId = '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
         
         // Use the authorized redirect URI that matches Google Cloud Console
-        const redirectUri = `${window.location.origin}/api/auth/callback`;
+        // This should be the exact URL registered in your Google Cloud Console
+        let redirectUri;
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            redirectUri = 'http://localhost:3000/api/auth/callback';
+        } else {
+            redirectUri = 'https://sanjayrajn.vercel.app/api/auth/callback';
+        }
+        
         const scope = 'openid email profile';
         const responseType = 'code';
         const state = this.generateRandomState();

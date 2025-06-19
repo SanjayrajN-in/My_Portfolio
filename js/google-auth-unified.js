@@ -3,7 +3,16 @@ class GoogleAuthUnified {
     constructor() {
         // Use the new Google Client ID from your environment variables
         this.clientId = '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
-        this.redirectUri = window.location.origin + '/api/auth/callback';
+        
+        // Fix the redirect URI to match what's configured in Google Cloud Console
+        // This should be the exact URL registered in your Google Cloud Console
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            this.redirectUri = 'http://localhost:3000/api/auth/callback';
+        } else {
+            this.redirectUri = 'https://sanjayrajn.vercel.app/api/auth/callback';
+        }
+        
         this.isInitialized = false;
         this.isLoading = false;
         
@@ -821,3 +830,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Backward compatibility
     window.googlePopupAuth = googleAuth;
 });
+
+// Fallback initialization in case DOMContentLoaded already fired
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    if (!window.googleAuth) {
+        console.log('🔄 Late initialization of Google Auth');
+        googleAuth = new GoogleAuthUnified();
+        window.googleAuth = googleAuth;
+        window.googlePopupAuth = googleAuth;
+    }
+}
