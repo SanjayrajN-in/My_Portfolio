@@ -132,6 +132,13 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
 
     } catch (error) {
         console.error('Send OTP error:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error details:', {
+            message: error.message,
+            name: error.name,
+            email: req.body?.email,
+            type: req.body?.type
+        });
         res.status(500).json({
             success: false,
             message: 'Server error. Please try again later.'
