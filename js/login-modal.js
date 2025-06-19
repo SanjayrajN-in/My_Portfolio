@@ -36,10 +36,6 @@ class LoginModal {
                     <div class="login-modal-body">
                         <div id="modalMessage"></div>
                         
-                        <!-- Email Login Form Header -->
-                        <div class="form-header">
-                            <span>Login with your email</span>
-                        </div>
                         
                         <!-- Login Form -->
                         <form class="login-form active" id="loginForm">
