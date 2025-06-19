@@ -13,6 +13,14 @@ api/debug/
 test-*.html
 test-*.js
 
+# Individual API files (now consolidated)
+api/auth/*.js
+api/contact/*.js
+api/users/*.js
+api/hello.js
+api/test.js
+api/db-test.js
+
 # Documentation and scripts
 *.ps1
 deploy-*.txt

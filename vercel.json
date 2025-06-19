@@ -3,7 +3,16 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "functions": {
-    "api/*.js": {
+    "api/index.js": {
+      "runtime": "@vercel/node@2.15.6"
+    },
+    "api/auth.js": {
+      "runtime": "@vercel/node@2.15.6"
+    },
+    "api/contact-user.js": {
+      "runtime": "@vercel/node@2.15.6"
+    },
+    "api/utils.js": {
       "runtime": "@vercel/node@2.15.6"
     }
   },

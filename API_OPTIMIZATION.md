@@ -56,6 +56,12 @@ All API files now use ES modules (import/export) consistently as specified in pa
 - The frontend code doesn't need to change as the API URLs remain the same
 - All API functionality remains intact
 - Error handling has been improved throughout the codebase
+- The build script automatically backs up and removes individual API files to stay within Vercel's function limits
+- Only 4 serverless functions are deployed:
+  1. `api/index.js` - API root handler
+  2. `api/auth.js` - Authentication endpoints
+  3. `api/contact-user.js` - Contact and user data endpoints
+  4. `api/utils.js` - Utility endpoints
 
 ## Troubleshooting
 
