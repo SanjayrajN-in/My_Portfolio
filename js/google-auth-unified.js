@@ -331,24 +331,8 @@ class GoogleAuthUnified {
             // 2. Add common endpoint formats as fallbacks
             const additionalEndpoints = [
                 {
-                    url: `${window.location.origin}/api/auth?endpoint=google`,
-                    description: 'Query parameter endpoint'
-                },
-                {
                     url: `${window.location.origin}/api/auth/google`,
                     description: 'Standard API endpoint'
-                },
-                {
-                    url: `${window.location.origin}/api/auth-google`,
-                    description: 'Direct auth-google endpoint'
-                },
-                {
-                    url: `${window.location.origin}/api/google-auth`,
-                    description: 'Direct endpoint'
-                },
-                {
-                    url: `${window.location.origin}/api/auth/google-signin`,
-                    description: 'Alternative endpoint'
                 }
             ];
             

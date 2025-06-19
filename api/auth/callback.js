@@ -226,8 +226,7 @@ export default async function handler(req, res) {
         <script>
           // Store user data and token in localStorage
           try {
-            localStorage.setItem('token', ${JSON.stringify(token)});
-            localStorage.setItem('user', ${JSON.stringify(JSON.stringify({
+            const userData = ${JSON.stringify({
               id: user._id.toString(),
               name: user.name,
               email: user.email,
@@ -235,31 +234,43 @@ export default async function handler(req, res) {
               joinedDate: user.joinedDate,
               gameStats: user.gameStats,
               isGoogleAuth: true
-            }))});
+            })};
+            
+            const tokenValue = ${JSON.stringify(token)};
+            
+            // Store in both possible locations for compatibility
+            localStorage.setItem('token', tokenValue);
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            
+            console.log('Auth data stored successfully');
             
             // Notify opener window if available
             if (window.opener && !window.opener.closed) {
               window.opener.postMessage({ 
                 type: 'GOOGLE_AUTH_SUCCESS',
-                token: ${JSON.stringify(token)},
-                user: ${JSON.stringify({
-                  id: user._id.toString(),
-                  name: user.name,
-                  email: user.email,
-                  avatar: user.avatar,
-                  joinedDate: user.joinedDate,
-                  gameStats: user.gameStats,
-                  isGoogleAuth: true
-                })}
+                token: tokenValue,
+                user: userData
               }, '*');
+              console.log('Notified opener window');
+            }
+            
+            // Redirect to home page if this is not a popup
+            if (!window.opener) {
+              window.location.href = '/';
             }
           } catch (e) {
             console.error('Error storing auth data:', e);
+            document.body.innerHTML += '<div style="color: red; margin-top: 20px;">Error: ' + e.message + '</div>';
           }
           
           // Close window after a short delay
           setTimeout(() => {
-            window.close();
+            if (window.opener) {
+              window.close();
+            } else {
+              window.location.href = '/';
+            }
           }, 3000);
         </script>
       </body>

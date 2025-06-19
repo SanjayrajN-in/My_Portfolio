@@ -304,12 +304,20 @@ class LoginModal {
         if (window.googleAuth) {
             console.log('✅ Using Unified Google Auth');
             window.googleAuth.login();
-        } else if (window.googlePopupAuth) {
-            console.log('🔄 Using fallback Google Auth');
-            window.googlePopupAuth.login();
         } else {
             console.log('❌ Google Auth not available, using redirect fallback');
             this.fallbackGoogleLogin();
+            
+            // Try to initialize Google Auth if it's not available
+            if (typeof GoogleAuthUnified === 'function') {
+                console.log('🔄 Attempting to initialize Google Auth');
+                window.googleAuth = new GoogleAuthUnified();
+                setTimeout(() => {
+                    if (window.googleAuth) {
+                        window.googleAuth.login();
+                    }
+                }, 1000);
+            }
         }
     }
 
@@ -326,7 +334,8 @@ class LoginModal {
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
             redirectUri = 'http://localhost:3000/api/auth/callback';
         } else {
-            redirectUri = 'https://sanjayrajn.vercel.app/api/auth/callback';
+            // Use the current origin to ensure it matches the deployed URL
+            redirectUri = `${window.location.origin}/api/auth/callback`;
         }
         
         const scope = 'openid email profile';

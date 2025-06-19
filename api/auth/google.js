@@ -4,7 +4,7 @@ import { OAuth2Client } from 'google-auth-library';
 import connectDB from '../config/database';
 import User from '../models/User';
 
-export default async (req, res) => {
+export default async function handler(req, res) {
     console.log('🔐 Google Auth API called:', {
         method: req.method,
         url: req.url,
