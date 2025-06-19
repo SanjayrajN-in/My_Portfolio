@@ -11,8 +11,7 @@
     { "source": "/api/auth/:endpoint", "destination": "/api/auth?endpoint=:endpoint" },
     { "source": "/api/contact/:endpoint", "destination": "/api/contact-user?endpoint=:endpoint" },
     { "source": "/api/users/:endpoint", "destination": "/api/contact-user?endpoint=:endpoint" },
-    { "source": "/api/:endpoint", "destination": "/api/utils?endpoint=:endpoint" },
-
+    { "source": "/api/:endpoint", "destination": "/api/utils?endpoint=:endpoint" }
   ],
   "headers": [
     {
