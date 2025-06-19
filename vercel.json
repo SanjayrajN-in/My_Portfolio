@@ -29,15 +29,9 @@
       "runtime": "@vercel/node"
     }
   },
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/auth/google/callback",
-      "dest": "/auth/google/callback.html"
-    }
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/auth/google/callback", "destination": "/auth/google/callback.html" }
   ],
   "headers": [
     {

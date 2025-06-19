@@ -65,6 +65,50 @@ if (Test-Path package.json) {
 # Check vercel.json
 if (Test-Path vercel.json) {
     Write-Host "✅ vercel.json found" -ForegroundColor Green
+    
+    # Validate vercel.json configuration
+    $vercelConfig = Get-Content -Raw vercel.json | ConvertFrom-Json
+    
+    # Check for configuration conflicts
+    if (($vercelConfig.PSObject.Properties.Name -contains "routes") -and 
+        (($vercelConfig.PSObject.Properties.Name -contains "rewrites") -or 
+         ($vercelConfig.PSObject.Properties.Name -contains "redirects") -or 
+         ($vercelConfig.PSObject.Properties.Name -contains "headers") -or 
+         ($vercelConfig.PSObject.Properties.Name -contains "cleanUrls") -or 
+         ($vercelConfig.PSObject.Properties.Name -contains "trailingSlash"))) {
+        
+        Write-Host "❌ Configuration error in vercel.json:" -ForegroundColor Red
+        Write-Host "   If 'rewrites', 'redirects', 'headers', 'cleanUrls' or 'trailingSlash' are used," -ForegroundColor Red
+        Write-Host "   then 'routes' cannot be present." -ForegroundColor Red
+        
+        $fixConfig = Read-Host "Do you want to automatically fix this issue? (y/n)"
+        if ($fixConfig -eq "y") {
+            # Convert routes to rewrites
+            if (($vercelConfig.PSObject.Properties.Name -contains "routes") -and 
+                ($vercelConfig.PSObject.Properties.Name -notcontains "rewrites")) {
+                
+                $rewrites = @()
+                foreach ($route in $vercelConfig.routes) {
+                    $rewrite = @{
+                        source = $route.src
+                        destination = $route.dest
+                    }
+                    $rewrites += $rewrite
+                }
+                
+                # Remove routes and add rewrites
+                $vercelConfig.PSObject.Properties.Remove('routes')
+                Add-Member -InputObject $vercelConfig -MemberType NoteProperty -Name "rewrites" -Value $rewrites
+                
+                # Save updated config
+                $vercelConfig | ConvertTo-Json -Depth 10 | Set-Content vercel.json
+                Write-Host "✅ vercel.json configuration fixed" -ForegroundColor Green
+            }
+        } else {
+            Write-Host "Deployment cancelled. Please fix vercel.json manually." -ForegroundColor Red
+            exit
+        }
+    }
 } else {
     Write-Host "❌ vercel.json not found" -ForegroundColor Red
     exit
