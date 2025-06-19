@@ -319,8 +319,8 @@ class LoginModal {
         // Your Google Client ID (make sure this matches your Google Cloud Console)
         const clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
         
-        // Use the correct redirect URI for your domain
-        const redirectUri = 'https://sanjayrajn.vercel.app/auth/google/callback';
+        // Use a dynamic redirect URI based on the current domain
+        const redirectUri = `${window.location.origin}/auth/google/callback`;
         const scope = 'openid email profile';
         const responseType = 'code';
         const state = this.generateRandomState();

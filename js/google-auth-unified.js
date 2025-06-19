@@ -6,6 +6,12 @@ class GoogleAuthUnified {
         this.isInitialized = false;
         this.isLoading = false;
         
+        // Log configuration for debugging
+        console.log('🔧 Google Auth Configuration:');
+        console.log('🔧 Client ID:', this.clientId);
+        console.log('🔧 Redirect URI:', this.redirectUri);
+        console.log('🔧 Current Origin:', window.location.origin);
+        
         // Suppress Google warnings
         this.suppressGoogleWarnings();
         
@@ -245,9 +251,18 @@ class GoogleAuthUnified {
 
             console.log('📤 Sending credential to backend...');
             
-            // Construct the API URL using the current origin
-            // Note: We're using the consolidated API endpoint
-            const apiUrl = `${window.location.origin}/api/auth?endpoint=google`;
+            // Use the API configuration from api-config.js if available
+            // Otherwise, fall back to a standard endpoint format
+            let apiUrl;
+            if (window.API) {
+                // Use the endpoint defined in api-config.js
+                apiUrl = `${window.API.apiURL}/auth/google`;
+                console.log('✅ Using API config from api-config.js');
+            } else {
+                // Fallback to standard endpoint
+                console.warn('⚠️ API configuration not found, using fallback endpoint');
+                apiUrl = `${window.location.origin}/api/auth/google`;
+            }
             console.log('🌐 API URL:', apiUrl);
             console.log('🌐 Using API URL:', apiUrl);
             
@@ -282,29 +297,41 @@ class GoogleAuthUnified {
                 
                 // Check if it's a 404 - API not found
                 if (result.status === 404) {
-                    console.error('🚨 API endpoint not found! Trying fallback...');
+                    console.error('🚨 API endpoint not found! Trying alternative endpoint...');
                     
-                    // Try to test if any API endpoint works
+                    // Try alternative endpoint format
                     try {
-                        const testUrl = `${window.location.origin}/api/test`;
-                        console.log('🔍 Testing API with:', testUrl);
-                        const testResponse = await fetch(testUrl, { 
-                            method: 'GET',
+                        // Try a different endpoint format
+                        const alternativeUrl = window.API 
+                            ? `${window.API.baseURL}/api/auth?endpoint=google` 
+                            : `${window.location.origin}/api/auth?endpoint=google`;
+                            
+                        console.log('🔄 Trying alternative endpoint:', alternativeUrl);
+                        
+                        const alternativeResult = await fetch(alternativeUrl, {
+                            method: 'POST',
                             headers: {
-                                'Cache-Control': 'no-cache',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Cache-Control': 'no-cache'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({ 
+                                credential: response.credential,
+                                popup_mode: true
+                            })
                         });
                         
-                        if (testResponse.ok) {
-                            console.log('✅ Basic API works, but Google auth endpoint missing');
-                            throw new Error('Google authentication service is temporarily unavailable. Please try again in a few minutes.');
+                        if (alternativeResult.ok) {
+                            console.log('✅ Alternative endpoint worked!');
+                            return alternativeResult; // Return the successful response
                         } else {
-                            console.error('❌ No API endpoints working, status:', testResponse.status);
-                            throw new Error('Server is temporarily unavailable. Please try again later.');
+                            console.error('❌ Alternative endpoint also failed:', alternativeResult.status);
+                            throw new Error('Google authentication service is temporarily unavailable. Please try again in a few minutes.');
                         }
-                    } catch (testError) {
-                        console.error('❌ API test failed:', testError.message);
+                    } catch (altError) {
+                        console.error('❌ Alternative endpoint error:', altError.message);
                         throw new Error('Unable to connect to authentication server. Please check your internet connection and try again.');
                     }
                 }
@@ -317,6 +344,15 @@ class GoogleAuthUnified {
                     try {
                         const errorJson = JSON.parse(errorText);
                         if (errorJson.error && errorJson.error.message) {
+                            console.error('🚨 Server error details:', errorJson.error);
+                            
+                            // Check if this is a MongoDB connection error
+                            if (errorJson.error.message.includes('MongoDB') || 
+                                errorJson.error.message.includes('database') ||
+                                errorJson.error.message.includes('connection')) {
+                                throw new Error('Database connection error. Please try again later.');
+                            }
+                            
                             throw new Error(`Server error: ${errorJson.error.message}`);
                         }
                     } catch (parseError) {
@@ -324,6 +360,8 @@ class GoogleAuthUnified {
                         console.log('Could not parse error JSON:', parseError);
                     }
                     
+                    // Suggest checking Vercel logs
+                    console.log('💡 Suggestion: Check Vercel deployment logs for more details on the 500 error');
                     throw new Error('The server encountered an error processing your login. Please try again later.');
                 }
                 
