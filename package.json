@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "description": "Portfolio website of Sanjayraj N - Electrical & Electronics Engineer",
   "main": "index.html",
+  "type": "module",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'Static build completed'",
     "start": "vercel dev",
-    "test:auth": "node api/test/google-auth-test.js"
+    "test:auth": "node api/test/google-auth-test.js",
+    "test:db": "node --experimental-modules api/test/db-connection.js"
   },
   "keywords": [
     "portfolio",

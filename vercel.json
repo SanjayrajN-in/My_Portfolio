@@ -1,32 +1,9 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
   "functions": {
-    "api/auth/google.js": {
-      "runtime": "@vercel/node"
-    },
-    "api/auth/login.js": {
-      "runtime": "@vercel/node"
-    },
-    "api/auth/register.js": {
-      "runtime": "@vercel/node"
-    },
-    "api/auth/send-otp.js": {
-      "runtime": "@vercel/node"
-    },
-    "api/auth/verify-otp.js": {
-      "runtime": "@vercel/node"
-    },
-    "api/contact/submit.js": {
-      "runtime": "@vercel/node"
-    },
-    "api/users/update-game-stats.js": {
-      "runtime": "@vercel/node"
-    },
-    "api/test/api-status.js": {
-      "runtime": "@vercel/node"
-    },
-    "api/debug/env-check.js": {
-      "runtime": "@vercel/node"
+    "api/**/*.js": {
+      "runtime": "@vercel/node@2.15.6"
     }
   },
   "rewrites": [
@@ -39,7 +16,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://sanjayrajn.vercel.app"
+          "value": "*"
         },
         {
           "key": "Access-Control-Allow-Methods",
@@ -63,5 +40,16 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "MONGODB_URI": "@mongodb_uri",
+    "JWT_SECRET": "@jwt_secret",
+    "GOOGLE_CLIENT_ID": "@google_client_id",
+    "GOOGLE_CLIENT_SECRET": "@google_client_secret",
+    "FRONTEND_URL": "@frontend_url",
+    "OAUTH_CALLBACK_URL": "@oauth_callback_url",
+    "EMAIL_USER": "@email_user",
+    "EMAIL_PASS": "@email_pass",
+    "APP_NAME": "@app_name"
+  }
 }

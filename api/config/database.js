@@ -1,13 +1,13 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-// Cache the database connection
-let cachedConnection = null;
+// Cache the database connection for serverless environment
+let cachedDb = null;
 
 const connectDB = async () => {
-  // If we have a cached connection, use it
-  if (cachedConnection) {
+  // If we have a cached connection and it's connected, use it
+  if (cachedDb && mongoose.connection.readyState === 1) {
     console.log('Using cached database connection');
-    return cachedConnection;
+    return cachedDb;
   }
 
   try {
@@ -19,22 +19,23 @@ const connectDB = async () => {
 
     console.log('Connecting to MongoDB...');
     
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 10000, // Timeout after 10s instead of 30s
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-    });
+    // Important: Remove deprecated options and use the new connection syntax
+    // that works well with Vercel serverless functions
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      });
+    }
     
-    // Cache the connection
-    cachedConnection = conn;
+    // Cache the mongoose instance
+    cachedDb = mongoose;
     
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    return conn;
+    console.log(`MongoDB Connected: ${mongoose.connection.host}`);
+    return mongoose;
   } catch (error) {
     console.error('Database connection error:', error);
     throw error;
   }
 };
 
-module.exports = connectDB;
+export default connectDB;

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const gameHistorySchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -81,4 +81,7 @@ const userSchema = new mongoose.Schema({
 // Add index for email lookups
 userSchema.index({ email: 1 });
 
-module.exports = mongoose.model('User', userSchema);
+// Check if the model already exists to prevent model overwrite errors in serverless environment
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+
+export default User;

@@ -1,5 +1,5 @@
-const connectDB = require('../config/database');
-const User = require('../models/User');
+import connectDB from '../config/database';
+import User from '../models/User';
 
 export default async function handler(req, res) {
   // Set CORS headers
