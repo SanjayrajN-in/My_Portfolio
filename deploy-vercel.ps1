@@ -120,6 +120,7 @@ if (Test-Path vercel.json) {
     if ($vercelConfig.PSObject.Properties.Name -contains "functions") {
         $runtimeIssues = $false
         $functionsToFix = @{}
+        $missingFiles = @()
         
         foreach ($functionPath in $vercelConfig.functions.PSObject.Properties.Name) {
             $runtime = $vercelConfig.functions.$functionPath.runtime
@@ -129,9 +130,53 @@ if (Test-Path vercel.json) {
                 $runtimeIssues = $true
                 $functionsToFix[$functionPath] = $runtime
             }
+            
+            # Check if the file exists
+            $fullPath = "c:/Users/ADMIN/OneDrive/Desktop/My portfolio/$functionPath"
+            if (-not (Test-Path $fullPath)) {
+                $missingFiles += $functionPath
+            }
         }
         
-        if ($runtimeIssues) {
+        # Handle missing files
+        if ($missingFiles.Count -gt 0) {
+            Write-Host "❌ Missing serverless function files in vercel.json:" -ForegroundColor Red
+            foreach ($file in $missingFiles) {
+                Write-Host "   - $file" -ForegroundColor Red
+            }
+            Write-Host "   The pattern defined in 'functions' doesn't match any Serverless Functions inside the 'api' directory." -ForegroundColor Red
+            $configErrors = $true
+            
+            $fixMissingFiles = Read-Host "Do you want to remove these missing files from the configuration? (y/n)"
+            if ($fixMissingFiles -eq "y") {
+                $simplifyConfig = Read-Host "Do you want to simplify the configuration by removing the entire 'functions' section? (recommended) (y/n)"
+                
+                if ($simplifyConfig -eq "y") {
+                    # Remove the entire functions section
+                    $vercelConfig.PSObject.Properties.Remove('functions')
+                    Write-Host "✅ Removed 'functions' section from vercel.json" -ForegroundColor Green
+                } else {
+                    # Remove only the missing files
+                    foreach ($file in $missingFiles) {
+                        $vercelConfig.functions.PSObject.Properties.Remove($file)
+                    }
+                    Write-Host "✅ Removed missing files from 'functions' section" -ForegroundColor Green
+                }
+                
+                # Save updated config
+                $vercelConfig | ConvertTo-Json -Depth 10 | Set-Content vercel.json
+                $configErrors = $false
+                
+                # Reload the config after changes
+                $vercelConfig = Get-Content -Raw vercel.json | ConvertFrom-Json
+            } else {
+                Write-Host "Deployment cancelled. Please fix vercel.json manually." -ForegroundColor Red
+                exit
+            }
+        }
+        
+        # Handle runtime version issues (only if functions section still exists)
+        if ($vercelConfig.PSObject.Properties.Name -contains "functions" -and $runtimeIssues) {
             Write-Host "❌ Function runtime version error in vercel.json:" -ForegroundColor Red
             Write-Host "   Function Runtimes must have a valid version, for example '@vercel/node@1.15.4'" -ForegroundColor Red
             $configErrors = $true

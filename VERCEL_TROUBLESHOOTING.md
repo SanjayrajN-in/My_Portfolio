@@ -66,6 +66,42 @@ Error: Function Runtimes must have a valid version, for example `now-php@1.0.0`.
   - `@vercel/go@1.2.3` - For Go functions
   - `@vercel/ruby@1.2.6` - For Ruby functions
 
+### 3. Missing Serverless Function Files
+
+**Error Message:**
+```
+Error: The pattern "api/test/api-status.js" defined in `functions` doesn't match any Serverless Functions inside the `api` directory.
+```
+
+**Solution:**
+- This error occurs when Vercel can't find the API files referenced in your configuration
+- Options to fix:
+  1. **Remove the functions section entirely** - Vercel will auto-detect your API files
+  2. **Correct the file paths** - Make sure the paths in `functions` match your actual file structure
+  3. **Create the missing files** - Add the referenced files to your project
+
+- Simplified configuration without functions section:
+```json
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/auth/google/callback", "destination": "/auth/google/callback.html" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "https://sanjayrajn.vercel.app" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" },
+        { "key": "Access-Control-Allow-Credentials", "value": "true" }
+      ]
+    }
+  ]
+}
+```
+
 ### 2. Missing Environment Variables
 
 **Error Message:**

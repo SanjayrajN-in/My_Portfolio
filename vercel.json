@@ -1,34 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "api/auth/google.js": {
-      "runtime": "@vercel/node@1.15.4"
-    },
-    "api/auth/login.js": {
-      "runtime": "@vercel/node@1.15.4"
-    },
-    "api/auth/register.js": {
-      "runtime": "@vercel/node@1.15.4"
-    },
-    "api/auth/send-otp.js": {
-      "runtime": "@vercel/node@1.15.4"
-    },
-    "api/auth/verify-otp.js": {
-      "runtime": "@vercel/node@1.15.4"
-    },
-    "api/contact/submit.js": {
-      "runtime": "@vercel/node@1.15.4"
-    },
-    "api/users/update-game-stats.js": {
-      "runtime": "@vercel/node@1.15.4"
-    },
-    "api/test/api-status.js": {
-      "runtime": "@vercel/node@1.15.4"
-    },
-    "api/debug/env-check.js": {
-      "runtime": "@vercel/node@1.15.4"
-    }
-  },
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/auth/google/callback", "destination": "/auth/google/callback.html" }
