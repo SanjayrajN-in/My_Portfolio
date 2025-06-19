@@ -45,7 +45,8 @@ class GoogleAuthCallbackUnified {
             this.updateStatus('🔄 Verifying with Google...', 'info');
 
             // Construct the API URL using the current origin
-            const apiUrl = `${window.location.origin}/api/auth/google`;
+            // Note: We're using the consolidated API endpoint
+            const apiUrl = `${window.location.origin}/api/auth?endpoint=google`;
             console.log('🌐 Using API URL:', apiUrl);
             
             // Send code to our backend

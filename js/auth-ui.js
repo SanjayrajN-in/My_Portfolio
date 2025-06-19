@@ -5,8 +5,22 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     // Check if user is logged in
-    const currentUser = localStorage.getItem('currentUser');
-    const token = localStorage.getItem('token');
+    let currentUser = null;
+    let token = null;
+    
+    try {
+        currentUser = localStorage.getItem('currentUser');
+        token = localStorage.getItem('token');
+        console.log('🔐 Auth check - currentUser:', !!currentUser, 'token:', !!token);
+    } catch (error) {
+        console.error('❌ Error accessing localStorage:', error);
+        // Clear potentially corrupted data
+        try {
+            localStorage.clear();
+        } catch (clearError) {
+            console.error('❌ Error clearing localStorage:', clearError);
+        }
+    }
     
     // Get UI elements
     const loginButtons = document.querySelectorAll('.login-button, .btn-login');
@@ -37,6 +51,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     element.src = user.avatar;
                     element.style.display = '';
                 });
+            }
+            
+            // Show user menu if it exists
+            if (userMenu) {
+                userMenu.style.display = '';
+                console.log('✅ User menu displayed');
             }
             
             // Show logout buttons
@@ -118,12 +138,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Logout handler
     function handleLogout() {
-        // Clear user data
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+        console.log('🔄 Logging out user...');
         
-        // Reload page
-        window.location.reload();
+        try {
+            // Clear user data
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            console.log('✅ User data cleared from localStorage');
+            
+            // Hide user menu if it exists
+            if (userMenu) {
+                userMenu.style.display = 'none';
+            }
+            
+            // Show success message
+            const logoutMessage = document.createElement('div');
+            logoutMessage.className = 'logout-message';
+            logoutMessage.innerHTML = `
+                <div class="logout-message-content">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Logged out successfully!</span>
+                </div>
+            `;
+            document.body.appendChild(logoutMessage);
+            
+            // Remove message after delay
+            setTimeout(() => {
+                if (logoutMessage.parentNode) {
+                    logoutMessage.parentNode.removeChild(logoutMessage);
+                }
+                // Redirect to home page
+                window.location.href = window.location.origin + '/index.html';
+            }, 1500);
+        } catch (error) {
+            console.error('❌ Error during logout:', error);
+            // Force reload even if there was an error
+            window.location.reload();
+        }
     }
 });
