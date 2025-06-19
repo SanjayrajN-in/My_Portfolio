@@ -73,20 +73,30 @@ class LoginModal {
                             
                             <div class="form-group">
                                 <label for="registerPassword">Password</label>
-                                <input type="password" id="registerPassword" name="password" placeholder="Create a password" required>
-                                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('registerPassword')" aria-label="Show password" title="Show password">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="registerPassword" name="password" placeholder="Create a password" required>
+                                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('registerPassword')" aria-label="Show password" title="Show password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="password-generate" onclick="loginModal.generatePassword()" aria-label="Generate password" title="Generate strong password">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength">
+                                    <div class="password-strength-bar"></div>
+                                </div>
+                                <div class="password-strength-text"></div>
                                 <div class="password-requirements">
                                     <small>Password must contain:</small>
                                     <ul>
-                                        <li>At least 8 characters</li>
-                                        <li>One uppercase letter (A-Z)</li>
-                                        <li>One lowercase letter (a-z)</li>
-                                        <li>One number (0-9)</li>
-                                        <li>One special character (!@#$%^&*)</li>
+                                        <li id="req-length" class="requirement">At least 8 characters</li>
+                                        <li id="req-uppercase" class="requirement">One uppercase letter (A-Z)</li>
+                                        <li id="req-lowercase" class="requirement">One lowercase letter (a-z)</li>
+                                        <li id="req-number" class="requirement">One number (0-9)</li>
+                                        <li id="req-special" class="requirement">One special character (!@#$%^&*)</li>
                                     </ul>
                                 </div>
+                                <div class="validation-message" id="passwordValidation"></div>
                             </div>
                             
                             <div class="form-group">
@@ -95,6 +105,7 @@ class LoginModal {
                                 <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirmPassword')" aria-label="Show password" title="Show password">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                <div class="validation-message" id="confirmPasswordValidation"></div>
                             </div>
                             
                             <button type="submit" class="submit-btn">Create Account</button>
@@ -139,7 +150,8 @@ class LoginModal {
         document.getElementById('loginForm').addEventListener('submit', (e) => this.handleLogin(e));
         document.getElementById('registerForm').addEventListener('submit', (e) => this.handleRegister(e));
 
-
+        // Password validation events
+        this.setupPasswordValidation();
     }
 
     open() {
@@ -254,8 +266,15 @@ class LoginModal {
             return;
         }
 
+        // Validate password strength
+        if (!this.isPasswordValid(password)) {
+            this.showMessage('Please ensure your password meets all requirements.');
+            this.setLoading(false);
+            return;
+        }
+
         try {
-            const result = authSystem.register(name, email, password);
+            const result = await authSystem.handleRegister(e);
             
             if (result.success) {
                 this.showMessage('Account created successfully! You are now logged in.', 'success');
@@ -274,6 +293,255 @@ class LoginModal {
         }
     }
 
+    setupPasswordValidation() {
+        const passwordInput = document.getElementById('registerPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+
+        if (passwordInput) {
+            passwordInput.addEventListener('input', () => {
+                this.validatePasswordRealTime(passwordInput.value);
+                this.updatePasswordStrength(passwordInput.value);
+            });
+
+            passwordInput.addEventListener('focus', () => {
+                const requirements = document.querySelector('.password-requirements');
+                if (requirements) {
+                    requirements.classList.add('show');
+                    requirements.style.display = 'block';
+                }
+            });
+
+            passwordInput.addEventListener('blur', () => {
+                const requirements = document.querySelector('.password-requirements');
+                if (requirements && passwordInput.value.length === 0) {
+                    requirements.classList.remove('show');
+                    setTimeout(() => {
+                        if (!requirements.classList.contains('show')) {
+                            requirements.style.display = 'none';
+                        }
+                    }, 300);
+                }
+            });
+        }
+
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('input', () => {
+                this.validatePasswordMatch();
+            });
+        }
+    }
+
+    validatePasswordRealTime(password) {
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /\d/.test(password),
+            special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+        };
+
+        // Update requirement indicators
+        Object.keys(requirements).forEach(req => {
+            const element = document.getElementById(`req-${req}`);
+            if (element) {
+                if (requirements[req]) {
+                    element.classList.add('met');
+                    element.classList.remove('unmet');
+                } else {
+                    element.classList.add('unmet');
+                    element.classList.remove('met');
+                }
+            }
+        });
+
+        return requirements;
+    }
+
+    updatePasswordStrength(password) {
+        const strengthBar = document.querySelector('.password-strength-bar');
+        const strengthText = document.querySelector('.password-strength-text');
+        const requirements = this.validatePasswordRealTime(password);
+        
+        if (!strengthBar || !strengthText) return;
+
+        const metCount = Object.values(requirements).filter(Boolean).length;
+        let strength = 0;
+        let strengthLabel = '';
+        let strengthClass = '';
+
+        if (password.length === 0) {
+            strength = 0;
+            strengthLabel = '';
+            strengthClass = '';
+        } else if (metCount <= 2) {
+            strength = 25;
+            strengthLabel = 'Weak';
+            strengthClass = 'password-strength-weak';
+        } else if (metCount === 3) {
+            strength = 50;
+            strengthLabel = 'Fair';
+            strengthClass = 'password-strength-fair';
+        } else if (metCount === 4) {
+            strength = 75;
+            strengthLabel = 'Good';
+            strengthClass = 'password-strength-good';
+        } else if (metCount === 5) {
+            strength = 100;
+            strengthLabel = 'Strong';
+            strengthClass = 'password-strength-strong';
+        }
+
+        // Remove all strength classes
+        strengthBar.parentElement.className = 'password-strength';
+        if (strengthClass) {
+            strengthBar.parentElement.classList.add(strengthClass);
+        }
+
+        strengthBar.style.width = strength + '%';
+        strengthText.textContent = strengthLabel;
+        strengthText.className = 'password-strength-text ' + strengthClass;
+    }
+
+    validatePasswordMatch() {
+        const password = document.getElementById('registerPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const validationDiv = document.getElementById('confirmPasswordValidation');
+
+        if (!validationDiv) return;
+
+        if (confirmPassword.length === 0) {
+            validationDiv.textContent = '';
+            validationDiv.className = 'validation-message';
+            return;
+        }
+
+        if (password === confirmPassword) {
+            validationDiv.textContent = '✓ Passwords match';
+            validationDiv.className = 'validation-message success';
+        } else {
+            validationDiv.textContent = '✗ Passwords do not match';
+            validationDiv.className = 'validation-message error';
+        }
+    }
+
+    isPasswordValid(password) {
+        const requirements = this.validatePasswordRealTime(password);
+        return Object.values(requirements).every(Boolean);
+    }
+
+    generatePassword() {
+        // Check if user wants to replace existing password
+        const currentPassword = document.getElementById('registerPassword').value;
+        if (currentPassword && !confirm('This will replace your current password. Continue?')) {
+            return;
+        }
+
+        const length = 14;
+        const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        const numbers = '0123456789';
+        const symbols = '!@#$%^&*';
+        
+        let password = '';
+        
+        // Ensure at least one character from each required category
+        password += uppercase[Math.floor(Math.random() * uppercase.length)];
+        password += lowercase[Math.floor(Math.random() * lowercase.length)];
+        password += numbers[Math.floor(Math.random() * numbers.length)];
+        password += symbols[Math.floor(Math.random() * symbols.length)];
+        
+        // Fill the rest with random characters from all categories
+        const allChars = uppercase + lowercase + numbers + symbols;
+        for (let i = password.length; i < length; i++) {
+            password += allChars[Math.floor(Math.random() * allChars.length)];
+        }
+        
+        // Shuffle the password to avoid predictable patterns
+        password = password.split('').sort(() => Math.random() - 0.5).join('');
+        
+        // Set the password
+        const passwordInput = document.getElementById('registerPassword');
+        if (passwordInput) {
+            passwordInput.value = password;
+            passwordInput.type = 'text'; // Show the generated password
+            
+            // Update the toggle button
+            const toggleButton = passwordInput.parentElement.querySelector('.password-toggle');
+            if (toggleButton) {
+                const icon = toggleButton.querySelector('i');
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+                toggleButton.setAttribute('aria-label', 'Hide password');
+                toggleButton.setAttribute('title', 'Hide password');
+            }
+            
+            // Trigger validation
+            this.validatePasswordRealTime(password);
+            this.updatePasswordStrength(password);
+            
+            // Show requirements
+            const requirements = document.querySelector('.password-requirements');
+            if (requirements) {
+                requirements.classList.add('show');
+                requirements.style.display = 'block';
+            }
+            
+            // Copy to clipboard
+            this.copyToClipboard(password);
+            
+            // Auto-fill confirm password
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            if (confirmPasswordInput) {
+                confirmPasswordInput.value = password;
+                this.validatePasswordMatch();
+                setTimeout(() => {
+                    confirmPasswordInput.focus();
+                }, 100);
+            }
+            
+            // Show success message
+            this.showMessage('🎉 Strong password generated and copied to clipboard!', 'success');
+        }
+    }
+
+    async copyToClipboard(text) {
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+                this.showCopyNotification();
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                textArea.remove();
+                this.showCopyNotification();
+            }
+        } catch (err) {
+            console.log('Could not copy password:', err);
+        }
+    }
+
+    showCopyNotification() {
+        let notification = document.querySelector('.copy-notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.className = 'copy-notification';
+            notification.innerHTML = '<i class="fas fa-check"></i> Password copied to clipboard!';
+            document.body.appendChild(notification);
+        }
+
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 2000);
+    }
 
 }
 
