@@ -678,7 +678,20 @@ class AuthSystem {
         document.getElementById('otpInput').value = '';
         
         // Show modal
+        console.log('👁️ Setting modal display to flex...');
         otpModal.style.display = 'flex';
+        
+        // Verify modal is visible
+        setTimeout(() => {
+            const modalCheck = document.getElementById('otpModal');
+            console.log('🔍 Modal check:', {
+                exists: !!modalCheck,
+                display: modalCheck?.style.display,
+                visibility: modalCheck?.style.visibility,
+                zIndex: modalCheck?.style.zIndex
+            });
+        }, 100);
+        
         document.getElementById('otpInput').focus();
         
         // Start timer
@@ -741,6 +754,81 @@ class AuthSystem {
             const styles = document.createElement('style');
             styles.id = 'otpModalStyles';
             styles.textContent = `
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                    backdrop-filter: blur(5px);
+                }
+                
+                .modal-content {
+                    background: white;
+                    border-radius: 15px;
+                    padding: 0;
+                    max-width: 90vw;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                    animation: modalSlideIn 0.3s ease-out;
+                }
+                
+                @keyframes modalSlideIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.8) translateY(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                    }
+                }
+                
+                .modal-header {
+                    padding: 25px 30px 20px;
+                    border-bottom: 1px solid #eee;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                .modal-header h2 {
+                    margin: 0;
+                    color: #333;
+                    font-size: 24px;
+                }
+                
+                .close-btn {
+                    background: none;
+                    border: none;
+                    font-size: 28px;
+                    color: #999;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 30px;
+                    height: 30px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    transition: all 0.2s ease;
+                }
+                
+                .close-btn:hover {
+                    background: #f0f0f0;
+                    color: #333;
+                }
+                
+                .modal-body {
+                    padding: 30px;
+                }
+                
                 .otp-modal {
                     max-width: 450px;
                     text-align: center;
