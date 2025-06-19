@@ -78,18 +78,25 @@ class AuthSystem {
             if (response.ok && data.user) {
                 // Login successful
                 this.currentUser = data.user;
-                localStorage.setItem('currentUser', JSON.stringify(data.user));
                 
-                // Store token if provided
+                // Only store token for session management, no user data in localStorage
                 if (data.token) {
                     localStorage.setItem('token', data.token);
                 }
                 
-                this.showMessage('Login successful! Redirecting...', 'success');
+                this.showMessage('Login successful! Welcome back.', 'success');
                 
-                setTimeout(() => {
-                    window.location.href = '../index.html';
-                }, 1500);
+                // Close modal if it's open
+                if (typeof loginModal !== 'undefined' && loginModal) {
+                    setTimeout(() => {
+                        loginModal.close();
+                        window.location.reload(); // Refresh to update navigation
+                    }, 1500);
+                } else {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }
             } else {
                 this.showMessage(data.message || 'Login failed', 'error');
             }
@@ -146,7 +153,9 @@ class AuthSystem {
                     this.showMessage(otpData.message, 'error');
                     // Auto-switch to login form after 2 seconds
                     setTimeout(() => {
-                        if (typeof switchToLogin === 'function') {
+                        if (typeof loginModal !== 'undefined' && loginModal) {
+                            loginModal.switchToLogin();
+                        } else if (typeof switchToLogin === 'function') {
                             switchToLogin();
                         }
                     }, 2000);
@@ -193,8 +202,11 @@ class AuthSystem {
         
         console.log('User logged out, all storage cleared');
         
+        // Update navigation immediately
+        this.updateNavigation();
+        
         // Show logout message
-        this.showMessage('You have been logged out successfully.', 'success');
+        this.showFloatingNotification('You have been logged out successfully.', 'success');
         
         // Redirect to home page after a brief delay
         setTimeout(() => {
@@ -203,7 +215,7 @@ class AuthSystem {
             } else {
                 window.location.reload();
             }
-        }, 1000);
+        }, 1500);
     }
 
     updateNavigation() {
@@ -804,7 +816,6 @@ class AuthSystem {
             if (response.ok && data.user) {
                 // Success - login user
                 this.currentUser = data.user;
-                localStorage.setItem('currentUser', JSON.stringify(data.user));
                 
                 if (data.token) {
                     localStorage.setItem('token', data.token);
@@ -813,9 +824,17 @@ class AuthSystem {
                 this.closeOTPModal();
                 this.showMessage(data.message || 'Verification successful!', 'success');
                 
-                setTimeout(() => {
-                    window.location.href = '../index.html';
-                }, 1500);
+              // Close modal if it's open and refresh
+                if (typeof loginModal !== 'undefined' && loginModal) {
+                    setTimeout(() => {
+                        loginModal.close();
+                          window.location.reload();
+                    }, 1500);
+                } else {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }
             } else {
                 this.showMessage(data.message || 'Invalid verification code', 'error');
             }
@@ -1305,69 +1324,7 @@ class AuthSystem {
         this.currentUser.gameStats.achievements = achievements;
     }
 
-    // Method-based login for the modal (now uses API)
-    async login(email, password) {
-        try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.user) {
-                this.currentUser = data.user;
-                localStorage.setItem('currentUser', JSON.stringify(data.user));
-                
-                if (data.token) {
-                    localStorage.setItem('token', data.token);
-                }
-                
-                this.updateNavigation();
-                return { success: true, message: 'Login successful!' };
-            } else {
-                return { success: false, message: data.message || 'Login failed.' };
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            return { success: false, message: 'Network error. Please try again.' };
-        }
-    }
-
-    // Method-based registration for the modal (now uses API)
-    async register(name, email, password) {
-        try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ name, email, password, confirmPassword: password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.user) {
-                this.currentUser = data.user;
-                localStorage.setItem('currentUser', JSON.stringify(data.user));
-                
-                if (data.token) {
-                    localStorage.setItem('token', data.token);
-                }
-                
-                this.updateNavigation();
-                return { success: true, message: 'Registration successful!' };
-            } else {
-                return { success: false, message: data.message || 'Registration failed.' };
-            }
-        } catch (error) {
-            console.error('Registration error:', error);
-            return { success: false, message: 'Network error. Please try again.' };
-        }
-    }
+    // Remove the old login/register methods since we're using handleLogin/handleRegister
 
 
 

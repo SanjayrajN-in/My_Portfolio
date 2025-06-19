@@ -215,6 +215,25 @@
     animation: pulse-generate 1.5s infinite;
 }
 
+/* Validation messages */
+.validation-message {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.validation-message.success {
+    color: #28a745;
+}
+
+.validation-message.error {
+    color: #dc3545;
+}
+
+.validation-message.info {
+    color: #17a2b8;
+}
+
 /* Legacy support for single password toggle */
 .form-group input[type="password"]:not(.password-input-wrapper input) {
     padding-right: 3rem;

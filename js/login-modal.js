@@ -136,6 +136,8 @@ class LoginModal {
         
         this.modal = document.getElementById('loginModal');
         this.overlay = document.getElementById('loginModalOverlay');
+        
+        console.log('✅ Modal HTML injected with enhanced password features');
     }
 
     bindEvents() {
@@ -160,6 +162,15 @@ class LoginModal {
 
     open() {
         console.log('Opening login modal...');
+        
+        // Recreate modal to ensure latest HTML structure
+        const existingModal = document.getElementById('loginModalOverlay');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        this.createModal();
+        this.bindEvents();
+        
         // Prevent body scroll
         document.body.classList.add('modal-open');
         this.overlay.classList.add('active');
@@ -315,6 +326,8 @@ class LoginModal {
                 this.validatePasswordMatch();
             });
         }
+        
+        console.log('✅ Enhanced password validation setup complete');
     }
 
     validatePasswordRealTime(password) {
@@ -566,23 +579,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Global function to open login modal
 function openLoginModal() {
+    console.log('Opening login modal...');
     if (loginModal) {
         loginModal.open();
     } else {
         // Reinitialize if needed
+        console.log('Reinitializing login modal...');
         loginModal = new LoginModal();
         loginModal.open();
     }
-}
-
-// Global function to reinitialize login modal (for development)
-function reinitializeLoginModal() {
-    if (loginModal) {
-        const existingModal = document.getElementById('loginModalOverlay');
-        if (existingModal) {
-            existingModal.remove();
-        }
-    }
-    loginModal = new LoginModal();
-    console.log('Login modal reinitialized');
 }
