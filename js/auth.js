@@ -1,3 +1,6 @@
+// Configuration
+const API_BASE_URL = 'http://localhost:3000';
+
 // Authentication System
 class AuthSystem {
     constructor() {
@@ -12,7 +15,7 @@ class AuthSystem {
         if (token) {
             try {
                 // Validate token with server
-                const response = await fetch('/api/auth/profile', {
+                const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -65,7 +68,7 @@ class AuthSystem {
         try {
             this.showMessage('Logging in...', 'info');
             
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -131,7 +134,7 @@ class AuthSystem {
             this.showMessage('Sending verification code...', 'info');
             
             // First, send OTP for email verification
-            const otpResponse = await fetch('/api/auth/send-otp', {
+            const otpResponse = await fetch('http://localhost:3000/api/auth/send-otp', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -173,7 +176,7 @@ class AuthSystem {
     async logout() {
         try {
             // Call logout API to invalidate session on server
-            const response = await fetch('/api/auth/logout', {
+            const response = await fetch('http://localhost:3000/api/auth/logout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -826,7 +829,7 @@ class AuthSystem {
         try {
             this.showMessage('Verifying code...', 'info');
             
-            const response = await fetch('/api/auth/verify-otp', {
+            const response = await fetch('http://localhost:3000/api/auth/verify-otp', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
