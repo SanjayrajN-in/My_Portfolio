@@ -1,8 +1,9 @@
 // Unified Google Authentication System
 class GoogleAuthUnified {
     constructor() {
-        this.clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
-        this.redirectUri = window.location.origin + '/auth/google/callback';
+        // Use the new Google Client ID from your environment variables
+        this.clientId = '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
+        this.redirectUri = window.location.origin + '/api/auth/callback';
         this.isInitialized = false;
         this.isLoading = false;
         
@@ -722,9 +723,10 @@ class GoogleAuthUnified {
                 // Store state for verification
                 sessionStorage.setItem('google_oauth_state', state);
                 
+                // Use the updated redirect URI that matches Google Cloud Console
                 const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
                     `client_id=${encodeURIComponent(clientId)}&` +
-                    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+                    `redirect_uri=${encodeURIComponent(this.redirectUri)}&` +
                     `response_type=${responseType}&` +
                     `scope=${encodeURIComponent(scope)}&` +
                     `state=${state}&` +

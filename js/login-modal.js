@@ -316,11 +316,11 @@ class LoginModal {
     fallbackGoogleLogin() {
         console.log('Using fallback Google OAuth redirect flow');
         
-        // Your Google Client ID (make sure this matches your Google Cloud Console)
-        const clientId = '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
+        // Your Google Client ID (updated to match your Google Cloud Console)
+        const clientId = '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
         
-        // Use a dynamic redirect URI based on the current domain
-        const redirectUri = `${window.location.origin}/auth/google/callback`;
+        // Use the authorized redirect URI that matches Google Cloud Console
+        const redirectUri = `${window.location.origin}/api/auth/callback`;
         const scope = 'openid email profile';
         const responseType = 'code';
         const state = this.generateRandomState();

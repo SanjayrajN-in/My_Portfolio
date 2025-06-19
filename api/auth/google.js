@@ -66,7 +66,7 @@ export default async (req, res) => {
         });
 
         // Environment variables check
-        const googleClientId = process.env.GOOGLE_CLIENT_ID || '1026303958134-nncar1hc3ko280tds9r7fa77f0d7cucu.apps.googleusercontent.com';
+        const googleClientId = process.env.GOOGLE_CLIENT_ID || '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
         const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
         const jwtSecret = process.env.JWT_SECRET || 'fallback-jwt-secret-for-development';
 
