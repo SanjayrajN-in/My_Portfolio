@@ -12,9 +12,8 @@ class AuthSystem {
         
         if (userData) {
             this.currentUser = JSON.parse(userData);
-            // If we have a token, this is a Google-authenticated user
+            // If we have a token
             if (token) {
-                this.currentUser.isGoogleAuth = true;
                 this.currentUser.token = token;
             }
             this.updateUI();
@@ -146,8 +145,8 @@ class AuthSystem {
     logout() {
         this.currentUser = null;
         localStorage.removeItem('currentUser');
-        localStorage.removeItem('user'); // Remove Google auth user data
-        localStorage.removeItem('token'); // Remove Google auth token
+        localStorage.removeItem('user'); // Remove user data
+        localStorage.removeItem('token'); // Remove auth token
         
         // Redirect to home page
         if (window.location.pathname.includes('profile.html')) {
@@ -1239,27 +1238,7 @@ class AuthSystem {
         }
     }
 
-    loginWithGoogle(googleUserInfo) {
-        // This method is now handled by the Google Auth API
-        // The frontend Google auth will call the API directly
-        // This method is kept for backward compatibility
-        try {
-            // Set as current user (data comes from API response)
-            this.currentUser = googleUserInfo;
-            localStorage.setItem('currentUser', JSON.stringify(googleUserInfo));
-            
-            if (googleUserInfo.token) {
-                localStorage.setItem('token', googleUserInfo.token);
-            }
-            
-            this.updateNavigation();
-            
-            return { success: true, message: 'Google login successful!' };
-        } catch (error) {
-            console.error('Google login error:', error);
-            return { success: false, message: 'Google login failed. Please try again.' };
-        }
-    }
+
 
     // Show forgot password form
     showForgotPasswordForm() {

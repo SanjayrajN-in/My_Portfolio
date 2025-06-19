@@ -1,8 +1,11 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    
+    <!-- Google OAuth Configuration -->
+    <meta name="google-client-id" content="962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com">
 
     <title>Sanjayraj N | Electrical & Electronics Engineer</title>
     <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
@@ -75,7 +78,7 @@
         (function() {
             console.log('✅ Allowing Google Identity Services for authentication...');
             
-            // Override createElement to block unwanted Google scripts but allow GSI
+            // Script loading management
             const originalCreateElement = document.createElement;
             document.createElement = function(tagName) {
                 const element = originalCreateElement.call(this, tagName);
@@ -83,11 +86,6 @@
                     const originalSetAttribute = element.setAttribute;
                     element.setAttribute = function(name, value) {
                         if (name === 'src' && value) {
-                            // Allow Google Identity Services (GSI) for authentication
-                            if (value.includes('accounts.google.com/gsi/client')) {
-                                console.log('✅ Allowing Google Identity Services script:', value);
-                                return originalSetAttribute.call(this, name, value);
-                            }
                             // Block other unwanted Google scripts (ads, analytics, etc.)
                             else if (
                                 value.includes('googletagmanager.com') ||
@@ -560,8 +558,11 @@
     <script src="js/page-transition.js"></script>
     <script src="js/api-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/google-oauth-direct.js"></script>
     <script src="js/login-modal.js"></script>
     <script src="js/auth-ui.js"></script>
+    
+    <!-- Google Sign-In Implementation -->
+    <script src="js/google-auth.js"></script>
+    <script src="js/auth-ui-manager.js"></script>
 </body>
 </html>

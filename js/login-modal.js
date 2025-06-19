@@ -14,9 +14,7 @@ class LoginModal {
         this.createModal();
         console.log('Modal HTML created');
         
-        // Setup Google OAuth
-        this.setupGoogleAuth();
-        console.log('Google OAuth setup completed');
+
         
         // Bind events
         this.bindEvents();
@@ -38,14 +36,9 @@ class LoginModal {
                     <div class="login-modal-body">
                         <div id="modalMessage"></div>
                         
-                        <!-- Google Login Button -->
-                        <button class="google-login-btn" id="googleLoginBtn">
-                            <i class="fab fa-google"></i>
-                            <span>Continue with Google</span>
-                        </button>
-                        
-                        <div class="form-divider">
-                            <span>Or continue with email</span>
+                        <!-- Email Login Form Header -->
+                        <div class="form-header">
+                            <span>Login with your email</span>
                         </div>
                         
                         <!-- Login Form -->
@@ -150,8 +143,7 @@ class LoginModal {
         document.getElementById('loginForm').addEventListener('submit', (e) => this.handleLogin(e));
         document.getElementById('registerForm').addEventListener('submit', (e) => this.handleRegister(e));
 
-        // Google login
-        document.getElementById('googleLoginBtn').addEventListener('click', () => this.handleGoogleLogin());
+
     }
 
     open() {
@@ -286,117 +278,7 @@ class LoginModal {
         }
     }
 
-    setupGoogleAuth() {
-        console.log('Setting up Google OAuth...');
-        
-        // Ensure the Google button is visible and ready
-        const googleBtn = document.getElementById('googleLoginBtn');
-        if (googleBtn) {
-            googleBtn.style.display = 'block';
-            
-            // Add the google-login-button class for our simplified Google auth
-            googleBtn.classList.add('google-login-button');
-            
-            // Add click event listener
-            googleBtn.addEventListener('click', () => {
-                this.handleGoogleLogin();
-            });
-            
-            console.log('Google OAuth button ready');
-        }
-        
-        // Add a direct Google login button as a fallback
-        setTimeout(() => {
-            const modalBody = document.querySelector('.login-modal-body');
-            if (modalBody) {
-                const directGoogleBtn = document.createElement('button');
-                directGoogleBtn.className = 'google-login-btn direct-google-btn';
-                directGoogleBtn.innerHTML = '<i class="fab fa-google"></i><span>Direct Google Login</span>';
-                directGoogleBtn.addEventListener('click', () => {
-                    if (window.googleAuthSimple) {
-                        window.googleAuthSimple.useOAuthFallback();
-                    } else {
-                        this.fallbackGoogleLogin();
-                    }
-                });
-                
-                // Insert after the regular Google button
-                const formDivider = document.querySelector('.form-divider');
-                if (formDivider) {
-                    modalBody.insertBefore(directGoogleBtn, formDivider);
-                }
-                
-                console.log('Direct Google login button added');
-            }
-        }, 1000); // Delay to ensure DOM is ready
-    }
 
-    handleGoogleLogin() {
-        console.log('🔐 Google login button clicked');
-        
-        // Use the direct OAuth implementation
-        if (window.googleOAuthDirect) {
-            console.log('✅ Using Direct Google OAuth');
-            window.googleOAuthDirect.startLogin();
-        } else {
-            console.log('❌ Direct Google OAuth not available, using fallback');
-            this.fallbackGoogleLogin();
-        }
-    }
-
-    fallbackGoogleLogin() {
-        console.log('Using fallback Google OAuth redirect flow');
-        
-        // Your Google Client ID (updated to match your Google Cloud Console)
-        const clientId = '962387684215-f3ohlicfr8t1obvcojhlra04dd4kji2f.apps.googleusercontent.com';
-        
-        // Use the authorized redirect URI that matches Google Cloud Console
-        // This should be the exact URL registered in your Google Cloud Console
-        let redirectUri;
-        const hostname = window.location.hostname;
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            redirectUri = 'http://localhost:3000/api/auth/callback';
-        } else {
-            // Use the current origin to ensure it matches the deployed URL
-            redirectUri = `${window.location.origin}/api/auth/callback`;
-        }
-        
-        const scope = 'openid email profile';
-        const responseType = 'code';
-        const state = this.generateRandomState();
-        
-        console.log('=== OAuth Configuration Debug ===');
-        console.log('Client ID:', clientId);
-        console.log('Redirect URI:', redirectUri);
-        console.log('Current Origin:', window.location.origin);
-        console.log('Current URL:', window.location.href);
-        
-        // Store state in sessionStorage for verification
-        sessionStorage.setItem('google_oauth_state', state);
-        
-        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-            `client_id=${encodeURIComponent(clientId)}&` +
-            `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-            `response_type=${responseType}&` +
-            `scope=${encodeURIComponent(scope)}&` +
-            `state=${state}&` +
-            `access_type=offline&` +
-            `prompt=select_account`;
-        
-        console.log('Full OAuth URL:', authUrl);
-        
-        // Show loading state
-        this.setLoading(true);
-        this.showMessage('Redirecting to Google...', 'info');
-        
-        // Redirect to Google OAuth
-        window.location.href = authUrl;
-    }
-    
-    generateRandomState() {
-        return Math.random().toString(36).substring(2, 15) + 
-               Math.random().toString(36).substring(2, 15);
-    }
 }
 
 // Global password toggle function

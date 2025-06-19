@@ -1,0 +1,30 @@
+{
+  "name": "google-signin-react-components",
+  "version": "1.0.0",
+  "description": "React components for Google Sign-In using Google Identity Services",
+  "main": "GoogleSignIn.jsx",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "vite": "^4.4.5"
+  },
+  "keywords": [
+    "react",
+    "google-signin",
+    "authentication",
+    "oauth",
+    "gsi"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
