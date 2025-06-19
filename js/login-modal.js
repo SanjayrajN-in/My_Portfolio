@@ -334,12 +334,12 @@ class LoginModal {
     handleGoogleLogin() {
         console.log('🔐 Google login button clicked');
         
-        // Use the simplified Google Auth
-        if (window.googleAuthSimple) {
-            console.log('✅ Using Simple Google Auth');
-            window.googleAuthSimple.login();
+        // Use the direct OAuth implementation
+        if (window.googleOAuthDirect) {
+            console.log('✅ Using Direct Google OAuth');
+            window.googleOAuthDirect.startLogin();
         } else {
-            console.log('❌ Google Auth not available, using redirect fallback');
+            console.log('❌ Direct Google OAuth not available, using fallback');
             this.fallbackGoogleLogin();
         }
     }

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Google OAuth Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        button i {
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #357AE8;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .result {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Direct Google OAuth Test</h1>
+    <p>This page tests the direct Google OAuth flow without using Google Identity Services.</p>
+    
+    <div class="container">
+        <h2>Login Test</h2>
+        <button class="direct-google-oauth">
+            <i class="fab fa-google"></i>
+            <span>Sign in with Google</span>
+        </button>
+        <div id="login-result" class="result">Click the button to start the OAuth flow...</div>
+    </div>
+    
+    <div class="container">
+        <h2>Current User</h2>
+        <button id="check-user-btn">
+            <i class="fas fa-user"></i>
+            <span>Check Current User</span>
+        </button>
+        <div id="user-result" class="result">No user logged in</div>
+    </div>
+    
+    <div class="container">
+        <h2>Logout</h2>
+        <button id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </button>
+        <div id="logout-result" class="result">Not logged out yet</div>
+    </div>
+    
+    <script src="js/google-oauth-direct.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginResult = document.getElementById('login-result');
+            const userResult = document.getElementById('user-result');
+            const logoutResult = document.getElementById('logout-result');
+            
+            // Check user button
+            document.getElementById('check-user-btn').addEventListener('click', () => {
+                const user = localStorage.getItem('user');
+                const token = localStorage.getItem('token');
+                
+                if (user && token) {
+                    try {
+                        const userData = JSON.parse(user);
+                        userResult.textContent = JSON.stringify(userData, null, 2);
+                    } catch (e) {
+                        userResult.textContent = 'Error parsing user data: ' + e.message;
+                    }
+                } else {
+                    userResult.textContent = 'No user logged in';
+                }
+            });
+            
+            // Logout button
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                logoutResult.textContent = 'Logged out successfully';
+                userResult.textContent = 'No user logged in';
+            });
+            
+            // Listen for login events
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'user' && event.newValue) {
+                    loginResult.textContent = 'Login detected: ' + event.newValue;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
