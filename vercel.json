@@ -3,14 +3,15 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "functions": {
-    "api/**/*.js": {
+    "api/*.js": {
       "runtime": "@vercel/node@2.15.6"
     }
   },
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/api/auth/google", "destination": "/api/auth/google" },
-    { "source": "/api/db-test", "destination": "/api/db-test" },
+    { "source": "/api/auth/:endpoint", "destination": "/api/auth?endpoint=:endpoint" },
+    { "source": "/api/contact/:endpoint", "destination": "/api/contact-user?endpoint=:endpoint" },
+    { "source": "/api/users/:endpoint", "destination": "/api/contact-user?endpoint=:endpoint" },
+    { "source": "/api/:endpoint", "destination": "/api/utils?endpoint=:endpoint" },
     { "source": "/auth/google/callback", "destination": "/auth/google/callback.html" }
   ],
   "headers": [

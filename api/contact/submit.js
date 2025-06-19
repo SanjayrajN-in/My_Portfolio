@@ -1,6 +1,6 @@
-import connectDB from '../config/database';
-import Contact from '../models/Contact';
-import nodemailer from 'nodemailer';
+const connectDB = require('../config/database');
+const Contact = require('../models/Contact');
+const nodemailer = require('nodemailer');
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     // Send email notification (optional)
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       try {
-        const transporter = nodemailer.createTransport({
+        const transporter = nodemailer.createTransporter({
           service: 'gmail',
           auth: {
             user: process.env.EMAIL_USER,

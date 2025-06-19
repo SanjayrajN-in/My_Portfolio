@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const contactSchema = new mongoose.Schema({
   name: {
@@ -48,7 +48,4 @@ contactSchema.index({ email: 1 });
 contactSchema.index({ status: 1 });
 contactSchema.index({ createdAt: -1 });
 
-// Check if the model already exists to prevent model overwrite errors in serverless environment
-const Contact = mongoose.models.Contact || mongoose.model('Contact', contactSchema);
-
-export default Contact;
+module.exports = mongoose.model('Contact', contactSchema);
