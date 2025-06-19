@@ -10,10 +10,22 @@
     "api/auth/register.js": {
       "runtime": "@vercel/node"
     },
+    "api/auth/send-otp.js": {
+      "runtime": "@vercel/node"
+    },
+    "api/auth/verify-otp.js": {
+      "runtime": "@vercel/node"
+    },
     "api/contact/submit.js": {
       "runtime": "@vercel/node"
     },
     "api/users/update-game-stats.js": {
+      "runtime": "@vercel/node"
+    },
+    "api/test/api-status.js": {
+      "runtime": "@vercel/node"
+    },
+    "api/debug/env-check.js": {
       "runtime": "@vercel/node"
     }
   },
@@ -41,11 +53,19 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "value": "Content-Type, Authorization, X-Requested-With, Accept, Cache-Control"
         },
         {
           "key": "Access-Control-Allow-Credentials",
           "value": "true"
+        },
+        {
+          "key": "Access-Control-Max-Age",
+          "value": "86400"
+        },
+        {
+          "key": "Vary",
+          "value": "Origin"
         }
       ]
     }
