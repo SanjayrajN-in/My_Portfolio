@@ -64,6 +64,10 @@ class LoginModal {
                             </div>
                             
                             <button type="submit" class="submit-btn">Sign In</button>
+                            
+                            <div class="forgot-password-link">
+                                <a href="#" onclick="authSystem.showForgotPasswordForm(); return false;">Forgot Password?</a>
+                            </div>
                         </form>
                         
                         <!-- Register Form -->
@@ -84,6 +88,16 @@ class LoginModal {
                                 <button type="button" class="password-toggle" onclick="togglePasswordVisibility('registerPassword')" aria-label="Show password" title="Show password">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                <div class="password-requirements">
+                                    <small>Password must contain:</small>
+                                    <ul>
+                                        <li>At least 8 characters</li>
+                                        <li>One uppercase letter (A-Z)</li>
+                                        <li>One lowercase letter (a-z)</li>
+                                        <li>One number (0-9)</li>
+                                        <li>One special character (!@#$%^&*)</li>
+                                    </ul>
+                                </div>
                             </div>
                             
                             <div class="form-group">

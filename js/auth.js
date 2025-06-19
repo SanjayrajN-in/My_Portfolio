@@ -40,88 +40,107 @@ class AuthSystem {
         this.loadProfileData();
     }
 
-    handleLogin(e) {
+    async handleLogin(e) {
         const formData = new FormData(e.target);
         const email = formData.get('email');
         const password = formData.get('password');
 
-        // Get registered users
-        const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        
-        // Find user
-        const user = users.find(u => u.email === email && u.password === password);
+        try {
+            this.showMessage('Logging in...', 'info');
+            
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password })
+            });
 
-        if (user) {
-            // Login successful
-            this.currentUser = user;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            
-            this.showMessage('Login successful! Redirecting...', 'success');
-            
-            setTimeout(() => {
-                window.location.href = '../index.html';
-            }, 1500);
-        } else {
-            this.showMessage('Invalid email or password', 'error');
+            const data = await response.json();
+
+            if (response.ok && data.user) {
+                // Login successful
+                this.currentUser = data.user;
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                
+                // Store token if provided
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                }
+                
+                this.showMessage('Login successful! Redirecting...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 1500);
+            } else {
+                this.showMessage(data.message || 'Login failed', 'error');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            this.showMessage('Network error. Please try again.', 'error');
         }
     }
 
-    handleRegister(e) {
+    async handleRegister(e) {
         const formData = new FormData(e.target);
         const name = formData.get('name');
         const email = formData.get('email');
         const password = formData.get('password');
         const confirmPassword = formData.get('confirmPassword');
 
-        // Validation
+        // Client-side validation
         if (password !== confirmPassword) {
             this.showMessage('Passwords do not match', 'error');
             return;
         }
 
-        if (password.length < 6) {
-            this.showMessage('Password must be at least 6 characters long', 'error');
+        // Enhanced password validation
+        const passwordValidation = this.validatePassword(password);
+        if (!passwordValidation.isValid) {
+            this.showMessage(passwordValidation.message, 'error');
             return;
         }
 
-        // Get existing users
-        const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        
-        // Check if email already exists
-        if (users.find(u => u.email === email)) {
-            this.showMessage('Email already registered', 'error');
-            return;
-        }
+        try {
+            this.showMessage('Sending verification code...', 'info');
+            
+            // First, send OTP for email verification
+            const otpResponse = await fetch('/api/auth/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, type: 'register' })
+            });
 
-        // Create new user
-        const newUser = {
-            id: Date.now().toString(),
-            name,
-            email,
-            password,
-            avatar: 'images/default-avatar.svg', // Store relative to root
-            joinedDate: new Date().toISOString(),
-            gameStats: {
-                totalGamesPlayed: 0,
-                totalPlaytime: 0,
-                gamesHistory: [],
-                achievements: []
+            const otpData = await otpResponse.json();
+
+            if (otpResponse.ok) {
+                // Store registration data temporarily
+                sessionStorage.setItem('pendingRegistration', JSON.stringify({
+                    name, email, password, type: 'register'
+                }));
+
+                this.showMessage('Verification code sent to your email!', 'success');
+                this.showOTPModal(email, 'register');
+            } else {
+                if (otpData.shouldLogin) {
+                    this.showMessage(otpData.message, 'error');
+                    // Auto-switch to login form after 2 seconds
+                    setTimeout(() => {
+                        if (typeof switchToLogin === 'function') {
+                            switchToLogin();
+                        }
+                    }, 2000);
+                } else {
+                    this.showMessage(otpData.message || 'Failed to send verification code', 'error');
+                }
             }
-        };
-
-        // Save user
-        users.push(newUser);
-        localStorage.setItem('registeredUsers', JSON.stringify(users));
-
-        // Auto login
-        this.currentUser = newUser;
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
-
-        this.showMessage('Account created successfully! Redirecting...', 'success');
-        
-        setTimeout(() => {
-            window.location.href = '../index.html';
-        }, 1500);
+        } catch (error) {
+            console.error('Registration error:', error);
+            this.showMessage('Network error. Please try again.', 'error');
+        }
     }
 
     logout() {
@@ -362,7 +381,7 @@ class AuthSystem {
         return sessionId;
     }
 
-    endGameSession(score = null) {
+    async endGameSession(score = null) {
         if (!this.currentUser) return;
 
         const sessionData = JSON.parse(sessionStorage.getItem('currentGameSession'));
@@ -371,35 +390,759 @@ class AuthSystem {
         const endTime = Date.now();
         const duration = Math.round((endTime - sessionData.startTime) / 60000); // Convert to minutes
 
-        // Update game history
-        const gameRecord = {
+        // Prepare game data
+        const gameData = {
             name: sessionData.gameName,
-            date: new Date().toISOString(),
             duration,
-            score
+            score: score || 'N/A'
+        };
+
+        try {
+            // Send game stats to API
+            const response = await fetch('/api/users/update-game-stats', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: this.currentUser.id,
+                    gameData: gameData
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Update local user data with new stats
+                this.currentUser.gameStats = data.gameStats;
+                localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                
+                // Show achievement notifications if any
+                if (data.newAchievements && data.newAchievements.length > 0) {
+                    this.showAchievementNotifications(data.newAchievements);
+                }
+                
+                console.log('Game stats updated successfully');
+            } else {
+                console.error('Failed to update game stats:', await response.text());
+                // Fallback to local storage update
+                this.updateGameStatsLocally(gameData);
+            }
+        } catch (error) {
+            console.error('Error updating game stats:', error);
+            // Fallback to local storage update
+            this.updateGameStatsLocally(gameData);
+        }
+
+        // Clear session
+        sessionStorage.removeItem('currentGameSession');
+    }
+
+    // Fallback method for local storage update
+    updateGameStatsLocally(gameData) {
+        const gameRecord = {
+            name: gameData.name,
+            date: new Date().toISOString(),
+            duration: gameData.duration,
+            score: gameData.score
         };
 
         this.currentUser.gameStats.gamesHistory = this.currentUser.gameStats.gamesHistory || [];
         this.currentUser.gameStats.gamesHistory.push(gameRecord);
         this.currentUser.gameStats.totalGamesPlayed = (this.currentUser.gameStats.totalGamesPlayed || 0) + 1;
-        this.currentUser.gameStats.totalPlaytime = (this.currentUser.gameStats.totalPlaytime || 0) + duration;
+        this.currentUser.gameStats.totalPlaytime = (this.currentUser.gameStats.totalPlaytime || 0) + gameData.duration;
 
         // Check for achievements
         this.checkAchievements();
 
         // Save updated user data
         localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-        
-        // Update registered users
-        const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        const userIndex = users.findIndex(u => u.id === this.currentUser.id);
-        if (userIndex !== -1) {
-            users[userIndex] = this.currentUser;
-            localStorage.setItem('registeredUsers', JSON.stringify(users));
+    }
+
+    // Show achievement notifications
+    showAchievementNotifications(achievements) {
+        achievements.forEach(achievement => {
+            const achievementNames = {
+                'first_game': 'First Game',
+                'game_master': 'Game Master',
+                'time_waster': 'Time Waster',
+                'dedication': 'Dedication',
+                'high_scorer': 'High Scorer'
+            };
+            
+            const name = achievementNames[achievement] || achievement;
+            this.showMessage(`🏆 Achievement Unlocked: ${name}!`, 'success');
+        });
+    }
+
+    // OTP Modal Methods
+    showOTPModal(email, type) {
+        // Create OTP modal if it doesn't exist
+        let otpModal = document.getElementById('otpModal');
+        if (!otpModal) {
+            otpModal = this.createOTPModal();
+            document.body.appendChild(otpModal);
         }
 
-        // Clear session
-        sessionStorage.removeItem('currentGameSession');
+        // Update modal content
+        document.getElementById('otpEmail').textContent = email;
+        document.getElementById('otpType').textContent = type === 'register' ? 'Registration' : 'Login';
+        document.getElementById('otpInput').value = '';
+        
+        // Show modal
+        otpModal.style.display = 'flex';
+        document.getElementById('otpInput').focus();
+        
+        // Start timer
+        this.startOTPTimer();
+    }
+
+    createOTPModal() {
+        const modal = document.createElement('div');
+        modal.id = 'otpModal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content otp-modal">
+                <div class="modal-header">
+                    <h2>📧 Email Verification</h2>
+                    <button class="close-btn" onclick="authSystem.closeOTPModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="otp-instruction">
+                        We've sent a 6-digit verification code to<br>
+                        <strong id="otpEmail"></strong>
+                    </p>
+                    <p class="otp-subtext">
+                        Please check your email and enter the code below to complete your <span id="otpType"></span>.
+                    </p>
+                    
+                    <form id="otpForm" onsubmit="authSystem.handleOTPSubmit(event)">
+                        <div class="otp-input-container">
+                            <input 
+                                type="text" 
+                                id="otpInput" 
+                                placeholder="Enter 6-digit code"
+                                maxlength="6"
+                                pattern="[0-9]{6}"
+                                required
+                                autocomplete="one-time-code"
+                            >
+                        </div>
+                        
+                        <div class="otp-actions">
+                            <button type="submit" class="btn primary-btn">
+                                <i class="fas fa-check"></i>
+                                Verify Code
+                            </button>
+                            <button type="button" class="btn secondary-btn" onclick="authSystem.resendOTP()">
+                                <i class="fas fa-redo"></i>
+                                Resend Code
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="otp-timer">
+                        <p>Code expires in: <span id="otpTimer">10:00</span></p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add styles
+        if (!document.getElementById('otpModalStyles')) {
+            const styles = document.createElement('style');
+            styles.id = 'otpModalStyles';
+            styles.textContent = `
+                .otp-modal {
+                    max-width: 450px;
+                    text-align: center;
+                }
+                
+                .otp-instruction {
+                    font-size: 16px;
+                    margin-bottom: 15px;
+                    color: #333;
+                }
+                
+                .otp-subtext {
+                    font-size: 14px;
+                    color: #666;
+                    margin-bottom: 30px;
+                    line-height: 1.5;
+                }
+                
+                .otp-input-container {
+                    margin-bottom: 25px;
+                }
+                
+                #otpInput {
+                    width: 200px;
+                    height: 60px;
+                    font-size: 24px;
+                    text-align: center;
+                    letter-spacing: 8px;
+                    border: 2px solid #ddd;
+                    border-radius: 8px;
+                    font-family: 'Courier New', monospace;
+                    font-weight: bold;
+                }
+                
+                #otpInput:focus {
+                    border-color: var(--primary-color);
+                    outline: none;
+                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                }
+                
+                .otp-actions {
+                    display: flex;
+                    gap: 15px;
+                    justify-content: center;
+                    margin-bottom: 20px;
+                }
+                
+                .otp-actions .btn {
+                    flex: 1;
+                    max-width: 150px;
+                }
+                
+                .otp-timer {
+                    font-size: 14px;
+                    color: #666;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    border: 1px solid #e9ecef;
+                }
+                
+                #otpTimer {
+                    font-weight: bold;
+                    color: #dc3545;
+                }
+            `;
+            document.head.appendChild(styles);
+        }
+        
+        return modal;
+    }
+
+    closeOTPModal() {
+        const modal = document.getElementById('otpModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        // Clear pending registration data
+        sessionStorage.removeItem('pendingRegistration');
+    }
+
+    async handleOTPSubmit(e) {
+        e.preventDefault();
+        
+        const otp = document.getElementById('otpInput').value.trim();
+        if (otp.length !== 6) {
+            this.showMessage('Please enter a 6-digit code', 'error');
+            return;
+        }
+
+        const pendingData = JSON.parse(sessionStorage.getItem('pendingRegistration'));
+        if (!pendingData) {
+            this.showMessage('Session expired. Please try again.', 'error');
+            this.closeOTPModal();
+            return;
+        }
+
+        try {
+            this.showMessage('Verifying code...', 'info');
+            
+            const response = await fetch('/api/auth/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: pendingData.email,
+                    otp: otp,
+                    type: pendingData.type,
+                    userData: pendingData.type === 'register' ? {
+                        name: pendingData.name,
+                        password: pendingData.password
+                    } : null
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.user) {
+                // Success - login user
+                this.currentUser = data.user;
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                }
+
+                this.closeOTPModal();
+                this.showMessage(data.message || 'Verification successful!', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 1500);
+            } else {
+                this.showMessage(data.message || 'Invalid verification code', 'error');
+            }
+        } catch (error) {
+            console.error('OTP verification error:', error);
+            this.showMessage('Network error. Please try again.', 'error');
+        }
+    }
+
+    async resendOTP() {
+        const pendingData = JSON.parse(sessionStorage.getItem('pendingRegistration'));
+        if (!pendingData) {
+            this.showMessage('Session expired. Please try again.', 'error');
+            this.closeOTPModal();
+            return;
+        }
+
+        try {
+            this.showMessage('Resending code...', 'info');
+            
+            const response = await fetch('/api/auth/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: pendingData.email,
+                    type: pendingData.type
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                this.showMessage('New verification code sent!', 'success');
+                // Reset timer
+                this.startOTPTimer();
+            } else {
+                this.showMessage(data.message || 'Failed to resend code', 'error');
+            }
+        } catch (error) {
+            console.error('Resend OTP error:', error);
+            this.showMessage('Network error. Please try again.', 'error');
+        }
+    }
+
+    startOTPTimer() {
+        let timeLeft = 600; // 10 minutes in seconds
+        const timerElement = document.getElementById('otpTimer');
+        
+        const timer = setInterval(() => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            
+            if (timerElement) {
+                timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                if (timerElement) {
+                    timerElement.textContent = 'Expired';
+                    timerElement.style.color = '#dc3545';
+                }
+            }
+            
+            timeLeft--;
+        }, 1000);
+    }
+
+    // Password validation function
+    validatePassword(password) {
+        const minLength = 8;
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        
+        if (password.length < minLength) {
+            return {
+                isValid: false,
+                message: `Password must be at least ${minLength} characters long`
+            };
+        }
+        
+        if (!hasUpperCase) {
+            return {
+                isValid: false,
+                message: 'Password must contain at least one uppercase letter (A-Z)'
+            };
+        }
+        
+        if (!hasLowerCase) {
+            return {
+                isValid: false,
+                message: 'Password must contain at least one lowercase letter (a-z)'
+            };
+        }
+        
+        if (!hasNumbers) {
+            return {
+                isValid: false,
+                message: 'Password must contain at least one number (0-9)'
+            };
+        }
+        
+        if (!hasSpecialChar) {
+            return {
+                isValid: false,
+                message: 'Password must contain at least one special character (!@#$%^&*)'
+            };
+        }
+        
+        return {
+            isValid: true,
+            message: 'Password meets all requirements'
+        };
+    }
+
+    // Forgot password functionality
+    async forgotPassword(email) {
+        try {
+            const response = await fetch('/api/auth/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, type: 'forgot-password' })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Store email for password reset
+                sessionStorage.setItem('passwordResetEmail', email);
+                this.showMessage('Password reset code sent to your email!', 'success');
+                this.showPasswordResetModal(email);
+                return { success: true, message: data.message };
+            } else {
+                this.showMessage(data.message || 'Failed to send reset code', 'error');
+                return { success: false, message: data.message };
+            }
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            this.showMessage('Network error. Please try again.', 'error');
+            return { success: false, message: 'Network error' };
+        }
+    }
+
+    showPasswordResetModal(email) {
+        // Create password reset modal if it doesn't exist
+        let resetModal = document.getElementById('passwordResetModal');
+        if (!resetModal) {
+            resetModal = this.createPasswordResetModal();
+            document.body.appendChild(resetModal);
+        }
+
+        // Update modal content
+        document.getElementById('resetEmail').textContent = email;
+        document.getElementById('resetOtpInput').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmNewPassword').value = '';
+        
+        // Show modal
+        resetModal.style.display = 'flex';
+        document.getElementById('resetOtpInput').focus();
+        
+        // Start timer
+        this.startResetTimer();
+    }
+
+    createPasswordResetModal() {
+        const modal = document.createElement('div');
+        modal.id = 'passwordResetModal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content password-reset-modal">
+                <div class="modal-header">
+                    <h2>🔑 Reset Password</h2>
+                    <button class="close-btn" onclick="authSystem.closePasswordResetModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="reset-instruction">
+                        We've sent a verification code to<br>
+                        <strong id="resetEmail"></strong>
+                    </p>
+                    
+                    <form id="passwordResetForm" onsubmit="authSystem.handlePasswordReset(event)">
+                        <div class="form-group">
+                            <label for="resetOtpInput">Verification Code:</label>
+                            <input 
+                                type="text" 
+                                id="resetOtpInput" 
+                                placeholder="Enter 6-digit code"
+                                maxlength="6"
+                                pattern="[0-9]{6}"
+                                required
+                                autocomplete="one-time-code"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="newPassword">New Password:</label>
+                            <input 
+                                type="password" 
+                                id="newPassword" 
+                                placeholder="Enter new password"
+                                required
+                            >
+                            <div class="password-requirements">
+                                <small>Password must contain:</small>
+                                <ul>
+                                    <li>At least 8 characters</li>
+                                    <li>One uppercase letter (A-Z)</li>
+                                    <li>One lowercase letter (a-z)</li>
+                                    <li>One number (0-9)</li>
+                                    <li>One special character (!@#$%^&*)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmNewPassword">Confirm New Password:</label>
+                            <input 
+                                type="password" 
+                                id="confirmNewPassword" 
+                                placeholder="Confirm new password"
+                                required
+                            >
+                        </div>
+                        
+                        <div class="reset-actions">
+                            <button type="submit" class="btn primary-btn">
+                                <i class="fas fa-key"></i>
+                                Reset Password
+                            </button>
+                            <button type="button" class="btn secondary-btn" onclick="authSystem.resendPasswordResetOTP()">
+                                <i class="fas fa-redo"></i>
+                                Resend Code
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="reset-timer">
+                        <p>Code expires in: <span id="resetTimer">10:00</span></p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add styles for password reset modal
+        if (!document.getElementById('passwordResetStyles')) {
+            const styles = document.createElement('style');
+            styles.id = 'passwordResetStyles';
+            styles.textContent = `
+                .password-reset-modal {
+                    max-width: 500px;
+                }
+                
+                .reset-instruction {
+                    font-size: 16px;
+                    margin-bottom: 25px;
+                    color: #333;
+                    text-align: center;
+                }
+                
+                .password-requirements {
+                    margin-top: 8px;
+                    padding: 12px;
+                    background: #f8f9fa;
+                    border-radius: 6px;
+                    border-left: 4px solid #007bff;
+                }
+                
+                .password-requirements small {
+                    font-weight: 600;
+                    color: #495057;
+                }
+                
+                .password-requirements ul {
+                    margin: 8px 0 0 0;
+                    padding-left: 20px;
+                }
+                
+                .password-requirements li {
+                    font-size: 12px;
+                    color: #6c757d;
+                    margin-bottom: 4px;
+                }
+                
+                .reset-actions {
+                    display: flex;
+                    gap: 15px;
+                    justify-content: center;
+                    margin: 25px 0 20px 0;
+                }
+                
+                .reset-actions .btn {
+                    flex: 1;
+                    max-width: 180px;
+                }
+                
+                .reset-timer {
+                    font-size: 14px;
+                    color: #666;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    border: 1px solid #e9ecef;
+                    text-align: center;
+                }
+                
+                #resetTimer {
+                    font-weight: bold;
+                    color: #dc3545;
+                }
+            `;
+            document.head.appendChild(styles);
+        }
+        
+        return modal;
+    }
+
+    closePasswordResetModal() {
+        const modal = document.getElementById('passwordResetModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        sessionStorage.removeItem('passwordResetEmail');
+    }
+
+    async handlePasswordReset(e) {
+        e.preventDefault();
+        
+        const otp = document.getElementById('resetOtpInput').value.trim();
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+        
+        if (otp.length !== 6) {
+            this.showMessage('Please enter a 6-digit code', 'error');
+            return;
+        }
+        
+        if (newPassword !== confirmNewPassword) {
+            this.showMessage('Passwords do not match', 'error');
+            return;
+        }
+        
+        // Validate password strength
+        const passwordValidation = this.validatePassword(newPassword);
+        if (!passwordValidation.isValid) {
+            this.showMessage(passwordValidation.message, 'error');
+            return;
+        }
+        
+        const email = sessionStorage.getItem('passwordResetEmail');
+        if (!email) {
+            this.showMessage('Session expired. Please try again.', 'error');
+            this.closePasswordResetModal();
+            return;
+        }
+
+        try {
+            this.showMessage('Resetting password...', 'info');
+            
+            const response = await fetch('/api/auth/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    otp: otp,
+                    type: 'forgot-password',
+                    userData: { newPassword: newPassword }
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                this.closePasswordResetModal();
+                this.showMessage(data.message || 'Password reset successful!', 'success');
+                
+                // Auto-switch to login form after 2 seconds
+                setTimeout(() => {
+                    if (typeof switchToLogin === 'function') {
+                        switchToLogin();
+                    }
+                }, 2000);
+            } else {
+                this.showMessage(data.message || 'Password reset failed', 'error');
+            }
+        } catch (error) {
+            console.error('Password reset error:', error);
+            this.showMessage('Network error. Please try again.', 'error');
+        }
+    }
+
+    async resendPasswordResetOTP() {
+        const email = sessionStorage.getItem('passwordResetEmail');
+        if (!email) {
+            this.showMessage('Session expired. Please try again.', 'error');
+            this.closePasswordResetModal();
+            return;
+        }
+
+        try {
+            this.showMessage('Resending code...', 'info');
+            
+            const response = await fetch('/api/auth/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    type: 'forgot-password'
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                this.showMessage('New verification code sent!', 'success');
+                this.startResetTimer();
+            } else {
+                this.showMessage(data.message || 'Failed to resend code', 'error');
+            }
+        } catch (error) {
+            console.error('Resend password reset OTP error:', error);
+            this.showMessage('Network error. Please try again.', 'error');
+        }
+    }
+
+    startResetTimer() {
+        let timeLeft = 600; // 10 minutes in seconds
+        const timerElement = document.getElementById('resetTimer');
+        
+        const timer = setInterval(() => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            
+            if (timerElement) {
+                timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                if (timerElement) {
+                    timerElement.textContent = 'Expired';
+                    timerElement.style.color = '#dc3545';
+                }
+            }
+            
+            timeLeft--;
+        }, 1000);
     }
 
     checkAchievements() {
@@ -432,98 +1175,83 @@ class AuthSystem {
         this.currentUser.gameStats.achievements = achievements;
     }
 
-    // Method-based login for the modal
-    login(email, password) {
-        const users = JSON.parse(localStorage.getItem('registeredUsers')) || [];
-        const user = users.find(u => u.email === email && u.password === password);
-        
-        if (user) {
-            this.currentUser = user;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            this.updateNavigation();
-            return { success: true, message: 'Login successful!' };
-        } else {
-            return { success: false, message: 'Invalid email or password.' };
+    // Method-based login for the modal (now uses API)
+    async login(email, password) {
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.user) {
+                this.currentUser = data.user;
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                }
+                
+                this.updateNavigation();
+                return { success: true, message: 'Login successful!' };
+            } else {
+                return { success: false, message: data.message || 'Login failed.' };
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            return { success: false, message: 'Network error. Please try again.' };
         }
     }
 
-    // Method-based registration for the modal
-    register(name, email, password) {
-        // Get existing users
-        const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        
-        // Check if email already exists
-        if (users.find(u => u.email === email)) {
-            return { success: false, message: 'Email already registered.' };
-        }
+    // Method-based registration for the modal (now uses API)
+    async register(name, email, password) {
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, email, password, confirmPassword: password })
+            });
 
-        // Create new user
-        const newUser = {
-            id: Date.now().toString(),
-            name,
-            email,
-            password,
-            avatar: 'images/default-avatar.svg',
-            joinedDate: new Date().toISOString(),
-            gameStats: {
-                totalGamesPlayed: 0,
-                totalPlaytime: 0,
-                gamesHistory: [],
-                achievements: []
+            const data = await response.json();
+
+            if (response.ok && data.user) {
+                this.currentUser = data.user;
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                }
+                
+                this.updateNavigation();
+                return { success: true, message: 'Registration successful!' };
+            } else {
+                return { success: false, message: data.message || 'Registration failed.' };
             }
-        };
-
-        // Add user to list
-        users.push(newUser);
-        localStorage.setItem('registeredUsers', JSON.stringify(users));
-
-        // Auto login
-        this.currentUser = newUser;
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
-        this.updateNavigation();
-
-        return { success: true, message: 'Registration successful!' };
+        } catch (error) {
+            console.error('Registration error:', error);
+            return { success: false, message: 'Network error. Please try again.' };
+        }
     }
 
     loginWithGoogle(googleUserInfo) {
+        // This method is now handled by the Google Auth API
+        // The frontend Google auth will call the API directly
+        // This method is kept for backward compatibility
         try {
-            const users = JSON.parse(localStorage.getItem('registeredUsers')) || [];
+            // Set as current user (data comes from API response)
+            this.currentUser = googleUserInfo;
+            localStorage.setItem('currentUser', JSON.stringify(googleUserInfo));
             
-            // Check if user already exists
-            let user = users.find(u => u.email === googleUserInfo.email || u.googleId === googleUserInfo.googleId);
-            
-            if (user) {
-                // Update existing user with Google info
-                user.googleId = googleUserInfo.googleId;
-                user.avatar = googleUserInfo.picture || user.avatar;
-                user.name = googleUserInfo.name || user.name;
-            } else {
-                // Create new user from Google info
-                user = {
-                    id: Date.now().toString(),
-                    name: googleUserInfo.name,
-                    email: googleUserInfo.email,
-                    password: null, // No password for Google users
-                    googleId: googleUserInfo.googleId,
-                    avatar: googleUserInfo.picture || 'images/default-avatar.svg',
-                    joinedDate: new Date().toISOString(),
-                    gameStats: {
-                        totalGamesPlayed: 0,
-                        totalPlaytime: 0,
-                        gamesHistory: [],
-                        achievements: []
-                    },
-                    loginMethod: 'google'
-                };
-                users.push(user);
+            if (googleUserInfo.token) {
+                localStorage.setItem('token', googleUserInfo.token);
             }
             
-            // Save updated users list
-            localStorage.setItem('registeredUsers', JSON.stringify(users));
-            
-            // Set as current user
-            this.currentUser = user;
-            localStorage.setItem('currentUser', JSON.stringify(user));
             this.updateNavigation();
             
             return { success: true, message: 'Google login successful!' };
@@ -531,6 +1259,25 @@ class AuthSystem {
             console.error('Google login error:', error);
             return { success: false, message: 'Google login failed. Please try again.' };
         }
+    }
+
+    // Show forgot password form
+    showForgotPasswordForm() {
+        const email = document.getElementById('loginEmail')?.value || '';
+        
+        if (!email) {
+            this.showMessage('Please enter your email address first', 'error');
+            return;
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            this.showMessage('Please enter a valid email address', 'error');
+            return;
+        }
+        
+        this.forgotPassword(email);
     }
 }
 

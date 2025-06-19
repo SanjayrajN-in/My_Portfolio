@@ -1,9 +1,8 @@
 // Google OAuth Authentication Handler
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
-
-// Simple in-memory user storage for now (replace with database later)
-const users = new Map();
+const connectDB = require('../config/database');
+const User = require('../models/User');
 
 module.exports = async (req, res) => {
     console.log('🔐 Google Auth API called:', {
@@ -181,42 +180,63 @@ module.exports = async (req, res) => {
 
         console.log('👤 Processing user:', { googleId, email, name, hasAvatar: !!picture });
 
-        // Simple user management (in-memory for now)
-        let user = users.get(email);
+        // Connect to MongoDB
+        await connectDB();
+
+        // Find or create user in MongoDB
+        let user = await User.findOne({ 
+            $or: [
+                { email: email },
+                { googleId: googleId }
+            ]
+        });
         
         if (user) {
             console.log('✅ Existing user found');
             // Update user info
             user.name = name;
             user.avatar = picture || user.avatar;
-            user.lastLogin = new Date().toISOString();
+            user.lastLogin = new Date();
+            user.isVerified = true; // Google users are automatically verified
+            
+            // If user exists but doesn't have googleId, add it
+            if (!user.googleId) {
+                user.googleId = googleId;
+            }
+            
+            // Clear any pending OTP since this is Google auth
+            user.otp = null;
+            user.otpExpires = null;
+            
+            await user.save();
         } else {
             console.log('🆕 Creating new user');
-            user = {
-                id: googleId,
+            user = new User({
                 googleId: googleId,
                 name: name,
                 email: email,
                 avatar: picture || 'images/default-avatar.svg',
-                isVerified: email_verified || true,
-                createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString(),
+                isVerified: true, // Google users are automatically verified
+                joinedDate: new Date(),
+                lastLogin: new Date(),
                 gameStats: {
                     totalGamesPlayed: 0,
-                    totalScore: 0,
-                    achievements: [],
-                    favoriteGame: null
+                    totalPlaytime: 0,
+                    gamesHistory: [],
+                    achievements: []
                 }
-            };
-            users.set(email, user);
+            });
+            
+            await user.save();
         }
 
         // Generate JWT token
         const token = jwt.sign(
             { 
-                userId: user.id,
+                userId: user._id.toString(),
                 email: user.email,
-                name: user.name
+                name: user.name,
+                googleId: user.googleId
             },
             jwtSecret,
             { expiresIn: '7d' }
@@ -229,11 +249,13 @@ module.exports = async (req, res) => {
             success: true,
             message: 'Google login successful',
             user: {
-                id: user.id,
+                id: user._id.toString(),
                 name: user.name,
                 email: user.email,
                 avatar: user.avatar,
-                gameStats: user.gameStats
+                joinedDate: user.joinedDate,
+                gameStats: user.gameStats,
+                isGoogleAuth: true
             },
             token: token
         };
