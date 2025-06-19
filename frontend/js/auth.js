@@ -239,16 +239,19 @@ class AuthSystem {
         const navContainer = document.querySelector('.nav-container');
         const navLinks = document.querySelector('.nav-links');
         const hamburger = document.querySelector('.hamburger');
+        const moreDropdown = document.querySelector('.dropdown'); // Find the "More" dropdown
         const isInPagesFolder = window.location.pathname.includes('pages/');
         
         console.log('🔍 DOM elements found:');
         console.log('  navContainer:', !!navContainer);
         console.log('  navLinks:', !!navLinks);
         console.log('  hamburger:', !!hamburger);
+        console.log('  moreDropdown:', !!moreDropdown);
         
         if (this.currentUser) {
             // User is logged in - create or show user menu
             let userMenu = document.querySelector('.user-menu');
+            let userMenuWrapper = document.querySelector('.nav-user-menu');
             
             if (!userMenu) {
                 // Create user menu if it doesn't exist
@@ -262,11 +265,11 @@ class AuthSystem {
                     <div class="user-avatar-container">
                         <img src="${avatarPath}" alt="User Avatar" class="user-avatar" id="navUserAvatar">
                         <div class="user-dropdown">
-                            <a href="${profilePath}" class="dropdown-item">
+                            <a href="${profilePath}" class="user-dropdown-item">
                                 <i class="fas fa-user"></i>
                                 <span>Profile</span>
                             </a>
-                            <button onclick="authSystem.logout()" class="dropdown-item logout-btn">
+                            <button onclick="authSystem.logout()" class="user-dropdown-item logout-btn">
                                 <i class="fas fa-sign-out-alt"></i>
                                 <span>Logout</span>
                             </button>
@@ -274,18 +277,39 @@ class AuthSystem {
                     </div>
                 `;
                 
-                // Insert user menu before hamburger button
-                navContainer.insertBefore(userMenu, hamburger);
+                // Position the user menu correctly:
+                // Desktop: After the "More" dropdown in nav-links
+                // Mobile: Before hamburger in nav-container
+                if (window.innerWidth >= 993 && navLinks && moreDropdown) {
+                    // Desktop: Insert after the "More" dropdown within nav-links
+                    const moreDropdownParent = moreDropdown.parentElement; // This should be the <li> containing the dropdown
+                    if (moreDropdownParent) {
+                        // Create a list item wrapper for the user menu on desktop
+                        const userMenuLi = document.createElement('li');
+                        userMenuLi.className = 'nav-user-menu';
+                        userMenuLi.appendChild(userMenu);
+                        
+                        if (moreDropdownParent.nextSibling) {
+                            navLinks.insertBefore(userMenuLi, moreDropdownParent.nextSibling);
+                        } else {
+                            navLinks.appendChild(userMenuLi);
+                        }
+                    } else {
+                        navLinks.appendChild(userMenu);
+                    }
+                } else {
+                    // Mobile: Insert before hamburger in nav container
+                    navContainer.insertBefore(userMenu, hamburger);
+                }
+                
                 console.log('✅ User menu created and added to DOM');
                 console.log('User menu HTML:', userMenu.outerHTML);
             }
             
-            // Show user menu with proper styles (need !important to override CSS)
+            // Show user menu with proper styles
             userMenu.style.setProperty('display', 'flex', 'important');
             userMenu.style.setProperty('visibility', 'visible', 'important');
             userMenu.style.setProperty('opacity', '1', 'important');
-            userMenu.style.alignItems = 'center';
-            userMenu.style.marginLeft = '1rem';
             userMenu.classList.add('show');
             
             // Update avatar if user has one
@@ -301,26 +325,30 @@ class AuthSystem {
             }
             
             console.log('✅ User menu shown for user:', this.currentUser.name);
-            console.log('User menu styles:', {
-                display: userMenu.style.display,
-                visibility: userMenu.style.visibility,
-                opacity: userMenu.style.opacity
-            });
 
             // Remove login button if exists
             const loginBtn = document.querySelector('.login-btn');
             if (loginBtn) {
                 loginBtn.remove();
             }
+            
+            // Add mobile menu entry for profile when user is logged in
+            this.updateMobileMenu();
         } else {
             // User is NOT logged in - hide user menu
             console.log('❌ No user logged in, hiding user menu');
             const userMenu = document.querySelector('.user-menu');
+            const userMenuWrapper = document.querySelector('.nav-user-menu');
+            
             if (userMenu) {
                 userMenu.style.display = 'none';
                 userMenu.style.visibility = 'hidden';
                 userMenu.style.opacity = '0';
                 userMenu.classList.remove('show');
+            }
+            
+            if (userMenuWrapper) {
+                userMenuWrapper.style.display = 'none';
             }
 
             // Add login button if not exists
@@ -335,7 +363,100 @@ class AuthSystem {
                 `;
                 navLinks.appendChild(loginBtn);
             }
+            
+            // Update mobile menu for logged out state
+            this.updateMobileMenu();
         }
+    }
+
+    updateMobileMenu() {
+        // Handle mobile navigation menu items when hamburger menu is open
+        const navLinks = document.querySelector('.nav-links');
+        if (!navLinks) return;
+
+        // Remove existing mobile user actions
+        const existingMobileProfile = navLinks.querySelector('.mobile-profile-link');
+        const existingMobileLogout = navLinks.querySelector('.mobile-logout-link');
+        if (existingMobileProfile) existingMobileProfile.remove();
+        if (existingMobileLogout) existingMobileLogout.remove();
+
+        if (this.currentUser) {
+            // Add profile and logout links to mobile menu
+            const isInPagesFolder = window.location.pathname.includes('pages/');
+            const profilePath = isInPagesFolder ? 'profile.html' : 'pages/profile.html';
+            
+            // Create profile link for mobile menu
+            const mobileProfileLink = document.createElement('li');
+            mobileProfileLink.className = 'mobile-profile-link mobile-only';
+            mobileProfileLink.innerHTML = `
+                <a href="${profilePath}">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            `;
+
+            // Create logout link for mobile menu
+            const mobileLogoutLink = document.createElement('li');
+            mobileLogoutLink.className = 'mobile-logout-link mobile-only';
+            mobileLogoutLink.innerHTML = `
+                <a href="#" onclick="authSystem.logout(); return false;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            `;
+
+            // Insert at the end of nav links
+            navLinks.appendChild(mobileProfileLink);
+            navLinks.appendChild(mobileLogoutLink);
+        }
+    }
+
+    repositionUserMenu() {
+        // Reposition user menu when window is resized
+        const userMenu = document.querySelector('.user-menu');
+        const userMenuWrapper = document.querySelector('.nav-user-menu');
+        
+        if (!userMenu || !this.currentUser) return;
+
+        // Remove existing user menu from its current position
+        if (userMenuWrapper) {
+            userMenuWrapper.remove();
+        } else if (userMenu.parentElement) {
+            userMenu.remove();
+        }
+
+        // Re-run the positioning logic
+        const navContainer = document.querySelector('.nav-container');
+        const navLinks = document.querySelector('.nav-links');
+        const hamburger = document.querySelector('.hamburger');
+        const moreDropdown = document.querySelector('.dropdown');
+
+        if (window.innerWidth >= 993 && navLinks && moreDropdown) {
+            // Desktop: Insert after the "More" dropdown within nav-links
+            const moreDropdownParent = moreDropdown.parentElement;
+            if (moreDropdownParent) {
+                const userMenuLi = document.createElement('li');
+                userMenuLi.className = 'nav-user-menu';
+                userMenuLi.appendChild(userMenu);
+                
+                if (moreDropdownParent.nextSibling) {
+                    navLinks.insertBefore(userMenuLi, moreDropdownParent.nextSibling);
+                } else {
+                    navLinks.appendChild(userMenuLi);
+                }
+            } else {
+                navLinks.appendChild(userMenu);
+            }
+        } else {
+            // Mobile: Insert before hamburger in nav container
+            navContainer.insertBefore(userMenu, hamburger);
+        }
+
+        // Ensure menu is visible
+        userMenu.style.setProperty('display', 'flex', 'important');
+        userMenu.style.setProperty('visibility', 'visible', 'important');
+        userMenu.style.setProperty('opacity', '1', 'important');
+        userMenu.classList.add('show');
     }
 
     updateUI() {
@@ -1484,6 +1605,17 @@ class AuthSystem {
 // Initialize auth system
 const authSystem = new AuthSystem();
 console.log('🔧 AuthSystem initialized:', authSystem);
+
+// Handle window resize to reposition user menu
+let resizeTimeout;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        if (authSystem && authSystem.currentUser) {
+            authSystem.repositionUserMenu();
+        }
+    }, 250);
+});
 
 // Immediately ensure user menu is hidden on page load if not logged in
 document.addEventListener('DOMContentLoaded', function() {

@@ -150,6 +150,7 @@ header .nav-links li a,
     align-items: center;
     height: 100%;
     transition: all 0.3s ease;
+    margin-left: 1rem;
 }
 
 /* Only show when explicitly enabled by JavaScript */
@@ -220,6 +221,11 @@ header .nav-links li a,
     font-size: 0.95rem !important;
     font-weight: 500 !important;
     border-radius: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    width: 100% !important;
+    text-align: left !important;
 }
 
 .user-dropdown-item:hover {
@@ -1152,11 +1158,37 @@ body.menu-open {
    USER MENU AND LOGIN BUTTON RESPONSIVE STYLES
    =================================================================== */
 
-/* Desktop User Menu Styles - Still hidden by default */
+/* Desktop User Menu Styles - Position after More dropdown */
 @media (min-width: 993px) {
     .user-menu {
-        margin-left: 1rem !important;
+        margin-left: 0.5rem !important;
         /* Don't override display - keep hidden until JS shows it */
+        order: 10; /* Ensure it appears after other nav items */
+    }
+    
+    /* Nav user menu wrapper for desktop */
+    .nav-user-menu {
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+    }
+    
+    /* When user menu is inside nav-links (desktop) */
+    .nav-links .user-menu,
+    .nav-user-menu .user-menu {
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        margin-left: 0.5rem !important;
+        list-style: none !important;
+    }
+    
+    /* Position user menu after More dropdown on desktop */
+    .nav-links .dropdown ~ .nav-user-menu {
+        margin-left: 0.5rem !important;
     }
     
     .user-menu.show,
@@ -1184,6 +1216,64 @@ body.menu-open {
         margin-right: 1rem !important;
         position: relative !important;
         /* Keep hidden by default - don't override */
+    }
+    
+    /* Mobile menu items for profile/logout - only visible in mobile menu */
+    .mobile-only {
+        display: none !important;
+    }
+    
+    /* Show mobile-only items when mobile menu is open */
+    .nav-links.active .mobile-only,
+    body.menu-open .nav-links .mobile-only {
+        display: flex !important;
+    }
+    
+    /* Style mobile profile and logout links */
+    .mobile-profile-link a,
+    .mobile-logout-link a {
+        color: var(--text-color) !important;
+        text-decoration: none !important;
+        font-weight: 500 !important;
+        font-size: 0.9rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        white-space: nowrap !important;
+        padding: 12px 20px !important;
+        height: auto !important;
+        box-sizing: border-box !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 12px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        transform: translateZ(0) !important;
+        will-change: transform, background-color !important;
+        backface-visibility: hidden !important;
+        -webkit-font-smoothing: antialiased !important;
+        width: 100% !important;
+        margin: 2px 0 !important;
+    }
+    
+    .mobile-profile-link a:hover,
+    .mobile-logout-link a:hover {
+        background: rgba(0, 168, 255, 0.1) !important;
+        color: var(--primary-color) !important;
+        transform: translateX(5px) translateZ(0) !important;
+    }
+    
+    /* Add separator before mobile profile section */
+    .mobile-profile-link {
+        border-top: 1px solid rgba(0, 168, 255, 0.15) !important;
+        margin-top: 10px !important;
+        padding-top: 10px !important;
+    }
+    
+    .mobile-profile-link:first-of-type {
+        margin-top: 5px !important;
     }
     
     .user-menu.show,
