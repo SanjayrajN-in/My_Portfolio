@@ -1,6 +1,9 @@
-# Only ignore non-essential files
+api/test/
+api/debug/
+api/models/
+api/config/
+api/test.js
 node_modules/
 .git/
 *.log
 .env
-# DO NOT ignore API files needed for deployment
