@@ -612,8 +612,6 @@ router.post('/reset-password', authLimiter, async (req, res) => {
 });
 
 // Google OAuth routes
-const { OAuth2Client } = require('google-auth-library');
-
 // @route   GET /api/auth/google/init
 // @desc    Get Google Client ID for frontend initialization
 // @access  Public
