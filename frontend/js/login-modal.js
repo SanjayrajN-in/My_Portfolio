@@ -1,4 +1,19 @@
 // Login Modal JavaScript
+
+// Get API base URL
+const getAPIBaseURL = () => {
+    if (window.API && window.API.baseURL) {
+        return window.API.baseURL;
+    }
+    // Fallback - detect environment
+    const isProduction = window.location.hostname !== 'localhost' && 
+                        window.location.hostname !== '127.0.0.1' && 
+                        !window.location.hostname.includes('local');
+    return isProduction ? 'https://sanjayraj-n.onrender.com' : 'http://localhost:3000';
+};
+
+const API_BASE_URL = getAPIBaseURL();
+
 class LoginModal {
     constructor() {
         this.modal = null;
@@ -62,7 +77,7 @@ class LoginModal {
                                 <span>or</span>
                             </div>
                             
-                            <button type="button" class="google-login-btn" onclick="authSystem.handleGoogleLogin()">
+                            <button type="button" class="google-login-btn" onclick="loginModal.handleGoogleLogin()">
                                 <i class="fab fa-google"></i>
                                 Continue with Google
                             </button>
@@ -121,13 +136,28 @@ class LoginModal {
                                 <div class="validation-message" id="confirmPasswordValidation"></div>
                             </div>
                             
-                            <button type="submit" class="submit-btn">Create Account</button>
+                            <!-- OTP Section (Initially Hidden) -->
+                            <div class="form-group otp-section" id="otpSection" style="display: none;">
+                                <label for="registerOtp">Verification Code</label>
+                                <div class="otp-input-wrapper">
+                                    <input type="text" id="registerOtp" name="otp" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}">
+                                    <button type="button" class="resend-otp-btn" id="resendOtpBtn" onclick="loginModal.resendOTP()" disabled>
+                                        <span>Resend in <span id="resendTimer">60</span>s</span>
+                                    </button>
+                                </div>
+                                <div class="otp-help-text">
+                                    <small>We've sent a 6-digit verification code to your email address</small>
+                                </div>
+                                <div class="validation-message" id="otpValidation"></div>
+                            </div>
+                            
+                            <button type="submit" class="submit-btn" id="registerSubmitBtn">Create Account</button>
                             
                             <div class="divider">
                                 <span>or</span>
                             </div>
                             
-                            <button type="button" class="google-login-btn" onclick="authSystem.handleGoogleLogin()">
+                            <button type="button" class="google-login-btn" onclick="loginModal.handleGoogleLogin()">
                                 <i class="fab fa-google"></i>
                                 Sign up with Google
                             </button>
@@ -176,6 +206,9 @@ class LoginModal {
 
         // Password validation events
         this.setupPasswordValidation();
+        
+        // OTP input validation
+        this.setupOTPValidation();
     }
 
     open() {
@@ -214,6 +247,9 @@ class LoginModal {
         
         // Reset to login form if on register
         this.switchToLogin();
+        
+        // Clean up pending registration and remove unverified accounts
+        this.cleanupPendingRegistration();
     }
 
     switchToRegister() {
@@ -226,15 +262,7 @@ class LoginModal {
         this.clearMessage();
     }
 
-    switchToLogin() {
-        document.getElementById('registerForm').classList.remove('active');
-        document.getElementById('loginForm').classList.add('active');
-        document.getElementById('switchToLogin').style.display = 'none';
-        document.getElementById('switchToRegister').style.display = 'block';
-        document.getElementById('modalTitle').textContent = 'Welcome Back';
-        document.getElementById('modalSubtitle').textContent = 'Sign in to your account';
-        this.clearMessage();
-    }
+
 
     showMessage(message, type = 'error') {
         const messageDiv = document.getElementById('modalMessage');
@@ -282,29 +310,114 @@ class LoginModal {
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
+        const otp = document.getElementById('registerOtp').value;
+        const otpSection = document.getElementById('otpSection');
 
-        // Validate passwords match
-        if (password !== confirmPassword) {
-            this.showMessage('Passwords do not match.');
-            this.setLoading(false);
-            return;
-        }
+        // Check if OTP section is visible (meaning OTP was already sent)
+        if (otpSection.style.display === 'none') {
+            // First submission - validate and send OTP
+            
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                this.showMessage('Passwords do not match.');
+                this.setLoading(false);
+                return;
+            }
 
-        // Validate password strength
-        if (!this.isPasswordValid(password)) {
-            this.showMessage('Please ensure your password meets all requirements.');
-            this.setLoading(false);
-            return;
-        }
+            // Validate password strength
+            if (!this.isPasswordValid(password)) {
+                this.showMessage('Please ensure your password meets all requirements.');
+                this.setLoading(false);
+                return;
+            }
 
-        try {
-            // Call the auth system's handleRegister method (database-based)
-            await authSystem.handleRegister(e);
-        } catch (error) {
-            console.error('Registration error:', error);
-            this.showMessage('An error occurred. Please try again.');
-        } finally {
-            this.setLoading(false);
+            try {
+                // Send OTP first
+                const response = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, type: 'register' })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store registration data temporarily
+                    sessionStorage.setItem('pendingRegistration', JSON.stringify({
+                        name, email, password, type: 'register'
+                    }));
+
+                    // Show OTP section
+                    otpSection.style.display = 'block';
+                    document.getElementById('registerSubmitBtn').textContent = 'Verify & Create Account';
+                    this.showMessage('Verification code sent to your email!', 'success');
+                    this.startResendTimer();
+                    
+                    // Focus on OTP input
+                    document.getElementById('registerOtp').focus();
+                } else {
+                    if (data.shouldLogin) {
+                        this.showMessage(data.message);
+                        setTimeout(() => this.switchToLogin(), 2000);
+                    } else {
+                        this.showMessage(data.message || 'Failed to send verification code');
+                    }
+                }
+            } catch (error) {
+                console.error('Send OTP error:', error);
+                this.showMessage('Network error. Please try again.');
+            } finally {
+                this.setLoading(false);
+            }
+        } else {
+            // Second submission - verify OTP and create account
+            if (!otp || otp.length !== 6) {
+                this.showMessage('Please enter the 6-digit verification code.');
+                this.setLoading(false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, password, confirmPassword, otp })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.user) {
+                    // Registration successful
+                    authSystem.currentUser = data.user;
+                    
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                    }
+                    
+                    // Clear pending registration
+                    sessionStorage.removeItem('pendingRegistration');
+                    
+                    // Update navigation
+                    authSystem.updateNavigation();
+                    
+                    this.showMessage('Registration successful! Welcome to the platform.', 'success');
+                    
+                    setTimeout(() => {
+                        this.close();
+                    }, 1500);
+                } else {
+                    this.showMessage(data.message || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                this.showMessage('Network error. Please try again.');
+            } finally {
+                this.setLoading(false);
+            }
         }
     }
 
@@ -558,6 +671,145 @@ class LoginModal {
         setTimeout(() => {
             notification.classList.remove('show');
         }, 2000);
+    }
+
+    startResendTimer() {
+        const resendBtn = document.getElementById('resendOtpBtn');
+        const timerSpan = document.getElementById('resendTimer');
+        let timeLeft = 60;
+        
+        resendBtn.disabled = true;
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            timerSpan.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = '<span>Resend Code</span>';
+            }
+        }, 1000);
+    }
+
+    async resendOTP() {
+        const pendingData = JSON.parse(sessionStorage.getItem('pendingRegistration') || '{}');
+        if (!pendingData.email) {
+            this.showMessage('Please start the registration process again.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: pendingData.email, type: 'register' })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                this.showMessage('New verification code sent!', 'success');
+                this.startResendTimer();
+            } else {
+                this.showMessage(data.message || 'Failed to resend code');
+            }
+        } catch (error) {
+            console.error('Resend OTP error:', error);
+            this.showMessage('Network error. Please try again.');
+        }
+    }
+
+    async cleanupPendingRegistration() {
+        const pendingData = JSON.parse(sessionStorage.getItem('pendingRegistration') || '{}');
+        
+        if (pendingData.email && pendingData.type === 'register') {
+            try {
+                // Call backend to remove unverified account
+                await fetch(`${API_BASE_URL}/api/auth/cleanup-unverified`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: pendingData.email })
+                });
+            } catch (error) {
+                console.error('Cleanup error:', error);
+            }
+            
+            // Clear session storage
+            sessionStorage.removeItem('pendingRegistration');
+        }
+    }
+
+    switchToLogin() {
+        document.getElementById('registerForm').classList.remove('active');
+        document.getElementById('loginForm').classList.add('active');
+        document.getElementById('switchToLogin').style.display = 'none';
+        document.getElementById('switchToRegister').style.display = 'block';
+        document.getElementById('modalTitle').textContent = 'Welcome Back';
+        document.getElementById('modalSubtitle').textContent = 'Sign in to your account';
+        this.clearMessage();
+        
+        // Reset OTP section
+        const otpSection = document.getElementById('otpSection');
+        if (otpSection) {
+            otpSection.style.display = 'none';
+        }
+        const submitBtn = document.getElementById('registerSubmitBtn');
+        if (submitBtn) {
+            submitBtn.textContent = 'Create Account';
+        }
+    }
+
+    setupOTPValidation() {
+        const otpInput = document.getElementById('registerOtp');
+        if (otpInput) {
+            otpInput.addEventListener('input', (e) => {
+                // Only allow numbers
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                
+                // Limit to 6 digits
+                if (e.target.value.length > 6) {
+                    e.target.value = e.target.value.slice(0, 6);
+                }
+                
+                // Auto-submit when 6 digits are entered
+                if (e.target.value.length === 6) {
+                    setTimeout(() => {
+                        document.getElementById('registerSubmitBtn').click();
+                    }, 500);
+                }
+            });
+            
+            otpInput.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const numbers = paste.replace(/[^0-9]/g, '').slice(0, 6);
+                otpInput.value = numbers;
+                
+                if (numbers.length === 6) {
+                    setTimeout(() => {
+                        document.getElementById('registerSubmitBtn').click();
+                    }, 500);
+                }
+            });
+        }
+    }
+
+    async handleGoogleLogin() {
+        try {
+            if (typeof authSystem !== 'undefined' && authSystem.handleGoogleLogin) {
+                await authSystem.handleGoogleLogin();
+            } else {
+                this.showMessage('Google login service is currently unavailable. Please use email login.', 'info');
+            }
+        } catch (error) {
+            console.error('Google login error:', error);
+            this.showMessage('Google login failed. Please use email login instead.', 'error');
+        }
     }
 
 }

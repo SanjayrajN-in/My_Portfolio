@@ -499,13 +499,7 @@ class AuthSystem {
         try {
             this.showMessage('Initializing Google login...', 'info');
             
-            // Check if Google API is loaded
-            if (!window.google) {
-                this.showMessage('Google API not loaded. Please try again.', 'error');
-                return;
-            }
-
-            // Initialize Google login
+            // Check if Google OAuth is configured on server
             const response = await fetch(`${API_BASE_URL}/api/auth/google/init`, {
                 method: 'GET',
                 headers: {
@@ -516,9 +510,21 @@ class AuthSystem {
             const data = await response.json();
             
             if (!response.ok) {
-                this.showMessage(data.message || 'Google login not available', 'error');
+                this.showMessage(data.message || 'Google login not configured', 'error');
                 return;
             }
+
+            // Check if Google API is loaded
+            if (!window.google) {
+                // Load Google API dynamically
+                await this.loadGoogleAPI();
+                if (!window.google) {
+                    this.showMessage('Failed to load Google API. Please try again.', 'error');
+                    return;
+                }
+            }
+
+
 
             // Use Google Identity Services
             window.google.accounts.id.initialize({
@@ -538,6 +544,41 @@ class AuthSystem {
             console.error('❌ Google login error:', error);
             this.showMessage('Google login failed. Please try again.', 'error');
         }
+    }
+
+    async loadGoogleAPI() {
+        return new Promise((resolve, reject) => {
+            // Check if already loaded
+            if (window.google) {
+                resolve();
+                return;
+            }
+
+            // Create script element
+            const script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            
+            script.onload = () => {
+                console.log('Google API loaded successfully');
+                resolve();
+            };
+            
+            script.onerror = () => {
+                console.error('Failed to load Google API');
+                reject(new Error('Failed to load Google API'));
+            };
+            
+            document.head.appendChild(script);
+            
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                if (!window.google) {
+                    reject(new Error('Google API load timeout'));
+                }
+            }, 10000);
+        });
     }
 
     showGooglePopup(clientId) {

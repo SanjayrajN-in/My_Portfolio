@@ -389,6 +389,45 @@ router.post('/logout', auth, async (req, res) => {
     }
 });
 
+// @route   POST /api/auth/cleanup-unverified
+// @desc    Remove unverified accounts when user exits registration
+// @access  Public
+router.post('/cleanup-unverified', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || !validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide a valid email address'
+            });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+
+        if (user && !user.isEmailVerified) {
+            // Only delete if the account is unverified and was created recently (within last hour)
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+            if (user.createdAt > oneHourAgo) {
+                await User.deleteOne({ _id: user._id });
+                console.log(`Cleaned up unverified account: ${email}`);
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Cleanup completed'
+        });
+
+    } catch (error) {
+        console.error('Cleanup error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
 // @route   POST /api/auth/verify-otp
 // @desc    Verify OTP for password reset or other purposes
 // @access  Public
