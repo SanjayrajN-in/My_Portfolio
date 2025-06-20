@@ -1,9 +1,13 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const validator = require('validator');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const { auth, generateToken } = require('../middleware/auth');
 const emailService = require('../utils/emailService');
+
+// Initialize Google OAuth client
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = express.Router();
 
@@ -844,6 +848,375 @@ router.get('/google/callback', async (req, res) => {
                 window.close();
             </script>
         `);
+    }
+});
+
+// @route   POST /api/auth/verify-login
+// @desc    Verify login with OTP for unverified accounts
+// @access  Public
+router.post('/verify-login', authLimiter, async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide email and OTP'
+            });
+        }
+
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide a valid email address'
+            });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (!user.verifyEmailOTP(otp)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired OTP'
+            });
+        }
+
+        // Mark email as verified
+        user.isEmailVerified = true;
+        user.emailVerificationOTP = undefined;
+        user.emailVerificationOTPExpires = undefined;
+        user.lastLogin = new Date();
+        await user.save();
+
+        const token = generateToken(user._id);
+
+        res.json({
+            success: true,
+            message: 'Login successful!',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+                joinedDate: user.joinedDate,
+                gameStats: user.gameStats
+            }
+        });
+
+    } catch (error) {
+        console.error('Verify login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.'
+        });
+    }
+});
+
+// @route   POST /api/auth/reset-password
+// @desc    Reset password with OTP
+// @access  Public
+router.post('/reset-password', authLimiter, async (req, res) => {
+    try {
+        const { email, otp, password } = req.body;
+
+        if (!email || !otp || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide email, OTP, and new password'
+            });
+        }
+
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide a valid email address'
+            });
+        }
+
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password requirements not met',
+                errors: passwordValidation.errors
+            });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (!user.verifyPasswordResetOTP(otp)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset code'
+            });
+        }
+
+        // Update password
+        user.password = password;
+        user.passwordResetOTP = undefined;
+        user.passwordResetOTPExpires = undefined;
+        
+        // Reset login attempts
+        user.loginAttempts = 0;
+        user.lockUntil = undefined;
+        
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Password reset successful! You can now login with your new password.'
+        });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.'
+        });
+    }
+});
+
+// @route   POST /api/auth/google-login
+// @desc    Login with Google credential
+// @access  Public
+router.post('/google-login', async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({
+                success: false,
+                message: 'Google credential is required'
+            });
+        }
+
+        // Verify Google token
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email not provided by Google'
+            });
+        }
+
+        let user = await User.findOne({ 
+            $or: [
+                { email: email.toLowerCase() },
+                { googleId: googleId }
+            ]
+        });
+
+        if (user) {
+            // Update user info if needed
+            if (!user.googleId) {
+                user.googleId = googleId;
+            }
+            if (!user.avatar && picture) {
+                user.avatar = picture;
+            }
+            user.lastLogin = new Date();
+            await user.save();
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: 'No account found. Please register first.'
+            });
+        }
+
+        const token = generateToken(user._id);
+
+        res.json({
+            success: true,
+            message: 'Login successful!',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+                joinedDate: user.joinedDate,
+                gameStats: user.gameStats
+            }
+        });
+
+    } catch (error) {
+        console.error('Google login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Google authentication failed'
+        });
+    }
+});
+
+// @route   POST /api/auth/google-register
+// @desc    Register with Google credential
+// @access  Public
+router.post('/google-register', async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({
+                success: false,
+                message: 'Google credential is required'
+            });
+        }
+
+        // Verify Google token
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email not provided by Google'
+            });
+        }
+
+        // Check if user already exists
+        let user = await User.findOne({ 
+            $or: [
+                { email: email.toLowerCase() },
+                { googleId: googleId }
+            ]
+        });
+
+        if (user) {
+            return res.status(400).json({
+                success: false,
+                message: 'Account already exists. Please login instead.'
+            });
+        }
+
+        // Create new user
+        user = new User({
+            name: name,
+            email: email.toLowerCase(),
+            avatar: picture,
+            googleId: googleId,
+            isEmailVerified: true,
+            password: 'GoogleAuth_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + '!1A'
+        });
+
+        await user.save();
+
+        const token = generateToken(user._id);
+
+        res.status(201).json({
+            success: true,
+            message: 'Registration successful!',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+                joinedDate: user.joinedDate,
+                gameStats: user.gameStats
+            }
+        });
+
+    } catch (error) {
+        console.error('Google register error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Google registration failed'
+        });
+    }
+});
+
+// @route   GET /api/auth/google-config
+// @desc    Get Google OAuth client configuration
+// @access  Public
+router.get('/google-config', (req, res) => {
+    res.json({
+        success: true,
+        clientId: process.env.GOOGLE_CLIENT_ID
+    });
+});
+
+// @route   POST /api/auth/change-password
+// @desc    Change user password
+// @access  Private
+router.post('/change-password', auth, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide current and new password'
+            });
+        }
+
+        const passwordValidation = validatePassword(newPassword);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password requirements not met',
+                errors: passwordValidation.errors
+            });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Check current password
+        const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+        if (!isCurrentPasswordValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Current password is incorrect'
+            });
+        }
+
+        // Update password
+        user.password = newPassword;
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.'
+        });
     }
 });
 

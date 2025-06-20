@@ -3,14 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile | Sanjayraj N Portfolio</title>
+    <title>Profile | Sanjayraj N</title>
     <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="../css/styles.css">
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <link rel="stylesheet" href="../css/critical.css">
+    <link rel="stylesheet" href="../css/styles.css?v=3.0">
+    <link rel="stylesheet" href="../css/fix-logo.css">
+    <link rel="stylesheet" href="../css/fix-styles.css">
     <link rel="stylesheet" href="../css/nav-fix.css?v=5.0">
-    <link rel="stylesheet" href="../css/login-modal.css">
-    <link rel="stylesheet" href="../css/profile.css">
+    <link rel="stylesheet" href="../css/profile-page.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -28,207 +34,249 @@
     <div class="cursor-follower"></div>
 
     <!-- Header -->
-    <header>
+    <header class="profile-header-nav">
         <div class="nav-container">
             <a href="../index.html" class="logo">
                 <span class="logo-text">SRN</span>
                 <div class="logo-circle"></div>
             </a>
             
-            <ul class="nav-links">
-                <li><a href="../index.html">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a></li>
-                <li><a href="about.html">
-                    <i class="fas fa-user"></i>
-                    <span>About</span>
-                </a></li>
-                <li><a href="games.html">
-                    <i class="fas fa-gamepad"></i>
-                    <span>Games</span>
-                </a></li>
-                <li><a href="contact.html">
-                    <i class="fas fa-envelope"></i>
-                    <span>Contact</span>
-                </a></li>
-            </ul>
-            
-            <!-- User Menu -->
-            <div class="user-menu" style="display: none;">
-                <div class="user-avatar-container">
-                    <img src="../images/default-avatar.svg" alt="User Avatar" class="user-avatar" id="navUserAvatar">
-                    <div class="user-dropdown">
-                        <a href="profile.html" class="user-dropdown-item" style="display: none;">
-                            <i class="fas fa-user"></i>
-                            <span>Profile</span>
-                        </a>
-                        <a href="#" class="user-dropdown-item" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Logout</span>
-                        </a>
-                    </div>
-                </div>
+            <div class="profile-nav-actions">
+                <a href="../index.html" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Home</span>
+                </a>
             </div>
-            
-            <button class="hamburger" aria-label="Toggle navigation menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
         </div>
     </header>
 
-    <!-- Authentication Check -->
-    <div id="authCheck" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(12, 12, 20, 0.95); backdrop-filter: blur(10px); z-index: 10000; align-items: center; justify-content: center;">
-        <div style="text-align: center; color: var(--text-color); padding: 2rem; background: rgba(30, 30, 47, 0.9); border-radius: 20px; border: 1px solid rgba(0, 168, 255, 0.3); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);">
-            <div style="width: 50px; height: 50px; border: 3px solid rgba(0, 168, 255, 0.3); border-top: 3px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
-            <p style="margin: 0; font-size: 1.1rem; font-weight: 500;">Checking authentication...</p>
-            <p style="margin: 10px 0 0 0; font-size: 0.9rem; color: var(--text-color-dark);">Please wait</p>
-        </div>
-    </div>
-
-    <!-- Profile Section -->
-    <section class="profile-section">
-        <div class="container">
+    <!-- Main Content -->
+    <main class="profile-main">
+        <div class="profile-container">
             <div class="profile-header">
-                <h1 class="section-title">My Profile</h1>
-                <div class="section-line"></div>
+                <div class="profile-avatar-section">
+                    <div class="profile-avatar-container">
+                        <img src="../images/default-avatar.svg" alt="Profile Avatar" class="profile-avatar" id="profileAvatar">
+                        <button class="avatar-edit-btn" id="avatarEditBtn">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
+                    <div class="profile-basic-info">
+                        <h1 class="profile-name" id="profileName">Loading...</h1>
+                        <p class="profile-email" id="profileEmail">Loading...</p>
+                        <div class="profile-badges">
+                            <span class="badge verified" id="verifiedBadge">
+                                <i class="fas fa-check-circle"></i>
+                                Verified
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button class="btn secondary-btn" id="editProfileBtn">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit Profile</span>
+                    </button>
+                    <button class="btn danger-btn" onclick="authSystem.logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
             </div>
 
             <div class="profile-content">
-                <!-- Profile Info Card -->
-                <div class="profile-card profile-info-card">
-                    <div class="profile-avatar-section">
-                        <div class="profile-avatar-container">
-                            <img src="../images/default-avatar.svg" alt="Profile Avatar" class="profile-avatar" id="profileAvatar">
-                            <button class="avatar-edit-btn" onclick="openAvatarModal()">
-                                <i class="fas fa-camera"></i>
+                <div class="profile-tabs">
+                    <button class="tab-btn active" data-tab="overview">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Overview</span>
+                    </button>
+                    <button class="tab-btn" data-tab="security">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Security</span>
+                    </button>
+                    <button class="tab-btn" data-tab="activity">
+                        <i class="fas fa-history"></i>
+                        <span>Activity</span>
+                    </button>
+                </div>
+
+                <!-- Overview Tab -->
+                <div class="tab-content active" id="overviewTab">
+                    <div class="profile-cards">
+                        <div class="profile-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-info-circle"></i> Account Information</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="info-row">
+                                    <span class="info-label">Full Name:</span>
+                                    <span class="info-value" id="profileNameInfo">Loading...</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Email Address:</span>
+                                    <span class="info-value" id="profileEmailInfo">Loading...</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Member Since:</span>
+                                    <span class="info-value" id="joinedDate">Loading...</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Last Login:</span>
+                                    <span class="info-value" id="lastLogin">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-gamepad"></i> Game Statistics</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="totalGamesPlayed">0</div>
+                                        <div class="stat-label">Games Played</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="totalScore">0</div>
+                                        <div class="stat-label">Total Score</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="highScore">0</div>
+                                        <div class="stat-label">High Score</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="achievements">0</div>
+                                        <div class="stat-label">Achievements</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Tab -->
+                <div class="tab-content" id="securityTab">
+                    <div class="profile-cards">
+                        <div class="profile-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-lock"></i> Password & Security</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="security-item">
+                                    <div class="security-info">
+                                        <h4>Password</h4>
+                                        <p>Last changed: <span id="passwordLastChanged">Never</span></p>
+                                    </div>
+                                    <button class="btn secondary-btn" id="changePasswordBtn">
+                                        <i class="fas fa-key"></i>
+                                        Change Password
+                                    </button>
+                                </div>
+                                
+                                <div class="security-item">
+                                    <div class="security-info">
+                                        <h4>Two-Factor Authentication</h4>
+                                        <p>Add an extra layer of security to your account</p>
+                                    </div>
+                                    <button class="btn primary-btn" id="enable2FABtn">
+                                        <i class="fas fa-shield-alt"></i>
+                                        Enable 2FA
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-devices"></i> Login Sessions</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="session-item current">
+                                    <div class="session-info">
+                                        <h4>Current Session</h4>
+                                        <p><i class="fas fa-desktop"></i> <span id="currentDevice">Desktop - Chrome</span></p>
+                                        <p><i class="fas fa-map-marker-alt"></i> <span id="currentLocation">Location</span></p>
+                                    </div>
+                                    <span class="session-status active">Active Now</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Tab -->
+                <div class="tab-content" id="activityTab">
+                    <div class="profile-cards">
+                        <div class="profile-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="activity-list" id="activityList">
+                                    <div class="activity-item">
+                                        <div class="activity-icon">
+                                            <i class="fas fa-sign-in-alt"></i>
+                                        </div>
+                                        <div class="activity-info">
+                                            <h4>Logged in</h4>
+                                            <p>Just now</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Change Password Modal -->
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <button class="modal-close" id="closePasswordModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <div class="password-input">
+                            <input type="password" id="currentPassword" name="currentPassword" required>
+                            <button type="button" class="password-toggle" data-target="currentPassword">
+                                <i class="fas fa-eye"></i>
                             </button>
                         </div>
-                        <div class="profile-basic-info">
-                            <div class="editable-field">
-                                <h2 id="profileName" class="profile-name">User Name</h2>
-                                <button class="edit-btn" onclick="editField('name')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </div>
-                            <p class="profile-email" id="profileEmail">user@example.com</p>
-                            <p class="profile-joined">Joined: <span id="profileJoined">--</span></p>
-                        </div>
                     </div>
-                </div>
-
-                <!-- Gaming Stats Card -->
-                <div class="profile-card gaming-stats-card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-gamepad"></i> Gaming Statistics</h3>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value" id="totalGamesPlayed">0</div>
-                            <div class="stat-label">Games Played</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="totalPlaytime">0h 0m</div>
-                            <div class="stat-label">Total Playtime</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="favoriteGame">None</div>
-                            <div class="stat-label">Favorite Game</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="longestSession">0m</div>
-                            <div class="stat-label">Longest Session</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Games Card -->
-                <div class="profile-card recent-games-card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-history"></i> Recent Games</h3>
-                        <button class="clear-history-btn" onclick="clearGameHistory()">
-                            <i class="fas fa-trash"></i> Clear History
-                        </button>
-                    </div>
-                    <div class="games-list" id="recentGamesList">
-                        <div class="no-games-message">
-                            <i class="fas fa-gamepad"></i>
-                            <p>No games played yet. Start playing to see your history!</p>
-                            <a href="games.html" class="play-games-btn">
-                                <i class="fas fa-play"></i> Play Games
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Achievements Card -->
-                <div class="profile-card achievements-card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-trophy"></i> Achievements</h3>
-                    </div>
-                    <div class="achievements-grid" id="achievementsList">
-                        <!-- Achievements will be populated by JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Avatar Selection Modal -->
-    <div id="avatarModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Choose Avatar</h3>
-                <button class="modal-close" onclick="closeAvatarModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="avatar-options">
-                    <div class="avatar-option" data-avatar="../images/default-avatar.svg">
-                        <img src="../images/default-avatar.svg" alt="Avatar 1">
-                    </div>
-                    <div class="avatar-option" data-avatar="../images/default-avatar.svg">
-                        <img src="../images/default-avatar.svg" alt="Avatar 2">
-                    </div>
-                    <div class="avatar-option" data-avatar="../images/default-avatar.svg">
-                        <img src="../images/default-avatar.svg" alt="Avatar 3">
-                    </div>
-                    <div class="avatar-option" data-avatar="../images/default-avatar.svg">
-                        <img src="../images/default-avatar.svg" alt="Avatar 4">
-                    </div>
-                </div>
-                <div class="upload-section">
-                    <p>Or upload your own:</p>
-                    <input type="file" id="avatarUpload" accept="image/*" onchange="handleAvatarUpload(event)">
-                    <label for="avatarUpload" class="upload-btn">
-                        <i class="fas fa-upload"></i> Upload Image
-                    </label>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Name Modal -->
-    <div id="editNameModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Edit Name</h3>
-                <button class="modal-close" onclick="closeEditModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="editNameForm">
+                    
                     <div class="form-group">
-                        <label for="newName">Full Name</label>
-                        <input type="text" id="newName" name="name" required>
+                        <label for="newPassword">New Password</label>
+                        <div class="password-input">
+                            <input type="password" id="newPassword" name="newPassword" required>
+                            <button type="button" class="password-toggle" data-target="newPassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmNewPassword">Confirm New Password</label>
+                        <div class="password-input">
+                            <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+                            <button type="button" class="password-toggle" data-target="confirmNewPassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div class="modal-actions">
-                        <button type="button" class="btn secondary-btn" onclick="closeEditModal()">Cancel</button>
-                        <button type="submit" class="btn primary-btn">Save Changes</button>
+                        <button type="button" class="btn secondary-btn" id="cancelPasswordChange">Cancel</button>
+                        <button type="submit" class="btn primary-btn">Update Password</button>
                     </div>
                 </form>
             </div>
@@ -236,11 +284,12 @@
     </div>
 
     <!-- Scripts -->
+    <script src="../js/api-config.js"></script>
+    <script src="../js/page-transition.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/profile-page.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script src="../js/script.js"></script>
-    <script src="../js/page-transition.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/login-modal.js"></script>
-    <script src="../js/profile.js"></script>
 </body>
 </html>

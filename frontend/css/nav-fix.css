@@ -3,7 +3,122 @@
  * 1. Consistent navigation bar across all pages
  * 2. Smooth page transitions
  * 3. Properly aligned dropdown menus
+ * 4. User menu and authentication
  */
+
+/* User Menu Styles */
+.user-menu {
+    display: none;
+    align-items: center;
+    margin-left: 1rem;
+}
+
+.user-avatar-container {
+    position: relative;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    object-fit: cover;
+}
+
+.user-avatar:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px rgba(0, 168, 255, 0.4);
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: linear-gradient(135deg, rgba(30, 30, 47, 0.95), rgba(20, 20, 35, 0.95));
+    border-radius: 12px;
+    border: 1px solid rgba(0, 168, 255, 0.3);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px);
+    min-width: 200px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.user-avatar-container:hover .user-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.user-dropdown-item:first-child {
+    border-radius: 12px 12px 0 0;
+}
+
+.user-dropdown-item:last-child {
+    border-radius: 0 0 12px 12px;
+}
+
+.user-dropdown-item:hover {
+    background: rgba(0, 168, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.user-dropdown-item.logout-btn:hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.user-dropdown-item i {
+    font-size: 1rem;
+    width: 16px;
+    text-align: center;
+}
+
+/* Mobile user menu */
+@media (max-width: 992px) {
+    .user-menu {
+        margin-left: 0;
+        margin-right: 1rem;
+    }
+    
+    .user-dropdown {
+        right: auto;
+        left: 0;
+    }
+}
+
+/* Desktop navigation adjustments */
+@media (min-width: 993px) {
+    .nav-user-menu {
+        display: flex;
+        align-items: center;
+    }
+    
+    .user-menu {
+        display: flex !important;
+    }
+}
 
 /* CSS Reset for Navigation Elements */
 .nav-links, .nav-links li, .nav-links li a, 
