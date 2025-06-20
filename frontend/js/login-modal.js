@@ -1,7 +1,7 @@
 // Login Modal JavaScript
 
-// Get API base URL
-const getAPIBaseURL = () => {
+// Get API base URL (check if already defined by auth.js)
+const API_BASE_URL = window.API_BASE_URL || (function() {
     if (window.API && window.API.baseURL) {
         return window.API.baseURL;
     }
@@ -10,9 +10,7 @@ const getAPIBaseURL = () => {
                         window.location.hostname !== '127.0.0.1' && 
                         !window.location.hostname.includes('local');
     return isProduction ? 'https://sanjayraj-n.onrender.com' : 'http://localhost:3000';
-};
-
-const API_BASE_URL = getAPIBaseURL();
+})();
 
 class LoginModal {
     constructor() {
@@ -847,6 +845,14 @@ document.addEventListener('DOMContentLoaded', function() {
     loginModal = new LoginModal();
 });
 
+// Also ensure initialization on window load as backup
+window.addEventListener('load', function() {
+    if (!loginModal) {
+        console.log('Window loaded, initializing login modal as backup...');
+        loginModal = new LoginModal();
+    }
+});
+
 // Global function to open login modal
 function openLoginModal() {
     console.log('Opening login modal...');
@@ -856,6 +862,11 @@ function openLoginModal() {
         // Reinitialize if needed
         console.log('Reinitializing login modal...');
         loginModal = new LoginModal();
-        loginModal.open();
+        setTimeout(() => {
+            loginModal.open();
+        }, 100);
     }
 }
+
+// Make sure the function is globally available
+window.openLoginModal = openLoginModal;

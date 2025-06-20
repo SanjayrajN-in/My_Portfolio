@@ -12,6 +12,8 @@ const getAPIBaseURL = () => {
 };
 
 const API_BASE_URL = getAPIBaseURL();
+// Make API_BASE_URL available globally
+window.API_BASE_URL = API_BASE_URL;
 
 // Authentication System
 class AuthSystem {
@@ -391,12 +393,32 @@ class AuthSystem {
                 const loginBtn = document.createElement('li');
                 loginBtn.className = 'login-btn';
                 loginBtn.innerHTML = `
-                    <a href="#" onclick="openLoginModal(); return false;" class="login-link">
+                    <a href="#" class="login-link">
                         <i class="fas fa-sign-in-alt"></i>
                         <span>Login</span>
                     </a>
                 `;
+                
+                // Add event listener instead of inline onclick
+                const loginLink = loginBtn.querySelector('.login-link');
+                loginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (typeof openLoginModal === 'function') {
+                        openLoginModal();
+                    } else if (window.openLoginModal) {
+                        window.openLoginModal();
+                    } else {
+                        console.error('openLoginModal function not available');
+                        // Try to initialize login modal directly
+                        if (typeof LoginModal !== 'undefined') {
+                            const modal = new LoginModal();
+                            modal.open();
+                        }
+                    }
+                });
+                
                 navLinks.appendChild(loginBtn);
+                console.log('✅ Login button added to navigation');
             }
             
             // Update mobile menu for logged out state
