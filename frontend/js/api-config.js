@@ -1,13 +1,19 @@
 // API Configuration
 class APIConfig {
     constructor() {
+        // Force production mode - always use production URL to avoid localhost issues
+        const FORCE_PRODUCTION = true; // Set to true to always use production URL
+        
         // Detect if we're in production or development
-        this.isProduction = window.location.hostname !== 'localhost' && 
-                           window.location.hostname !== '127.0.0.1' && 
-                           !window.location.hostname.includes('local');
+        this.isProduction = FORCE_PRODUCTION || (
+            window.location.hostname !== 'localhost' && 
+            window.location.hostname !== '127.0.0.1' && 
+            !window.location.hostname.includes('local')
+        );
         
         this.baseURL = this.isProduction ? 'https://sanjayraj-n.onrender.com' : 'http://localhost:3000';
         this.apiVersion = '/api';
+        console.log('APIConfig Base URL set to:', this.baseURL);
     }
 
     get apiURL() {

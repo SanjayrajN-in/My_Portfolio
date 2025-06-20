@@ -4,11 +4,20 @@ const getAPIBaseURL = () => {
     if (window.API && window.API.baseURL) {
         return window.API.baseURL;
     }
+    
+    // Force production mode - always use production URL to avoid localhost issues
+    const FORCE_PRODUCTION = true; // Set to true to always use production URL
+    
     // Fallback - detect environment
-    const isProduction = window.location.hostname !== 'localhost' && 
-                        window.location.hostname !== '127.0.0.1' && 
-                        !window.location.hostname.includes('local');
-    return isProduction ? 'https://sanjayraj-n.onrender.com' : 'http://localhost:3000';
+    const isProduction = FORCE_PRODUCTION || (
+        window.location.hostname !== 'localhost' && 
+        window.location.hostname !== '127.0.0.1' && 
+        !window.location.hostname.includes('local')
+    );
+    
+    const baseURL = isProduction ? 'https://sanjayraj-n.onrender.com' : 'http://localhost:3000';
+    console.log('API Base URL set to:', baseURL);
+    return baseURL;
 };
 
 const API_BASE_URL = getAPIBaseURL();
