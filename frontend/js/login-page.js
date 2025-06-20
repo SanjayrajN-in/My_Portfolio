@@ -148,17 +148,9 @@ class LoginPageManager {
         this.setLoading(submitBtn, true);
 
         try {
-            const response = await fetch(`${window.API_BASE_URL || this.getAPIBaseURL()}/api/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password })
-            });
+            const data = await window.API.login({ email, password });
 
-            const data = await response.json();
-
-            if (response.ok && data.user) {
+            if (data.user) {
                 // Store token
                 if (rememberMe) {
                     localStorage.setItem('token', data.token);
@@ -184,7 +176,12 @@ class LoginPageManager {
             }
         } catch (error) {
             console.error('Login error:', error);
-            this.showNotification('Network error. Please try again.', 'error');
+            // Handle API errors that contain a message
+            if (error.message && error.message !== 'API request failed') {
+                this.showNotification(error.message, 'error');
+            } else {
+                this.showNotification('Network error. Please try again.', 'error');
+            }
         } finally {
             this.setLoading(submitBtn, false);
         }
@@ -219,36 +216,18 @@ class LoginPageManager {
 
     async sendOTP(email, type, additionalData = {}) {
         try {
-            const response = await fetch(`${window.API_BASE_URL || this.getAPIBaseURL()}/api/auth/send-otp`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, type })
-            });
+            const data = await window.API.sendOTP(email, type);
 
-            const data = await response.json();
+            // Store pending data
+            this.pendingData = {
+                email,
+                type,
+                ...additionalData
+            };
 
-            if (response.ok) {
-                // Store pending data
-                this.pendingData = {
-                    email,
-                    type,
-                    ...additionalData
-                };
-
-                this.showNotification('Verification code sent to your email!', 'success');
-                this.showOTPForm(email);
-                this.startOTPCountdown();
-                
-            } else {
-                if (data.shouldLogin && type === 'register') {
-                    this.showNotification(data.message, 'error');
-                    setTimeout(() => this.switchTab('login'), 2000);
-                } else {
-                    this.showNotification(data.message || 'Failed to send verification code', 'error');
-                }
-            }
+            this.showNotification('Verification code sent to your email!', 'success');
+            this.showOTPForm(email);
+            this.startOTPCountdown();
         } catch (error) {
             console.error('Send OTP error:', error);
             this.showNotification('Failed to send verification code. Please try again.', 'error');
@@ -296,23 +275,15 @@ class LoginPageManager {
     }
 
     async completeRegistration(otp) {
-        const response = await fetch(`${window.API_BASE_URL || this.getAPIBaseURL()}/api/auth/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: this.pendingData.name,
-                email: this.pendingData.email,
-                password: this.pendingData.password,
-                confirmPassword: this.pendingData.password,
-                otp
-            })
+        const data = await window.API.register({
+            name: this.pendingData.name,
+            email: this.pendingData.email,
+            password: this.pendingData.password,
+            confirmPassword: this.pendingData.password,
+            otp
         });
 
-        const data = await response.json();
-
-        if (response.ok) {
+        if (data.token) {
             localStorage.setItem('token', data.token);
             this.showNotification('Account created successfully! Welcome!', 'success');
             
@@ -325,20 +296,9 @@ class LoginPageManager {
     }
 
     async completeLoginVerification(otp) {
-        const response = await fetch(`${window.API_BASE_URL || this.getAPIBaseURL()}/api/auth/verify-login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email: this.pendingData.email,
-                otp
-            })
-        });
+        const data = await window.API.verifyLogin(this.pendingData.email, otp);
 
-        const data = await response.json();
-
-        if (response.ok) {
+        if (data.token) {
             localStorage.setItem('token', data.token);
             this.showNotification('Login successful! Welcome back.', 'success');
             
@@ -393,21 +353,9 @@ class LoginPageManager {
         this.setLoading(submitBtn, true);
 
         try {
-            const response = await fetch(`${window.API_BASE_URL || this.getAPIBaseURL()}/api/auth/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: this.pendingData.email,
-                    otp,
-                    password
-                })
-            });
+            const data = await window.API.resetPassword(this.pendingData.email, otp, password);
 
-            const data = await response.json();
-
-            if (response.ok) {
+            if (data) {
                 this.showNotification('Password reset successful! You can now login.', 'success');
                 setTimeout(() => {
                     this.switchTab('login');
@@ -677,21 +625,11 @@ class LoginPageManager {
 
     async handleGoogleCallback(response) {
         try {
-            const endpoint = this.googleAuthType === 'register' ? 'google-register' : 'google-login';
-            
-            const res = await fetch(`${window.API_BASE_URL || this.getAPIBaseURL()}/api/auth/${endpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    credential: response.credential
-                })
-            });
+            const data = this.googleAuthType === 'register' 
+                ? await window.API.googleRegister(response.credential)
+                : await window.API.googleLogin(response.credential);
 
-            const data = await res.json();
-
-            if (res.ok) {
+            if (data.token) {
                 localStorage.setItem('token', data.token);
                 this.showNotification(`${this.googleAuthType === 'register' ? 'Registration' : 'Login'} successful!`, 'success');
                 
@@ -884,8 +822,7 @@ class LoginPageManager {
 
     async fetchGoogleClientId() {
         try {
-            const response = await fetch(`${window.API_BASE_URL || this.getAPIBaseURL()}/api/auth/google/init`);
-            const data = await response.json();
+            const data = await window.API.getGoogleClientId();
             return data.success ? data.clientId : null;
         } catch (error) {
             console.error('Failed to fetch Google Client ID:', error);

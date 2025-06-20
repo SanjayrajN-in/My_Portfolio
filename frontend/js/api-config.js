@@ -43,7 +43,7 @@ class APIConfig {
             
             return data;
         } catch (error) {
-
+            console.error('API Request Error:', error);
             throw error;
         }
     }
@@ -63,7 +63,62 @@ class APIConfig {
         });
     }
 
+    async sendOTP(email, type) {
+        return this.makeRequest('/auth/send-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email, type })
+        });
+    }
 
+    async verifyOTP(email, otp, type, additionalData = {}) {
+        return this.makeRequest('/auth/verify-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email, otp, type, ...additionalData })
+        });
+    }
+
+    async verifyLogin(email, otp) {
+        return this.makeRequest('/auth/verify-login', {
+            method: 'POST',
+            body: JSON.stringify({ email, otp })
+        });
+    }
+
+    async resetPassword(email, otp, newPassword) {
+        return this.makeRequest('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({ email, otp, newPassword })
+        });
+    }
+
+    async getProfile(token) {
+        return this.makeRequest('/auth/profile', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+    }
+
+    async getGoogleClientId() {
+        return this.makeRequest('/auth/google/init', {
+            method: 'GET'
+        });
+    }
+
+    async googleLogin(credential) {
+        return this.makeRequest('/auth/google-login', {
+            method: 'POST',
+            body: JSON.stringify({ credential })
+        });
+    }
+
+    async googleRegister(credential) {
+        return this.makeRequest('/auth/google-register', {
+            method: 'POST',
+            body: JSON.stringify({ credential })
+        });
+    }
 
     // Contact endpoint
     async submitContact(contactData) {

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Connection Test</h1>
+    <div id="result"></div>
+    <button onclick="testAPI()">Test API Connection</button>
+    <button onclick="testLogin()">Test Login</button>
+
+    <script src="js/api-config.js"></script>
+    <script>
+        async function testAPI() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing API connection...';
+            
+            try {
+                console.log('API Base URL:', window.API.baseURL);
+                console.log('API URL:', window.API.apiURL);
+                
+                // Test a simple endpoint
+                const response = await fetch(window.API.apiURL + '/auth/google/init');
+                const data = await response.json();
+                
+                result.innerHTML = `
+                    <h3>API Connection Test Results:</h3>
+                    <p><strong>Base URL:</strong> ${window.API.baseURL}</p>
+                    <p><strong>API URL:</strong> ${window.API.apiURL}</p>
+                    <p><strong>Response Status:</strong> ${response.status}</p>
+                    <p><strong>Response:</strong> ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <h3>API Connection Error:</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Base URL:</strong> ${window.API.baseURL}</p>
+                    <p><strong>API URL:</strong> ${window.API.apiURL}</p>
+                `;
+                console.error('API Test Error:', error);
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing login with dummy credentials...';
+            
+            try {
+                const data = await window.API.login({ 
+                    email: 'test@example.com', 
+                    password: 'testpassword' 
+                });
+                
+                result.innerHTML = `
+                    <h3>Login Test Results:</h3>
+                    <p><strong>Response:</strong> ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <h3>Login Test Results:</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>This is expected for invalid credentials</p>
+                `;
+                console.log('Login Test Error (expected):', error);
+            }
+        }
+
+        // Test on page load
+        window.addEventListener('load', () => {
+            console.log('API Config loaded:', !!window.API);
+            console.log('API Base URL:', window.API?.baseURL);
+        });
+    </script>
+</body>
+</html>
