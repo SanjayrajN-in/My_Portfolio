@@ -876,9 +876,9 @@ class LoginPageManager {
 
     async fetchGoogleClientId() {
         try {
-            const response = await fetch(`${this.getAPIBaseURL()}/api/auth/google-config`);
+            const response = await fetch(`${this.getAPIBaseURL()}/api/auth/google/init`);
             const data = await response.json();
-            return data.clientId;
+            return data.success ? data.clientId : null;
         } catch (error) {
             console.error('Failed to fetch Google Client ID:', error);
             return null;
