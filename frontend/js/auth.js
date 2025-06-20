@@ -40,10 +40,10 @@ class AuthSystem {
                 if (response.ok) {
                     const userData = await response.json();
                     this.currentUser = userData.user;
-                    console.log('User authenticated from server:', this.currentUser);
+
                 } else {
                     // Token is invalid, clear it
-                    console.log('Token invalid, clearing storage');
+
                     localStorage.clear();
                     sessionStorage.clear();
                 }
@@ -95,17 +95,13 @@ class AuthSystem {
             if (response.ok && data.user) {
                 // Login successful
                 this.currentUser = data.user;
-                console.log('🎉 Login successful! User set:', this.currentUser);
-                
                 // Only store token for session management, no user data in localStorage
                 if (data.token) {
                     localStorage.setItem('token', data.token);
                 }
                 
                 // Update navigation immediately to show avatar
-                console.log('🔄 About to call updateNavigation...');
                 this.updateNavigation();
-                console.log('✅ updateNavigation called');
                 
                 this.showMessage('Login successful! Welcome back.', 'success');
                 
@@ -117,7 +113,7 @@ class AuthSystem {
                 }
             } else if (data.requiresVerification) {
                 // Account exists but is not verified
-                console.log('📧 Account requires verification, sending OTP...');
+
                 this.showMessage('Account not verified. Sending verification code...', 'info');
                 
                 // Send OTP for login verification
@@ -253,7 +249,7 @@ class AuthSystem {
             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
         });
         
-        console.log('User logged out, all storage cleared');
+
         
         // Update navigation immediately
         this.updateNavigation();
@@ -272,18 +268,11 @@ class AuthSystem {
     }
 
     updateNavigation() {
-        console.log('📍 updateNavigation called, user logged in:', !!this.currentUser);
         const navContainer = document.querySelector('.nav-container');
         const navLinks = document.querySelector('.nav-links');
         const hamburger = document.querySelector('.hamburger');
         const moreDropdown = document.querySelector('.dropdown'); // Find the "More" dropdown
         const isInPagesFolder = window.location.pathname.includes('pages/');
-        
-        console.log('🔍 DOM elements found:');
-        console.log('  navContainer:', !!navContainer);
-        console.log('  navLinks:', !!navLinks);
-        console.log('  hamburger:', !!hamburger);
-        console.log('  moreDropdown:', !!moreDropdown);
         
         if (this.currentUser) {
             // User is logged in - create or show user menu

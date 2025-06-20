@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -38,19 +38,19 @@
             },
             timeout: 2000, // Set timeout to 2 seconds
             loading: function() {
-                console.log('Fonts are loading...');
+
             },
             active: function() {
                 // Fonts have loaded successfully
                 document.documentElement.classList.remove('wf-loading');
                 document.documentElement.classList.add('wf-active');
-                console.log('Fonts loaded successfully');
+
             },
             inactive: function() {
                 // Fallback if fonts fail to load
                 document.documentElement.classList.remove('wf-loading');
                 document.documentElement.classList.add('wf-inactive');
-                console.log('Fonts failed to load, using fallbacks');
+
             }
         };
         
@@ -78,7 +78,7 @@
     <script>
         // Script loading management
         (function() {
-            console.log('✅ Script loading management initialized...');
+
             
             // Script loading management
             const originalCreateElement = document.createElement;
@@ -120,7 +120,7 @@
                 if (document.documentElement.classList.contains('wf-loading')) {
                     document.documentElement.classList.remove('wf-loading');
                     document.documentElement.classList.add('wf-inactive');
-                    console.log('Font loading timed out, using fallbacks');
+
                 }
             }, 2500);
         });
