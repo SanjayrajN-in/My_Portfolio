@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .output {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #333;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Authentication System Test</h1>
+    
+    <div class="test-section">
+        <h2>Current Status</h2>
+        <button onclick="checkAuthStatus()">Check Auth Status</button>
+        <button onclick="checkToken()">Check Token</button>
+        <button onclick="testAPI()">Test API Connection</button>
+        <div id="status-output" class="output"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Quick Login Test</h2>
+        <input type="email" id="testEmail" placeholder="Email" value="test@example.com">
+        <input type="password" id="testPassword" placeholder="Password" value="password123">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-output" class="output"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Profile Test</h2>
+        <button onclick="testProfile()">Test Profile Load</button>
+        <div id="profile-output" class="output"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Navigation Test</h2>
+        <button onclick="testNavigation()">Test Navigation Update</button>
+        <div id="nav-output" class="output"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Clear Data</h2>
+        <button onclick="clearStorage()">Clear All Storage</button>
+        <button onclick="logout()">Logout</button>
+        <div id="clear-output" class="output"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api-config.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        function log(elementId, message) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.textContent += `[${timestamp}] ${message}\n`;
+        }
+
+        function checkAuthStatus() {
+            const output = document.getElementById('status-output');
+            output.textContent = '';
+            
+            log('status-output', 'Checking auth status...');
+            log('status-output', `Auth System Available: ${!!window.authSystem}`);
+            log('status-output', `API Available: ${!!window.API}`);
+            
+            if (window.authSystem) {
+                log('status-output', `Current User: ${JSON.stringify(window.authSystem.currentUser, null, 2)}`);
+                log('status-output', `Is Authenticated: ${window.authSystem.isAuthenticated()}`);
+            }
+        }
+
+        function checkToken() {
+            const output = document.getElementById('status-output');
+            const localToken = localStorage.getItem('token');
+            const sessionToken = sessionStorage.getItem('token');
+            
+            log('status-output', `Local Storage Token: ${localToken ? 'Present' : 'None'}`);
+            log('status-output', `Session Storage Token: ${sessionToken ? 'Present' : 'None'}`);
+            
+            if (localToken) {
+                log('status-output', `Local Token (first 20 chars): ${localToken.substring(0, 20)}...`);
+            }
+            if (sessionToken) {
+                log('status-output', `Session Token (first 20 chars): ${sessionToken.substring(0, 20)}...`);
+            }
+        }
+
+        async function testAPI() {
+            const output = document.getElementById('status-output');
+            
+            try {
+                log('status-output', 'Testing API connection...');
+                log('status-output', `API Base URL: ${window.API.baseURL}`);
+                
+                // Test a simple endpoint
+                const response = await fetch(`${window.API.baseURL}/api/auth/test`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log('status-output', `API Response Status: ${response.status}`);
+                
+            } catch (error) {
+                log('status-output', `API Error: ${error.message}`);
+            }
+        }
+
+        async function testLogin() {
+            const output = document.getElementById('login-output');
+            output.textContent = '';
+            
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            try {
+                log('login-output', 'Testing login...');
+                log('login-output', `Email: ${email}`);
+                
+                const data = await window.API.login({ email, password });
+                log('login-output', `Login Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    log('login-output', 'Token stored in localStorage');
+                    
+                    // Refresh auth state
+                    if (window.authSystem) {
+                        await window.authSystem.refreshAuthState();
+                        log('login-output', 'Auth state refreshed');
+                    }
+                }
+                
+            } catch (error) {
+                log('login-output', `Login Error: ${error.message}`);
+            }
+        }
+
+        async function testProfile() {
+            const output = document.getElementById('profile-output');
+            output.textContent = '';
+            
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            
+            if (!token) {
+                log('profile-output', 'No token found');
+                return;
+            }
+            
+            try {
+                log('profile-output', 'Testing profile load...');
+                const data = await window.API.getProfile(token);
+                log('profile-output', `Profile Response: ${JSON.stringify(data, null, 2)}`);
+                
+            } catch (error) {
+                log('profile-output', `Profile Error: ${error.message}`);
+            }
+        }
+
+        function testNavigation() {
+            const output = document.getElementById('nav-output');
+            output.textContent = '';
+            
+            log('nav-output', 'Testing navigation update...');
+            
+            if (window.authSystem) {
+                window.authSystem.updateNavigation();
+                log('nav-output', 'Navigation update called');
+                
+                // Check for auth buttons
+                const profileBtn = document.querySelector('.nav-profile-btn');
+                const logoutBtn = document.querySelector('.nav-logout-btn');
+                const loginLink = document.querySelector('a[href*="login.html"]');
+                
+                log('nav-output', `Profile Button: ${profileBtn ? 'Present' : 'Not found'}`);
+                log('nav-output', `Logout Button: ${logoutBtn ? 'Present' : 'Not found'}`);
+                log('nav-output', `Login Link: ${loginLink ? 'Present' : 'Not found'}`);
+                log('nav-output', `Login Link Visible: ${loginLink ? (loginLink.closest('li').style.display !== 'none') : 'N/A'}`);
+            } else {
+                log('nav-output', 'Auth system not available');
+            }
+        }
+
+        function clearStorage() {
+            const output = document.getElementById('clear-output');
+            output.textContent = '';
+            
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            log('clear-output', 'All storage cleared');
+            
+            if (window.authSystem) {
+                window.authSystem.currentUser = null;
+                window.authSystem.updateNavigation();
+                log('clear-output', 'Auth system reset');
+            }
+        }
+
+        function logout() {
+            const output = document.getElementById('clear-output');
+            
+            if (window.authSystem) {
+                window.authSystem.logout();
+                log('clear-output', 'Logout called');
+            } else {
+                log('clear-output', 'Auth system not available');
+            }
+        }
+
+        // Auto-check status on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkAuthStatus();
+                checkToken();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

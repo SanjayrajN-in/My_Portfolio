@@ -162,8 +162,13 @@ class LoginPageManager {
                 if (window.authSystem) {
                     if (data.user) {
                         window.authSystem.currentUser = data.user;
+                        // Store user data in sessionStorage for quick access
+                        sessionStorage.setItem('currentUser', JSON.stringify(data.user));
                     }
+                    // Refresh auth state to update navigation
                     await window.authSystem.refreshAuthState();
+                } else {
+                    console.warn('Auth system not available during login');
                 }
 
                 this.showNotification('Login successful! Welcome back.', 'success');
@@ -787,16 +792,34 @@ class LoginPageManager {
     }
 
     showNotification(message, type = 'info') {
-        const container = document.getElementById('notificationContainer');
+        // Create notification container if it doesn't exist
+        let container = document.getElementById('notificationContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'notification-container';
+            container.id = 'notificationContainer';
+            document.body.appendChild(container);
+        }
+
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.textContent = message;
         
         container.appendChild(notification);
         
+        // Trigger animation
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
         // Auto remove after 5 seconds
         setTimeout(() => {
-            notification.remove();
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
         }, 5000);
     }
 

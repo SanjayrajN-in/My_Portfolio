@@ -5,17 +5,107 @@ class ProfilePageManager {
         this.init();
     }
 
-    init() {
-        // Check authentication first
-        if (!authSystem.isAuthenticated()) {
-            window.location.href = 'login.html';
+    async init() {
+        console.log('🔄 Profile page initializing...');
+        
+        // Wait for auth system to be ready
+        await this.waitForAuthSystem();
+        
+        // Check authentication with multiple fallbacks
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const cachedUser = sessionStorage.getItem('currentUser');
+        
+        console.log('🔍 Profile init - Token found:', !!token);
+        console.log('🔍 Profile init - Cached user found:', !!cachedUser);
+        console.log('🔍 Profile init - Auth system user:', !!window.authSystem?.currentUser);
+        
+        if (!token) {
+            console.log('❌ No token found, redirecting to login');
+            this.redirectToLogin();
             return;
         }
 
-        this.currentUser = authSystem.getCurrentUser();
-        this.setupEventListeners();
-        this.loadProfileData();
-        this.setupTabs();
+        // Try to use cached user data first for faster loading
+        if (cachedUser && window.authSystem?.currentUser) {
+            try {
+                this.currentUser = JSON.parse(cachedUser);
+                console.log('✅ Using cached user data:', this.currentUser.name);
+                this.updateProfileElements();
+                this.showProfileContent();
+            } catch (error) {
+                console.warn('⚠️ Failed to parse cached user data');
+            }
+        }
+
+        // Verify token is valid by trying to load fresh profile data
+        try {
+            await this.loadProfileData();
+            this.setupEventListeners();
+            this.setupTabs();
+            this.showProfileContent();
+            
+        } catch (error) {
+            console.error('❌ Profile initialization failed:', error);
+            // Clear invalid token and redirect
+            this.clearAuthDataAndRedirect();
+        }
+    }
+
+    showProfileContent() {
+        // Hide loading and show profile
+        const authLoading = document.getElementById('authLoading');
+        const profileContainer = document.getElementById('profileContainer');
+        
+        if (authLoading) {
+            authLoading.style.display = 'none';
+        }
+        if (profileContainer) {
+            profileContainer.style.display = 'block';
+        }
+    }
+
+    redirectToLogin() {
+        window.location.href = 'login.html';
+    }
+
+    clearAuthDataAndRedirect() {
+        localStorage.clear();
+        sessionStorage.clear();
+        if (window.authSystem) {
+            window.authSystem.clearAuthData();
+        }
+        this.redirectToLogin();
+    }
+
+    async waitForAuthSystem() {
+        // Wait for auth system to be available
+        let attempts = 0;
+        while (!window.authSystem && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (window.authSystem) {
+            // Wait for auth system to complete initialization
+            let authAttempts = 0;
+            while (authAttempts < 50) {
+                // Check if auth system has completed its initialization
+                // Either user is set (logged in) or no token exists (not logged in)
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                if (!token || window.authSystem.currentUser !== null) {
+                    console.log('✅ Auth system initialization complete');
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+                authAttempts++;
+            }
+            
+            if (authAttempts >= 50) {
+                console.warn('⚠️ Auth system initialization timeout');
+            }
+        } else {
+            console.warn('⚠️ Auth system not available after waiting');
+        }
     }
 
     setupEventListeners() {
@@ -75,25 +165,41 @@ class ProfilePageManager {
     async loadProfileData() {
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const apiBaseURL = this.getAPIBaseURL();
-            const response = await fetch(`${apiBaseURL}/api/auth/profile`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.currentUser = data.user;
-                this.updateProfileElements();
-            } else {
-                throw new Error('Failed to load profile data');
+            if (!token) {
+                throw new Error('No authentication token found');
             }
+
+            // Use the API config if available, otherwise fallback to direct fetch
+            let data;
+            if (window.API) {
+                data = await window.API.getProfile(token);
+            } else {
+                const apiBaseURL = this.getAPIBaseURL();
+                const response = await fetch(`${apiBaseURL}/api/auth/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load profile data');
+                }
+                data = await response.json();
+            }
+
+            this.currentUser = data.user;
+            this.updateProfileElements();
+            
+            // Update auth system with current user data
+            if (window.authSystem) {
+                window.authSystem.currentUser = this.currentUser;
+            }
+            
         } catch (error) {
             console.error('Load profile data error:', error);
-            this.showNotification('Failed to load profile data', 'error');
+            throw error; // Re-throw to be handled by init()
         }
     }
 
@@ -322,12 +428,44 @@ class ProfilePageManager {
 
     showNotification(message, type = 'info') {
         // Use the auth system's notification method
-        if (authSystem && authSystem.showFloatingNotification) {
-            authSystem.showFloatingNotification(message, type);
+        if (window.authSystem && window.authSystem.showNotification) {
+            window.authSystem.showNotification(message, type);
         } else {
-            // Fallback notification
-            alert(message);
+            // Create a simple notification if auth system is not available
+            this.createSimpleNotification(message, type);
         }
+    }
+
+    createSimpleNotification(message, type) {
+        // Create notification container if it doesn't exist
+        let container = document.getElementById('notificationContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'notification-container';
+            container.id = 'notificationContainer';
+            document.body.appendChild(container);
+        }
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+
+        container.appendChild(notification);
+
+        // Trigger animation
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+
+        // Auto remove
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 5000);
     }
 }
 

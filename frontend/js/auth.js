@@ -47,22 +47,32 @@ class AuthSystem {
 
         // Check if user is logged in via token validation
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        console.log('🔍 Auth init - Token found:', !!token);
         
         if (token) {
             try {
                 // Validate token with server using API config
-                console.log('🔍 Validating token...');
+                console.log('🔍 Validating token with server...');
                 const userData = await window.API.getProfile(token);
-                this.currentUser = userData.user;
-                console.log('✅ User authenticated:', this.currentUser?.name || this.currentUser?.email);
+                
+                if (userData && userData.user) {
+                    this.currentUser = userData.user;
+                    console.log('✅ User authenticated:', this.currentUser?.name || this.currentUser?.email);
+                    console.log('✅ Current user object:', this.currentUser);
+                    
+                    // Store user data in sessionStorage for quick access
+                    sessionStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                } else {
+                    throw new Error('Invalid user data received');
+                }
             } catch (error) {
                 console.error('❌ Token validation error:', error);
-                // Token is invalid, clear it
-                localStorage.clear();
-                sessionStorage.clear();
+                // Token is invalid, clear all auth data
+                this.clearAuthData();
             }
         } else {
             console.log('ℹ️ No token found, user not logged in');
+            this.clearAuthData();
         }
 
         // Create global notification container if it doesn't exist
@@ -75,6 +85,14 @@ class AuthSystem {
         if (window.location.pathname.includes('profile.html')) {
             this.initProfilePage();
         }
+    }
+
+    // Clear all authentication data
+    clearAuthData() {
+        this.currentUser = null;
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('currentUser');
     }
 
     // Method to refresh auth state (useful after login)
@@ -197,82 +215,97 @@ class AuthSystem {
 
     updateNavigation() {
         console.log('🔄 Updating navigation, user:', this.currentUser ? 'logged in' : 'not logged in');
+        console.log('🔄 Current user details:', this.currentUser);
         const navLinks = document.querySelector('.nav-links');
         const isInPagesFolder = window.location.pathname.includes('pages/');
         
+        // First, clean up any existing auth-related buttons to prevent duplicates
+        this.cleanupAuthButtons();
+        
         if (this.currentUser) {
+            console.log('✅ User is logged in, updating navigation for authenticated user');
             // User is logged in - hide login link and add profile/logout buttons
             const loginLink = document.querySelector('a[href*="login.html"]');
             if (loginLink) {
                 loginLink.closest('li').style.display = 'none';
+                console.log('✅ Login link hidden');
             }
             
-            // Check if profile and logout buttons already exist
-            let profileButton = document.querySelector('.nav-profile-btn');
-            let logoutButton = document.querySelector('.nav-logout-btn');
-            
-            if (!profileButton && navLinks) {
-                // Create profile button
-                const profilePath = isInPagesFolder ? 'profile.html' : 'pages/profile.html';
-                const profileLi = document.createElement('li');
-                profileLi.innerHTML = `
-                    <a href="${profilePath}" class="nav-profile-btn">
-                        <i class="fas fa-user-circle"></i>
-                        <span>Profile</span>
-                    </a>
-                `;
-                
-                // Insert before the "More" dropdown
-                const moreDropdown = document.querySelector('.dropdown');
-                if (moreDropdown) {
-                    navLinks.insertBefore(profileLi, moreDropdown);
-                } else {
-                    navLinks.appendChild(profileLi);
-                }
-            }
-            
-            if (!logoutButton && navLinks) {
-                // Create logout button
-                const logoutLi = document.createElement('li');
-                logoutLi.innerHTML = `
-                    <a href="#" class="nav-logout-btn" onclick="authSystem.logout(); return false;">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </a>
-                `;
-                
-                // Insert before the "More" dropdown
-                const moreDropdown = document.querySelector('.dropdown');
-                if (moreDropdown) {
-                    navLinks.insertBefore(logoutLi, moreDropdown);
-                } else {
-                    navLinks.appendChild(logoutLi);
-                }
-            }
+            // Add profile and logout buttons
+            this.addAuthButtons(isInPagesFolder, navLinks);
             
             // Also add to mobile hamburger menu
             this.updateMobileMenu(true, isInPagesFolder);
             
         } else {
+            console.log('❌ User is not logged in, showing login link');
             // User is not logged in - show login link and hide profile/logout buttons
             const loginLink = document.querySelector('a[href*="login.html"]');
             if (loginLink) {
                 loginLink.closest('li').style.display = 'block';
-            }
-            
-            // Remove profile and logout buttons
-            const profileButton = document.querySelector('.nav-profile-btn');
-            const logoutButton = document.querySelector('.nav-logout-btn');
-            
-            if (profileButton) {
-                profileButton.closest('li').remove();
-            }
-            if (logoutButton) {
-                logoutButton.closest('li').remove();
+                console.log('✅ Login link shown');
             }
             
             // Update mobile menu
             this.updateMobileMenu(false, isInPagesFolder);
+        }
+    }
+
+    cleanupAuthButtons() {
+        // Remove any existing profile and logout buttons to prevent duplicates
+        const existingProfileButtons = document.querySelectorAll('.nav-profile-btn');
+        const existingLogoutButtons = document.querySelectorAll('.nav-logout-btn');
+        
+        existingProfileButtons.forEach(btn => {
+            if (btn.closest('li')) {
+                btn.closest('li').remove();
+            }
+        });
+        
+        existingLogoutButtons.forEach(btn => {
+            if (btn.closest('li')) {
+                btn.closest('li').remove();
+            }
+        });
+    }
+
+    addAuthButtons(isInPagesFolder, navLinks) {
+        if (!navLinks) {
+            console.warn('❌ Nav links container not found');
+            return;
+        }
+        
+        console.log('✅ Adding auth buttons, isInPagesFolder:', isInPagesFolder);
+        
+        // Create profile button
+        const profilePath = isInPagesFolder ? 'profile.html' : 'pages/profile.html';
+        const profileLi = document.createElement('li');
+        profileLi.innerHTML = `
+            <a href="${profilePath}" class="nav-profile-btn">
+                <i class="fas fa-user-circle"></i>
+                <span>Profile</span>
+            </a>
+        `;
+        
+        // Create logout button
+        const logoutLi = document.createElement('li');
+        logoutLi.innerHTML = `
+            <a href="#" class="nav-logout-btn" onclick="window.authSystem.logout(); return false;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        `;
+        
+        // Insert before the "More" dropdown
+        const moreDropdown = document.querySelector('.dropdown');
+        if (moreDropdown) {
+            navLinks.insertBefore(profileLi, moreDropdown);
+            navLinks.insertBefore(logoutLi, moreDropdown);
+            console.log('✅ Auth buttons added before More dropdown');
+        } else {
+            navLinks.appendChild(profileLi);
+            navLinks.appendChild(logoutLi);
+            console.log('✅ Auth buttons added to end of nav');
         }
     }
 
@@ -400,7 +433,8 @@ class AuthSystem {
 
     // Check if user is authenticated
     isAuthenticated() {
-        return !!this.currentUser;
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        return !!(token && this.currentUser);
     }
 
     // Get current user
@@ -420,11 +454,28 @@ class AuthSystem {
     }
 }
 
-// Initialize auth system
-const authSystem = new AuthSystem();
+// Initialize auth system when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize auth system
+    const authSystem = new AuthSystem();
+    
+    // Make it globally available
+    window.authSystem = authSystem;
+    
+    console.log('🚀 Auth system initialized on DOM ready');
+});
 
-// Make it globally available
-window.authSystem = authSystem;
+// Also initialize immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+    // DOM is still loading, wait for DOMContentLoaded
+} else {
+    // DOM is already loaded
+    if (!window.authSystem) {
+        const authSystem = new AuthSystem();
+        window.authSystem = authSystem;
+        console.log('🚀 Auth system initialized immediately');
+    }
+}
 
 // Add CSS for floating notifications
 const notificationCSS = `

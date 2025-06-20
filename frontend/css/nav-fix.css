@@ -1609,12 +1609,16 @@ body.menu-open {
 .notification-container {
     position: fixed !important;
     top: 2rem !important;
-    right: 2rem !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
     z-index: 9999999 !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 1rem !important;
     pointer-events: none !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: calc(100vw - 2rem) !important;
 }
 
 .notification {
@@ -1626,15 +1630,20 @@ body.menu-open {
     border: 1px solid rgba(0, 168, 255, 0.3) !important;
     color: var(--text-color) !important;
     font-size: 0.9rem !important;
-    max-width: 350px !important;
-    transform: translateX(100%) !important;
-    transition: all 0.3s ease !important;
+    max-width: 400px !important;
+    width: max-content !important;
+    min-width: 200px !important;
+    transform: translateY(-100%) scale(0.8) !important;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
     pointer-events: auto !important;
     position: relative !important;
+    text-align: center !important;
+    opacity: 0 !important;
 }
 
 .notification.show {
-    transform: translateX(0) !important;
+    transform: translateY(0) scale(1) !important;
+    opacity: 1 !important;
 }
 
 .notification.success {
@@ -1655,11 +1664,25 @@ body.menu-open {
 @media (max-width: 768px) {
     .notification-container {
         top: 1rem !important;
-        right: 1rem !important;
-        left: 1rem !important;
+        max-width: calc(100vw - 1rem) !important;
     }
     
     .notification {
-        max-width: none !important;
+        max-width: calc(100vw - 2rem) !important;
+        min-width: auto !important;
+        font-size: 0.85rem !important;
+        padding: 0.8rem 1rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-container {
+        top: 0.5rem !important;
+    }
+    
+    .notification {
+        font-size: 0.8rem !important;
+        padding: 0.7rem 0.9rem !important;
+        border-radius: 8px !important;
     }
 }
