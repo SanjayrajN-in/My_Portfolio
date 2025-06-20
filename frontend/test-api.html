@@ -10,6 +10,8 @@
     <div id="result"></div>
     <button onclick="testAPI()">Test API Connection</button>
     <button onclick="testLogin()">Test Login</button>
+    <button onclick="testAuthState()">Test Auth State</button>
+    <button onclick="clearStorage()">Clear Storage</button>
 
     <script src="js/api-config.js"></script>
     <script>
@@ -67,10 +69,41 @@
             }
         }
 
+        async function testAuthState() {
+            const result = document.getElementById('result');
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            
+            result.innerHTML = `
+                <h3>Auth State Test:</h3>
+                <p><strong>Token exists:</strong> ${!!token}</p>
+                <p><strong>Token:</strong> ${token ? token.substring(0, 20) + '...' : 'None'}</p>
+            `;
+            
+            if (token) {
+                try {
+                    const userData = await window.API.getProfile(token);
+                    result.innerHTML += `
+                        <p><strong>Profile API Response:</strong> ${JSON.stringify(userData, null, 2)}</p>
+                    `;
+                } catch (error) {
+                    result.innerHTML += `
+                        <p><strong>Profile API Error:</strong> ${error.message}</p>
+                    `;
+                }
+            }
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('result').innerHTML = '<p>Storage cleared!</p>';
+        }
+
         // Test on page load
         window.addEventListener('load', () => {
             console.log('API Config loaded:', !!window.API);
             console.log('API Base URL:', window.API?.baseURL);
+            testAuthState();
         });
     </script>
 </body>

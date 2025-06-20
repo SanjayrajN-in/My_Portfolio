@@ -349,23 +349,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle mobile menu
     function toggleMobileMenu() {
         const currentHamburger = document.querySelector('.hamburger');
+        const mobileUserMenu = document.querySelector('.mobile-nav-menu');
+        
         navLinks.classList.toggle('active');
         if (currentHamburger) {
             currentHamburger.classList.toggle('active');
         }
         navOverlay.classList.toggle('active');
         body.classList.toggle('menu-open');
+        
+        // Toggle mobile user menu visibility
+        if (mobileUserMenu) {
+            if (currentHamburger && currentHamburger.classList.contains('active')) {
+                mobileUserMenu.style.display = 'block';
+            } else {
+                mobileUserMenu.style.display = 'none';
+            }
+        }
     }
     
     // Close mobile menu
     function closeMobileMenu() {
         const currentHamburger = document.querySelector('.hamburger');
+        const mobileUserMenu = document.querySelector('.mobile-nav-menu');
+        
         navLinks.classList.remove('active');
         if (currentHamburger) {
             currentHamburger.classList.remove('active');
         }
         navOverlay.classList.remove('active');
         body.classList.remove('menu-open');
+        
+        // Hide mobile user menu
+        if (mobileUserMenu) {
+            mobileUserMenu.style.display = 'none';
+        }
     }
     
     // Clean up mobile-specific elements when switching to desktop

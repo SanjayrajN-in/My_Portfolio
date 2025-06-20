@@ -28,37 +28,41 @@ window.API_BASE_URL = API_BASE_URL;
 class AuthSystem {
     constructor() {
         this.currentUser = null;
-        this.init();
+        // Wait for API to be ready before initializing
+        if (window.API) {
+            this.init();
+        } else {
+            // Wait for API to load
+            setTimeout(() => this.init(), 100);
+        }
     }
 
     async init() {
+        // Ensure API is available
+        if (!window.API) {
+            console.warn('API not available, retrying auth init...');
+            setTimeout(() => this.init(), 200);
+            return;
+        }
+
         // Check if user is logged in via token validation
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         
         if (token) {
             try {
-                // Validate token with server
-                const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const userData = await response.json();
-                    this.currentUser = userData.user;
-                } else {
-                    // Token is invalid, clear it
-                    localStorage.clear();
-                    sessionStorage.clear();
-                }
+                // Validate token with server using API config
+                console.log('🔍 Validating token...');
+                const userData = await window.API.getProfile(token);
+                this.currentUser = userData.user;
+                console.log('✅ User authenticated:', this.currentUser?.name || this.currentUser?.email);
             } catch (error) {
-                console.error('Token validation error:', error);
+                console.error('❌ Token validation error:', error);
+                // Token is invalid, clear it
                 localStorage.clear();
                 sessionStorage.clear();
             }
+        } else {
+            console.log('ℹ️ No token found, user not logged in');
         }
 
         // Initialize profile page if on profile page
@@ -68,6 +72,11 @@ class AuthSystem {
 
         // Update navigation for all pages
         this.updateNavigation();
+    }
+
+    // Method to refresh auth state (useful after login)
+    async refreshAuthState() {
+        await this.init();
     }
 
     initProfilePage() {
@@ -84,16 +93,11 @@ class AuthSystem {
     async logout() {
         try {
             // Call logout API to invalidate session on server
-            const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token') || ''}`
-                }
-            });
-
-            const data = await response.json();
-            console.log('Logout response:', data);
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (token) {
+                const data = await window.API.logout(token);
+                console.log('Logout response:', data);
+            }
         } catch (error) {
             console.error('Logout API error:', error);
         }
@@ -131,103 +135,118 @@ class AuthSystem {
     }
 
     updateNavigation() {
-        const navContainer = document.querySelector('.nav-container');
+        console.log('🔄 Updating navigation, user:', this.currentUser ? 'logged in' : 'not logged in');
         const navLinks = document.querySelector('.nav-links');
-        const hamburger = document.querySelector('.hamburger');
-        const moreDropdown = document.querySelector('.dropdown'); // Find the "More" dropdown
         const isInPagesFolder = window.location.pathname.includes('pages/');
         
         if (this.currentUser) {
-            // User is logged in - create or show user menu
-            let userMenu = document.querySelector('.user-menu');
-            let userMenuWrapper = document.querySelector('.nav-user-menu');
-            
-            // Hide login link
+            // User is logged in - hide login link and add profile/logout buttons
             const loginLink = document.querySelector('a[href*="login.html"]');
             if (loginLink) {
                 loginLink.closest('li').style.display = 'none';
             }
             
-            if (!userMenu) {
-                // Create user menu if it doesn't exist
-                userMenu = document.createElement('div');
-                userMenu.className = 'user-menu';
-                
-                const avatarPath = isInPagesFolder ? '../images/default-avatar.svg' : 'images/default-avatar.svg';
+            // Check if profile and logout buttons already exist
+            let profileButton = document.querySelector('.nav-profile-btn');
+            let logoutButton = document.querySelector('.nav-logout-btn');
+            
+            if (!profileButton && navLinks) {
+                // Create profile button
                 const profilePath = isInPagesFolder ? 'profile.html' : 'pages/profile.html';
-                
-                userMenu.innerHTML = `
-                    <div class="user-avatar-container">
-                        <img src="${this.currentUser.avatar || avatarPath}" alt="User Avatar" class="user-avatar" id="navUserAvatar">
-                        <div class="user-dropdown">
-                            <a href="${profilePath}" class="user-dropdown-item">
-                                <i class="fas fa-user"></i>
-                                <span>Profile</span>
-                            </a>
-                            <button onclick="authSystem.logout()" class="user-dropdown-item logout-btn">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Logout</span>
-                            </button>
-                        </div>
-                    </div>
+                const profileLi = document.createElement('li');
+                profileLi.innerHTML = `
+                    <a href="${profilePath}" class="nav-profile-btn">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profile</span>
+                    </a>
                 `;
                 
-                // Position the user menu correctly:
-                // Desktop: After the "More" dropdown in nav-links
-                // Mobile: Before hamburger in nav-container
-                if (window.innerWidth >= 993 && navLinks && moreDropdown) {
-                    // Desktop: Insert after the "More" dropdown within nav-links
-                    const moreDropdownParent = moreDropdown.parentElement; // This should be the <li> containing the dropdown
-                    if (moreDropdownParent) {
-                        // Create a list item wrapper for the user menu on desktop
-                        const userMenuLi = document.createElement('li');
-                        userMenuLi.className = 'nav-user-menu';
-                        userMenuLi.appendChild(userMenu);
-                        
-                        if (moreDropdownParent.nextSibling) {
-                            navLinks.insertBefore(userMenuLi, moreDropdownParent.nextSibling);
-                        } else {
-                            navLinks.appendChild(userMenuLi);
-                        }
-                    } else {
-                        navLinks.appendChild(userMenu);
-                    }
+                // Insert before the "More" dropdown
+                const moreDropdown = document.querySelector('.dropdown');
+                if (moreDropdown) {
+                    navLinks.insertBefore(profileLi, moreDropdown);
                 } else {
-                    // Mobile: Insert before hamburger in nav container
-                    navContainer.insertBefore(userMenu, hamburger);
+                    navLinks.appendChild(profileLi);
                 }
+            }
+            
+            if (!logoutButton && navLinks) {
+                // Create logout button
+                const logoutLi = document.createElement('li');
+                logoutLi.innerHTML = `
+                    <a href="#" class="nav-logout-btn" onclick="authSystem.logout(); return false;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                `;
                 
-                console.log('✅ User menu created and added to DOM');
+                // Insert before the "More" dropdown
+                const moreDropdown = document.querySelector('.dropdown');
+                if (moreDropdown) {
+                    navLinks.insertBefore(logoutLi, moreDropdown);
+                } else {
+                    navLinks.appendChild(logoutLi);
+                }
             }
             
-            // Show user menu with proper styles
-            userMenu.style.setProperty('display', 'flex', 'important');
-            userMenu.style.setProperty('visibility', 'visible', 'important');
-            userMenu.style.setProperty('opacity', '1', 'important');
-            
-            // Update avatar if available
-            const avatarImg = document.getElementById('navUserAvatar');
-            if (avatarImg && this.currentUser.avatar) {
-                avatarImg.src = this.currentUser.avatar;
-            }
+            // Also add to mobile hamburger menu
+            this.updateMobileMenu(true, isInPagesFolder);
             
         } else {
-            // User is not logged in - hide user menu and show login link
-            const userMenu = document.querySelector('.user-menu');
-            const userMenuWrapper = document.querySelector('.nav-user-menu');
-            
-            if (userMenu) {
-                userMenu.style.display = 'none';
-            }
-            if (userMenuWrapper) {
-                userMenuWrapper.style.display = 'none';
-            }
-            
-            // Show login link
+            // User is not logged in - show login link and hide profile/logout buttons
             const loginLink = document.querySelector('a[href*="login.html"]');
             if (loginLink) {
                 loginLink.closest('li').style.display = 'block';
             }
+            
+            // Remove profile and logout buttons
+            const profileButton = document.querySelector('.nav-profile-btn');
+            const logoutButton = document.querySelector('.nav-logout-btn');
+            
+            if (profileButton) {
+                profileButton.closest('li').remove();
+            }
+            if (logoutButton) {
+                logoutButton.closest('li').remove();
+            }
+            
+            // Update mobile menu
+            this.updateMobileMenu(false, isInPagesFolder);
+        }
+    }
+
+    updateMobileMenu(isLoggedIn, isInPagesFolder) {
+        // Find or create mobile menu items
+        const hamburger = document.querySelector('.hamburger');
+        if (!hamburger) return;
+        
+        // Check if mobile menu exists
+        let mobileMenu = document.querySelector('.mobile-nav-menu');
+        if (!mobileMenu) {
+            // Create mobile menu if it doesn't exist
+            mobileMenu = document.createElement('div');
+            mobileMenu.className = 'mobile-nav-menu';
+            hamburger.parentNode.appendChild(mobileMenu);
+        }
+        
+        if (isLoggedIn) {
+            // Add profile and logout to mobile menu
+            const profilePath = isInPagesFolder ? 'profile.html' : 'pages/profile.html';
+            mobileMenu.innerHTML = `
+                <div class="mobile-user-menu">
+                    <a href="${profilePath}" class="mobile-nav-item">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="#" class="mobile-nav-item" onclick="authSystem.logout(); return false;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            `;
+        } else {
+            // Clear mobile menu for logged out users
+            mobileMenu.innerHTML = '';
         }
     }
 

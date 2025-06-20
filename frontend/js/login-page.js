@@ -158,6 +158,14 @@ class LoginPageManager {
                     sessionStorage.setItem('token', data.token);
                 }
 
+                // Update auth system with user data
+                if (window.authSystem) {
+                    if (data.user) {
+                        window.authSystem.currentUser = data.user;
+                    }
+                    await window.authSystem.refreshAuthState();
+                }
+
                 this.showNotification('Login successful! Welcome back.', 'success');
                 
                 // Redirect after short delay
@@ -631,6 +639,15 @@ class LoginPageManager {
 
             if (data.token) {
                 localStorage.setItem('token', data.token);
+                
+                // Update auth system with user data
+                if (window.authSystem) {
+                    if (data.user) {
+                        window.authSystem.currentUser = data.user;
+                    }
+                    await window.authSystem.refreshAuthState();
+                }
+                
                 this.showNotification(`${this.googleAuthType === 'register' ? 'Registration' : 'Login'} successful!`, 'success');
                 
                 setTimeout(() => {

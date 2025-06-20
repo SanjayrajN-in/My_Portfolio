@@ -106,6 +106,15 @@ class APIConfig {
         });
     }
 
+    async logout(token) {
+        return this.makeRequest('/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+    }
+
     async googleLogin(credential) {
         return this.makeRequest('/auth/google-login', {
             method: 'POST',
