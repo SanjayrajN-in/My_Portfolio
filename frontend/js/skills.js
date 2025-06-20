@@ -1,4 +1,4 @@
-/ Skills page specific JavaScript
+// Skills page specific JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     // Tab switching functionality

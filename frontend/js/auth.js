@@ -403,22 +403,21 @@ class AuthSystem {
                 const loginLink = loginBtn.querySelector('.login-link');
                 loginLink.addEventListener('click', (e) => {
                     e.preventDefault();
-                    if (typeof openLoginModal === 'function') {
-                        openLoginModal();
-                    } else if (window.openLoginModal) {
+                    
+                    // Try multiple approaches to open the modal
+                    if (window.openLoginModal && typeof window.openLoginModal === 'function') {
                         window.openLoginModal();
-                    } else {
-                        console.error('openLoginModal function not available');
-                        // Try to initialize login modal directly
-                        if (typeof LoginModal !== 'undefined') {
-                            const modal = new LoginModal();
-                            modal.open();
-                        }
+                    } else if (typeof openLoginModal === 'function') {
+                        openLoginModal();
+                    } else if (window.loginModal && window.loginModal.open) {
+                        window.loginModal.open();
+                    } else if (typeof LoginModal !== 'undefined') {
+                        const modal = new LoginModal();
+                        modal.open();
                     }
                 });
                 
                 navLinks.appendChild(loginBtn);
-                console.log('✅ Login button added to navigation');
             }
             
             // Update mobile menu for logged out state
