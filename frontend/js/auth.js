@@ -65,13 +65,16 @@ class AuthSystem {
             console.log('ℹ️ No token found, user not logged in');
         }
 
-        // Initialize profile page if on profile page
-        if (window.location.pathname.includes('profile.html')) {
-            this.initProfilePage();
-        }
+        // Create global notification container if it doesn't exist
+        this.createNotificationContainer();
 
         // Update navigation for all pages
         this.updateNavigation();
+
+        // Initialize profile page if on profile page (after auth check is complete)
+        if (window.location.pathname.includes('profile.html')) {
+            this.initProfilePage();
+        }
     }
 
     // Method to refresh auth state (useful after login)
@@ -79,15 +82,73 @@ class AuthSystem {
         await this.init();
     }
 
-    initProfilePage() {
-        // If user is not logged in, redirect to login page
-        if (!this.currentUser) {
-            window.location.href = 'login.html';
-            return;
+    // Create global notification container
+    createNotificationContainer() {
+        if (!document.getElementById('notificationContainer')) {
+            const container = document.createElement('div');
+            container.className = 'notification-container';
+            container.id = 'notificationContainer';
+            document.body.appendChild(container);
         }
+    }
 
-        // Load profile data
-        this.loadProfileData();
+    // Global notification method
+    showNotification(message, type = 'info', duration = 5000) {
+        const container = document.getElementById('notificationContainer');
+        if (!container) return;
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+
+        container.appendChild(notification);
+
+        // Trigger animation
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+
+        // Auto remove
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, duration);
+    }
+
+    initProfilePage() {
+        // Add a small delay to ensure auth state is properly loaded
+        setTimeout(() => {
+            console.log('🔍 Profile page init - Current user:', this.currentUser);
+            
+            const authLoading = document.getElementById('authLoading');
+            const profileContainer = document.getElementById('profileContainer');
+            
+            // If user is not logged in, redirect to login page
+            if (!this.currentUser) {
+                console.log('❌ No user found, redirecting to login');
+                const isInPagesFolder = window.location.pathname.includes('pages/');
+                const loginPath = isInPagesFolder ? 'login.html' : 'pages/login.html';
+                window.location.href = loginPath;
+                return;
+            }
+
+            console.log('✅ User authenticated, loading profile data');
+            
+            // Hide loading state and show profile content
+            if (authLoading) {
+                authLoading.style.display = 'none';
+            }
+            if (profileContainer) {
+                profileContainer.style.display = 'block';
+            }
+            
+            // Load profile data
+            this.loadProfileData();
+        }, 500); // Give auth system time to complete initialization
     }
 
     async logout() {
@@ -120,7 +181,7 @@ class AuthSystem {
         this.updateNavigation();
         
         // Show logout message
-        this.showFloatingNotification('You have been logged out successfully.', 'success');
+        this.showNotification('You have been logged out successfully.', 'success');
         
         // Redirect to login page after a brief delay
         setTimeout(() => {

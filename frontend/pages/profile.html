@@ -52,7 +52,13 @@
 
     <!-- Main Content -->
     <main class="profile-main">
-        <div class="profile-container">
+        <!-- Auth Loading State -->
+        <div class="auth-loading" id="authLoading">
+            <div class="loading-spinner"></div>
+            <p>Verifying authentication...</p>
+        </div>
+        
+        <div class="profile-container" id="profileContainer" style="display: none;">
             <div class="profile-header">
                 <div class="profile-avatar-section">
                     <div class="profile-avatar-container">
