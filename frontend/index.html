@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -116,15 +116,6 @@
         // Mark document as loading initially
         document.documentElement.classList.add('loading');
         
-        // Detect if device is mobile
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                        (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
-        
-        // Add mobile class if needed
-        if (isMobile) {
-            document.documentElement.classList.add('mobile-device');
-        }
-        
         // Script loading management
         (function() {
             const originalCreateElement = document.createElement;
@@ -188,7 +179,7 @@
                     document.documentElement.classList.remove('wf-loading');
                     document.documentElement.classList.add('wf-inactive');
                 }
-            }, isMobile ? 1500 : 2500);
+            }, 2500);
         });
         
         // Ensure Font Awesome is loaded
@@ -232,18 +223,6 @@
                 pageTransition.classList.add('active');
             }
         });
-        
-        // iOS-specific fixes
-        if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-            // Force repaint on iOS devices to prevent rendering issues
-            document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(function() {
-                    const scrollTop = window.pageYOffset;
-                    window.scrollTo(0, scrollTop + 1);
-                    window.scrollTo(0, scrollTop);
-                }, 0);
-            });
-        }
     </script>
 
 
