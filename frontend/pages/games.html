@@ -25,13 +25,11 @@
 
     <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
 
-    <!-- FOUC Prevention - Critical CSS -->
-    <link rel="stylesheet" href="../css/fouc-fix.css">
-    
-    <!-- FOUC Prevention Script - Must be inline for immediate execution -->
+                    <!-- FOUC Prevention and Page Transition -->
     <script>
-        // Mark document as loading initially
-        document.documentElement.classList.add('loading');
+        // Prevent FOUC with improved font loading
+        document.documentElement.style.visibility='visible';
+        document.documentElement.classList.add('loaded');
         
         // Ensure smooth font transition
         window.addEventListener('load', function() {
@@ -683,7 +681,6 @@
     <script src="../js/auth.js"></script>
     <script src="../js/game-scores.js"></script>
     <script src="../js/games.js?v=4.0"></script>
-    <script src="../js/fouc-prevention.js"></script>
     <script src="../js/page-transition.js"></script>
 </body>
 </html>
