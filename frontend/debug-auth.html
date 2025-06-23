@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Debug - Clear Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .debug-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .danger {
+            background: #dc3545;
+        }
+        .danger:hover {
+            background: #c82333;
+        }
+        .success {
+            background: #28a745;
+        }
+        .success:hover {
+            background: #218838;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Auth System Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h2>🧹 Clear All Data</h2>
+        <p>Use this to completely reset authentication state:</p>
+        <button class="danger" onclick="clearAllData()">Clear All Auth Data</button>
+        <button onclick="showCurrentData()">Show Current Data</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>🔍 Current Auth State</h2>
+        <pre id="authState">Click "Show Current Data" to see auth state</pre>
+    </div>
+    
+    <div class="debug-section">
+        <h2>🧪 Test Navigation</h2>
+        <button onclick="goToHome()">Go to Home</button>
+        <button onclick="goToLogin()">Go to Login</button>
+        <button onclick="goToProfile()">Go to Profile</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>� Quick Fixes</h2>
+        <button onclick="forceRefreshAuth()">Force Refresh Auth</button>
+        <button onclick="forceHideLogin()">Force Hide Login Button</button>
+        <button onclick="debugAuthSystem()">Debug Auth System</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>�📝 Instructions</h2>
+        <ol>
+            <li><strong>Clear All Data</strong> - Removes all tokens and user data</li>
+            <li><strong>Go to Login</strong> - Should work without redirecting back</li>
+            <li><strong>Login</strong> - Complete the login process</li>
+            <li><strong>Check Navigation</strong> - Login button should disappear, Profile/Logout should appear in More dropdown</li>
+            <li><strong>If login button still shows</strong> - Click "Force Hide Login Button"</li>
+        </ol>
+    </div>
+
+    <script>
+        function clearAllData() {
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            // Clear auth system if available
+            if (window.authSystem) {
+                window.authSystem.forceLogout();
+            }
+            
+            alert('✅ All auth data cleared! You can now test the login flow.');
+            showCurrentData();
+        }
+        
+        function showCurrentData() {
+            const data = {
+                localStorage: {
+                    token: localStorage.getItem('token'),
+                    currentUser: localStorage.getItem('currentUser')
+                },
+                sessionStorage: {
+                    token: sessionStorage.getItem('token'),
+                    currentUser: sessionStorage.getItem('currentUser')
+                },
+                authSystem: window.authSystem ? {
+                    initialized: window.authSystem.initialized,
+                    currentUser: window.authSystem.currentUser
+                } : 'Not available',
+                cookies: document.cookie || 'None'
+            };
+            
+            document.getElementById('authState').textContent = JSON.stringify(data, null, 2);
+        }
+        
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+        
+        function goToLogin() {
+            window.location.href = 'pages/login.html';
+        }
+        
+        function goToProfile() {
+            window.location.href = 'pages/profile.html';
+        }
+        
+        function forceRefreshAuth() {
+            if (window.authSystem) {
+                window.authSystem.forceRefreshNavigation();
+                alert('✅ Auth system refreshed!');
+            } else {
+                alert('❌ Auth system not available');
+            }
+        }
+        
+        function forceHideLogin() {
+            const loginLinks = document.querySelectorAll('a[href*="login.html"]');
+            loginLinks.forEach((loginLink, index) => {
+                const li = loginLink.closest('li');
+                if (li) {
+                    li.style.display = 'none';
+                    li.style.visibility = 'hidden';
+                    li.style.opacity = '0';
+                    li.style.height = '0';
+                    li.style.overflow = 'hidden';
+                }
+            });
+            alert(`✅ Forced hide ${loginLinks.length} login buttons!`);
+        }
+        
+        function debugAuthSystem() {
+            if (window.authSystem) {
+                const debug = window.authSystem.debugAuthState();
+                console.log('🔍 Auth Debug:', debug);
+                alert('✅ Debug info logged to console (F12)');
+            } else {
+                alert('❌ Auth system not available');
+            }
+        }
+        
+        // Show current data on page load
+        showCurrentData();
+    </script>
+</body>
+</html>

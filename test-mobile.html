@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mobile Google Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .info { background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .button { background: #4285f4; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; margin: 10px 0; }
+        .button:hover { background: #357ae8; }
+        .console { background: #f5f5f5; padding: 10px; border-radius: 4px; margin: 10px 0; min-height: 100px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Mobile Google Auth Test</h1>
+    
+    <div class="info">
+        <strong>Device Type:</strong> <span id="deviceType"></span><br>
+        <strong>User Agent:</strong> <span id="userAgent"></span><br>
+        <strong>Base URL:</strong> <span id="baseUrl"></span>
+    </div>
+    
+    <button class="button" id="testLoginBtn">Test Login Redirect</button>
+    <button class="button" id="testRegisterBtn">Test Register Redirect</button>
+    
+    <div class="console" id="console"></div>
+    
+    <script>
+        // Mobile detection (same as in login.html)
+        window.isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Mock API config
+        window.apiConfig = { baseURL: 'https://sanjayraj-n.onrender.com' };
+        
+        // Console logging
+        function log(message) {
+            const console = document.getElementById('console');
+            console.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+            console.scrollTop = console.scrollHeight;
+            window.console.log(message);
+        }
+        
+        // Update info
+        document.getElementById('deviceType').textContent = window.isMobileDevice ? 'Mobile Device' : 'Desktop Device';
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('baseUrl').textContent = window.apiConfig.baseURL;
+        
+        // Test buttons
+        document.getElementById('testLoginBtn').addEventListener('click', function() {
+            log('🚀 Testing Google Login redirect...');
+            if (window.isMobileDevice) {
+                const url = `${window.apiConfig.baseURL}/api/auth/google/login`;
+                log('📱 Mobile detected - would redirect to: ' + url);
+                // Uncomment next line to test actual redirect
+                // window.location.href = url;
+            } else {
+                log('💻 Desktop detected - would use popup');
+            }
+        });
+        
+        document.getElementById('testRegisterBtn').addEventListener('click', function() {
+            log('🚀 Testing Google Register redirect...');
+            if (window.isMobileDevice) {
+                const url = `${window.apiConfig.baseURL}/api/auth/google/register`;
+                log('📱 Mobile detected - would redirect to: ' + url);
+                // Uncomment next line to test actual redirect
+                // window.location.href = url;
+            } else {
+                log('💻 Desktop detected - would use popup');
+            }
+        });
+        
+        log('✅ Test page loaded successfully');
+        log('📱 Mobile device: ' + (window.isMobileDevice ? 'YES' : 'NO'));
+    </script>
+</body>
+</html>

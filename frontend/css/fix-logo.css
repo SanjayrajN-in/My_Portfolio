@@ -1,0 +1,91 @@
+/* Fix for logo-circle animation */
+.logo-circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    width: 50px;
+    height: 50px;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    z-index: 1;
+    will-change: box-shadow;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    perspective: 1000px;
+    
+    /* Prevent animation glitches */
+    animation-delay: 0.3s;
+    animation-play-state: paused;
+}
+
+/* Only start animation after page load */
+html.loaded .logo-circle {
+    animation-play-state: running;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 168, 255, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 168, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 168, 255, 0);
+    }
+}
+
+/* Ensure logo is properly positioned */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text-color);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Navigation styles moved to nav-fix.css */
+
+/* Ensure header is hardware accelerated */
+header {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+/* Fix cursor follower */
+.cursor, .cursor-follower {
+    pointer-events: none !important;
+    z-index: 999999 !important;
+    position: fixed !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.3s, height 0.3s, background 0.3s, border-color 0.3s !important;
+}
+
+.cursor {
+    width: 10px !important;
+    height: 10px !important;
+    background: var(--primary-color) !important;
+    border-radius: 50% !important;
+    mix-blend-mode: difference !important;
+}
+
+.cursor-follower {
+    width: 30px !important;
+    height: 30px !important;
+    border: 1px solid var(--primary-color) !important;
+    border-radius: 50% !important;
+    z-index: 9998 !important;
+    mix-blend-mode: difference !important;
+}

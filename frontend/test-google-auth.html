@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Auth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #3367D6;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Authentication Test</h1>
+    
+    <div class="card">
+        <h2>Test Google Login</h2>
+        <p>Click the button below to test Google login functionality:</p>
+        <button id="testGoogleLogin">Test Google Login</button>
+        <button id="checkAuthState">Check Auth State</button>
+        <button id="clearAuth">Clear Auth Data</button>
+    </div>
+    
+    <div class="card">
+        <h2>Results</h2>
+        <div id="results">No tests run yet</div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resultsDiv = document.getElementById('results');
+            const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://sanjayraj-n.onrender.com';
+            
+            // Test Google Login
+            document.getElementById('testGoogleLogin').addEventListener('click', function() {
+                // Check if we're on a mobile device
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    log('Mobile device detected, redirecting to Google login...');
+                    // On mobile, redirect to the auth URL
+                    window.location.href = `${baseUrl}/api/auth/google/login`;
+                } else {
+                    // On desktop, open a popup
+                    const width = 500;
+                    const height = 600;
+                    const left = (window.innerWidth - width) / 2;
+                    const top = (window.innerHeight - height) / 2;
+                    
+                    log('Opening Google login popup...');
+                    
+                    window.open(
+                        `${baseUrl}/api/auth/google/login`,
+                        'googleAuthPopup',
+                        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,status=yes`
+                    );
+                }
+            });
+            
+            // Check Auth State
+            document.getElementById('checkAuthState').addEventListener('click', function() {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const user = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+                
+                log('Current Auth State:');
+                log(`Token exists: ${!!token}`);
+                log(`User data exists: ${!!user}`);
+                
+                if (user) {
+                    try {
+                        const userData = JSON.parse(user);
+                        log('User data:', userData);
+                    } catch (e) {
+                        logError('Error parsing user data:', e);
+                    }
+                }
+                
+                if (token) {
+                    // Verify token with server
+                    fetch(`${baseUrl}/api/auth/profile`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            logSuccess('Token is valid. User profile:', data.user);
+                        } else {
+                            logError('Token validation failed:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        logError('Error validating token:', error);
+                    });
+                }
+            });
+            
+            // Clear Auth Data
+            document.getElementById('clearAuth').addEventListener('click', function() {
+                localStorage.removeItem('token');
+                sessionStorage.removeItem('token');
+                localStorage.removeItem('currentUser');
+                sessionStorage.removeItem('currentUser');
+                
+                logSuccess('Auth data cleared');
+            });
+            
+            // Listen for messages from popup
+            window.addEventListener('message', function(event) {
+                if (event.data && (event.data.type === 'GOOGLE_LOGIN_SUCCESS' || event.data.type === 'googleAuth')) {
+                    logSuccess('Google login successful!');
+                    log('Received data:', event.data);
+                    
+                    if (event.data.token) {
+                        localStorage.setItem('token', event.data.token);
+                        logSuccess('Token stored in localStorage');
+                    }
+                    
+                    if (event.data.user) {
+                        sessionStorage.setItem('currentUser', JSON.stringify(event.data.user));
+                        logSuccess('User data stored in sessionStorage');
+                    }
+                } else if (event.data && event.data.type === 'GOOGLE_LOGIN_ERROR') {
+                    logError('Google login failed:', event.data.message);
+                }
+            });
+            
+            // Helper functions
+            function log(message, data) {
+                const p = document.createElement('p');
+                p.textContent = message;
+                resultsDiv.appendChild(p);
+                
+                if (data) {
+                    const pre = document.createElement('pre');
+                    pre.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+                    resultsDiv.appendChild(pre);
+                }
+                
+                console.log(message, data);
+            }
+            
+            function logSuccess(message, data) {
+                const p = document.createElement('p');
+                p.textContent = '✅ ' + message;
+                p.className = 'success';
+                resultsDiv.appendChild(p);
+                
+                if (data) {
+                    const pre = document.createElement('pre');
+                    pre.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+                    resultsDiv.appendChild(pre);
+                }
+                
+                console.log('✅ ' + message, data);
+            }
+            
+            function logError(message, data) {
+                const p = document.createElement('p');
+                p.textContent = '❌ ' + message;
+                p.className = 'error';
+                resultsDiv.appendChild(p);
+                
+                if (data) {
+                    const pre = document.createElement('pre');
+                    pre.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+                    resultsDiv.appendChild(pre);
+                }
+                
+                console.error('❌ ' + message, data);
+            }
+        });
+    </script>
+</body>
+</html>

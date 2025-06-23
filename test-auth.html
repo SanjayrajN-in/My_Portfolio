@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Auth Success</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; }
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Auth Success Test</h1>
+    <div id="status">Checking...</div>
+    
+    <script>
+        console.log('URL:', window.location.href);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const authSuccess = urlParams.get('auth_success');
+        
+        console.log('auth_success parameter:', authSuccess);
+        
+        const statusDiv = document.getElementById('status');
+        
+        if (authSuccess === 'true') {
+            statusDiv.innerHTML = '<div class="success">✅ AUTH SUCCESS DETECTED! This should work in the main login page.</div>';
+            console.log('✅ SUCCESS! auth_success=true detected');
+        } else {
+            statusDiv.innerHTML = '<div class="error">❌ No auth_success=true found. Current URL: ' + window.location.href + '</div>';
+            console.log('❌ No auth success detected');
+        }
+    </script>
+</body>
+</html>

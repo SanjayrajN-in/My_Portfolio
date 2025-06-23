@@ -1,0 +1,37 @@
+# Node modules and environment
+node_modules/
+.git/
+*.log
+.env
+.env.local
+.env.development
+.env.test
+
+# Test and debug files
+api/test/
+api/debug/
+test-*.html
+test-*.js
+
+# Individual API files (now consolidated)
+api/auth/*.js
+api/contact/*.js
+api/users/*.js
+api/hello.js
+api/test.js
+api/db-test.js
+
+# Documentation and scripts
+*.ps1
+deploy-*.txt
+deploy-*.md
+DEPLOYMENT.md
+VERCEL_*.md
+GOOGLE_*.md
+README.md
+
+# Backup files
+*_backup.*
+*.bak
+*.backup
+*_part*.txt

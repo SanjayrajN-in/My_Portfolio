@@ -1,0 +1,292 @@
+/* 
+ * Mobile Optimizations CSS
+ * Improves the mobile experience and fixes button effects on touch devices
+ */
+
+/* Mobile touch optimizations for buttons */
+@media (hover: none) and (pointer: coarse) {
+    /* Fix for button effects on mobile devices */
+    .btn, button, a.btn, .nav-links a, .dropdown-menu a {
+        -webkit-tap-highlight-color: transparent !important;
+        touch-action: manipulation !important;
+    }
+    
+    /* Active state for buttons on touch */
+    .btn:active, button:active, a.btn:active {
+        transform: scale(0.98) !important;
+        transition: transform 0.1s ease !important;
+    }
+    
+    /* Button icon animation on touch */
+    .btn:active .btn-icon {
+        transform: translateX(5px) !important;
+        transition: transform 0.2s ease !important;
+    }
+    
+    /* Button text animation on touch */
+    .btn:active .btn-text {
+        transform: translateX(3px) !important;
+        transition: transform 0.2s ease !important;
+    }
+    
+    /* Glow effect on touch */
+    .glow-effect:active {
+        box-shadow: 0 0 15px var(--primary-color) !important;
+    }
+    
+    /* Neon text effect on touch */
+    .neon-text:active {
+        text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color) !important;
+    }
+    
+    /* Fix for mobile menu items */
+    .nav-links a:active, .mobile-auth-item a:active {
+        background-color: rgba(0, 168, 255, 0.15) !important;
+        color: var(--primary-color) !important;
+    }
+    
+    /* Fix for mobile logout button */
+    .mobile-logout-link a:active {
+        background-color: rgba(255, 68, 68, 0.15) !important;
+        color: #ff4444 !important;
+    }
+    
+    /* Ensure transitions are smooth on mobile */
+    * {
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+    }
+    
+    /* Fix for button ripple effect on mobile */
+    .btn::after, a.btn::after, button::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.5);
+        opacity: 0;
+        border-radius: 100%;
+        transform: scale(1, 1) translate(-50%, -50%);
+        transform-origin: 50% 50%;
+    }
+    
+    .btn:active::after, a.btn:active::after, button:active::after {
+        animation: ripple 0.6s ease-out;
+    }
+    
+    @keyframes ripple {
+        0% {
+            transform: scale(0, 0) translate(-50%, -50%);
+            opacity: 0.5;
+        }
+        100% {
+            transform: scale(20, 20) translate(-50%, -50%);
+            opacity: 0;
+        }
+    }
+}
+
+/* Google Sign-In Button Mobile Fixes */
+@media (hover: none) and (pointer: coarse) {
+    .google-btn {
+        height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 16px !important;
+        border-radius: 8px !important;
+        background-color: #ffffff !important;
+        color: #333333 !important;
+        font-family: 'Roboto', sans-serif !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.25px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24) !important;
+        transition: all 0.2s ease-in-out !important;
+        position: relative !important;
+        overflow: hidden !important;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .google-btn:active {
+        background-color: #f5f5f5 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(1px) !important;
+    }
+    
+    .google-btn i {
+        margin-right: 12px !important;
+        font-size: 18px !important;
+        color: #4285F4 !important;
+    }
+    
+    .google-btn .fa-spinner {
+        animation: spin 1s linear infinite !important;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+}
+
+/* Mobile layout optimizations */
+@media (max-width: 768px) {
+    /* Improve touch targets */
+    .nav-links a, .btn, button, .dropdown-menu a, .mobile-auth-item a {
+        min-height: 44px !important;
+        padding: 12px 16px !important;
+    }
+    
+    /* Ensure proper spacing in mobile menu */
+    .mobile-auth-items {
+        margin-top: 20px !important;
+        padding-top: 15px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Improve mobile menu appearance */
+    .nav-links.active {
+        padding-bottom: 20px !important;
+    }
+    
+    /* Remove avatar button in nav bar */
+    .user-avatar, .avatar-btn, .user-dropdown {
+        display: none !important;
+    }
+    
+    /* Fix Google Sign-In button on mobile */
+    .google-btn {
+        width: 100% !important;
+        margin: 8px 0 !important;
+    }
+    
+    /* Fix for Google One Tap dialog on mobile */
+    #credential_picker_container {
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        position: fixed !important;
+        z-index: 9999 !important;
+    }
+    
+    /* Fix for Google One Tap iframe */
+    #credential_picker_iframe {
+        width: 100% !important;
+        height: 100% !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+    
+    /* Fix feature notification overlap with scroll indicator on mobile */
+    .feature-notification {
+        position: relative !important;
+        z-index: 1 !important;
+        margin-bottom: 80px !important;
+    }
+    
+    .hero-scroll {
+        position: absolute !important;
+        z-index: 2 !important;
+    }
+    
+    /* Mobile More Items Styling */
+    .mobile-more-items {
+        width: 100% !important;
+        margin-top: 10px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding-top: 10px !important;
+    }
+    
+    .mobile-more-list {
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .mobile-more-list li {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    
+    .mobile-more-list li a {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding: 12px 16px !important;
+        color: var(--text-color) !important;
+        text-decoration: none !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        min-height: 44px !important;
+    }
+    
+    .mobile-more-list li a:hover,
+    .mobile-more-list li a:active {
+        background-color: rgba(0, 168, 255, 0.15) !important;
+        color: var(--primary-color) !important;
+    }
+    
+    .mobile-more-list li a i {
+        font-size: 1.1rem !important;
+        width: 20px !important;
+        text-align: center !important;
+        color: var(--primary-color) !important;
+    }
+    
+    .mobile-more-list li a span {
+        font-size: 0.95rem !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Special styling for logout button */
+    .mobile-more-list li a.nav-logout-btn {
+        color: #ff6b6b !important;
+    }
+    
+    .mobile-more-list li a.nav-logout-btn i {
+        color: #ff6b6b !important;
+    }
+    
+    .mobile-more-list li a.nav-logout-btn:hover,
+    .mobile-more-list li a.nav-logout-btn:active {
+        background-color: rgba(255, 107, 107, 0.15) !important;
+        color: #ff6b6b !important;
+    }
+}
+
+/* Additional mobile portrait fix for feature notification */
+@media (max-width: 480px) and (orientation: portrait) {
+    .feature-notification {
+        margin-bottom: 90px !important;
+        margin-left: 10px !important;
+        margin-right: 10px !important;
+    }
+}
+
+/* Additional mobile landscape fix for feature notification */
+@media (max-width: 896px) and (orientation: landscape) and (max-height: 500px) {
+    .feature-notification {
+        margin-bottom: 70px !important;
+        padding: 8px 12px !important;
+    }
+    
+    .notification-text {
+        font-size: 0.75rem !important;
+    }
+    
+    .hero-scroll {
+        bottom: 10px !important;
+    }
+    
+    .scroll-indicator {
+        font-size: 0.75rem !important;
+    }
+}

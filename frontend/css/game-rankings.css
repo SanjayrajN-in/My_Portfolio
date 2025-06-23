@@ -1,0 +1,169 @@
+/* Game Rankings Styles */
+
+.game-rankings {
+    max-width: 300px;
+    margin: 20px auto;
+    padding: 15px;
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.game-rankings h3 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.game-rankings h3::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 2px;
+}
+
+.rankings-list {
+    margin-bottom: 15px;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    margin-bottom: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.ranking-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.ranking-item.first-place {
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.ranking-position {
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: var(--bg-color-dark);
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-right: 10px;
+}
+
+.first-place .ranking-position {
+    background: #ffd700;
+    color: #000;
+}
+
+.ranking-username {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--text-color-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ranking-score {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-family: 'Orbitron', sans-serif;
+}
+
+.first-place .ranking-score {
+    color: #ffd700;
+}
+
+.user-rank {
+    padding: 10px;
+    background: rgba(0, 168, 255, 0.1);
+    border-radius: 8px;
+    border: 1px solid var(--primary-color);
+}
+
+.user-rank-title {
+    font-size: 0.8rem;
+    color: var(--text-color-light);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.user-rank-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-rank-position {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-family: 'Orbitron', sans-serif;
+}
+
+.user-rank-score {
+    font-size: 0.9rem;
+    color: var(--text-color-light);
+}
+
+.user-not-ranked {
+    color: var(--text-color-light);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+.loading-rankings, .no-rankings, .rankings-error {
+    text-align: center;
+    padding: 15px;
+    color: var(--text-color-light);
+    font-size: 0.9rem;
+}
+
+.rankings-error {
+    color: #ff6b6b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .game-rankings {
+        max-width: 250px;
+        padding: 10px;
+    }
+    
+    .ranking-item {
+        padding: 6px 8px;
+    }
+    
+    .ranking-position {
+        width: 22px;
+        height: 22px;
+        font-size: 0.7rem;
+    }
+    
+    .ranking-username, .ranking-score, .user-rank-score {
+        font-size: 0.8rem;
+    }
+}

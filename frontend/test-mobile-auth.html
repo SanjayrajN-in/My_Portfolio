@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Auth Menu Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #0a0a0a;
+            color: white;
+        }
+        
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+        
+        .test-button {
+            background: #00a8ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .test-button:hover {
+            background: #0088cc;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+        }
+        
+        .status.error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+        }
+        
+        .status.info {
+            background: rgba(0, 168, 255, 0.2);
+            color: #00a8ff;
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .code {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 Mobile Auth Menu Test</h1>
+        
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>Open this page on mobile device or resize browser to mobile width</li>
+                <li>Click "Test Auth State" to check current status</li>
+                <li>Use "Simulate Login" to test login state</li>
+                <li>Use "Simulate Logout" to test logout state</li>
+                <li>Check the hamburger menu to see if profile/logout buttons appear</li>
+            </ol>
+        </div>
+        
+        <div id="status" class="status info">
+            Ready for testing...
+        </div>
+        
+        <div class="test-buttons">
+            <button class="test-button" onclick="testAuthState()">Test Auth State</button>
+            <button class="test-button" onclick="simulateLogin()">Simulate Login</button>
+            <button class="test-button" onclick="simulateLogout()">Simulate Logout</button>
+            <button class="test-button" onclick="debugMobileMenu()">Debug Mobile Menu</button>
+            <button class="test-button" onclick="refreshMobileMenu()">Refresh Mobile Menu</button>
+        </div>
+        
+        <div id="debug-info" class="code"></div>
+        
+        <div class="instructions">
+            <h3>Expected Behavior:</h3>
+            <ul>
+                <li><strong>Before Login:</strong> No profile/logout buttons in mobile menu</li>
+                <li><strong>After Login:</strong> Profile and logout buttons appear in mobile menu</li>
+                <li><strong>After Logout:</strong> Profile and logout buttons disappear</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function updateDebugInfo(info) {
+            document.getElementById('debug-info').textContent = info;
+        }
+        
+        function testAuthState() {
+            const isLoggedIn = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const currentUser = localStorage.getItem('currentUser');
+            
+            if (isLoggedIn) {
+                updateStatus('✅ User is logged in', 'success');
+            } else {
+                updateStatus('❌ User is not logged in', 'error');
+            }
+            
+            updateDebugInfo(`Auth State:
+- Token: ${isLoggedIn ? 'Present' : 'Not found'}
+- Current User: ${currentUser || 'None'}
+- Window Width: ${window.innerWidth}px
+- Is Mobile: ${window.innerWidth <= 992}
+- Mobile Menu Items: ${document.querySelectorAll('.mobile-more-items li').length}
+- Auth buttons in dropdown: ${document.querySelectorAll('.dropdown-menu .nav-profile-btn, .dropdown-menu .nav-logout-btn').length}
+- Auth buttons in mobile: ${document.querySelectorAll('.mobile-more-items .nav-profile-btn, .mobile-more-items .nav-logout-btn').length}`);
+        }
+        
+        function simulateLogin() {
+            // Simulate login by setting tokens
+            localStorage.setItem('token', 'test-token-123');
+            localStorage.setItem('currentUser', JSON.stringify({
+                name: 'Test User',
+                email: 'test@example.com',
+                id: '123'
+            }));
+            
+            // Trigger auth system update if available
+            if (window.authSystem) {
+                window.authSystem.currentUser = {
+                    name: 'Test User',
+                    email: 'test@example.com',
+                    id: '123'
+                };
+                window.authSystem.updateNavigation();
+            }
+            
+            updateStatus('🔄 Simulated login - check mobile menu', 'info');
+            
+            // Refresh mobile menu
+            if (window.refreshMobileMenu) {
+                setTimeout(() => {
+                    window.refreshMobileMenu();
+                    updateStatus('✅ Login simulation complete', 'success');
+                }, 500);
+            }
+        }
+        
+        function simulateLogout() {
+            // Clear auth data
+            localStorage.removeItem('token');
+            localStorage.removeItem('currentUser');
+            sessionStorage.clear();
+            
+            // Trigger auth system update if available
+            if (window.authSystem) {
+                window.authSystem.currentUser = null;
+                window.authSystem.updateNavigation();
+            }
+            
+            updateStatus('🔄 Simulated logout - check mobile menu', 'info');
+            
+            // Refresh mobile menu
+            if (window.refreshMobileMenu) {
+                setTimeout(() => {
+                    window.refreshMobileMenu();
+                    updateStatus('✅ Logout simulation complete', 'success');
+                }, 500);
+            }
+        }
+        
+        function debugMobileMenu() {
+            if (window.debugMobileMenu) {
+                window.debugMobileMenu();
+                updateStatus('📱 Debug info logged to console', 'info');
+            } else {
+                updateStatus('❌ Debug function not available', 'error');
+            }
+        }
+        
+        function refreshMobileMenu() {
+            if (window.refreshMobileMenu) {
+                window.refreshMobileMenu();
+                updateStatus('🔄 Mobile menu refreshed', 'success');
+            } else {
+                updateStatus('❌ Refresh function not available', 'error');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            testAuthState();
+        });
+    </script>
+</body>
+</html>

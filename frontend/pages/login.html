@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Login | Sanjayraj N</title>
+    
+    <!-- Cache control script - load this first -->
+    <script src="../js/cache-control.js?v=1.0.0"></script>
+    <link rel="icon" href="../images/favicon.svg" type="image/svg+xml">
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <link rel="stylesheet" href="../css/critical.css">
+    <link rel="stylesheet" href="../css/styles.css?v=3.0">
+    <link rel="stylesheet" href="../css/fix-logo.css">
+    <link rel="stylesheet" href="../css/fix-styles.css">
+    <link rel="stylesheet" href="../css/nav-fix.css?v=6.0">
+    <link rel="stylesheet" href="../css/mobile-optimizations.css?v=1.0">
+    <link rel="stylesheet" href="../css/login-page.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Identity Services API -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- This script will be handled by the main script at the bottom -->
+</head>
+<body class="dark-theme">
+    <!-- Page Transition -->
+    <div class="page-transition">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Header -->
+    <header class="login-header-nav">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">SRN</span>
+                <div class="logo-circle"></div>
+            </a>
+            
+            <div class="login-nav-actions">
+                <a href="../index.html" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Home</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="login-main">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="login-logo">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <h1 class="login-title" id="authTitle">Welcome Back</h1>
+                    <p class="login-subtitle" id="authSubtitle">Sign in to your account</p>
+                </div>
+
+                <div class="login-body">
+                    <!-- Auth Tabs -->
+                    <div class="auth-tabs">
+                        <button class="tab-btn active" data-tab="login" id="loginTab">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Login</span>
+                        </button>
+                        <button class="tab-btn" data-tab="register" id="registerTab">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Register</span>
+                        </button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <div class="auth-form active" id="loginForm">
+                        <form id="loginFormElement" novalidate>
+                            <div class="form-group">
+                                <label for="loginEmail">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                </label>
+                                <input type="email" id="loginEmail" name="email" required autocomplete="email" aria-describedby="loginEmailError">
+                                <div class="form-error" id="loginEmailError"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="loginPassword">
+                                    <i class="fas fa-lock"></i>
+                                    Password
+                                </label>
+                                <div class="password-input">
+                                    <input type="password" id="loginPassword" name="password" required autocomplete="current-password" aria-describedby="loginPasswordError">
+                                    <button type="button" class="password-toggle" data-target="loginPassword" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-error" id="loginPasswordError"></div>
+                            </div>
+
+                            <div class="form-options">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="rememberMe" name="rememberMe">
+                                    <span class="checkmark"></span>
+                                    Remember me
+                                </label>
+                                <button type="button" class="forgot-password-btn" id="forgotPasswordBtn">
+                                    Forgot Password?
+                                </button>
+                            </div>
+
+                            <button type="submit" class="submit-btn" id="loginSubmitBtn">
+                                <span class="btn-text">Sign In</span>
+                                <span class="btn-loader"></span>
+                            </button>
+
+                            <div class="divider">
+                                <span>or continue with</span>
+                            </div>
+
+                            <button type="button" class="google-btn" id="googleLoginBtn">
+                                <i class="fab fa-google"></i>
+                                <span id="googleLoginText">Sign in with Google</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div class="auth-form" id="registerForm">
+                        <form id="registerFormElement" novalidate>
+                            <div class="form-group">
+                                <label for="registerName">
+                                    <i class="fas fa-user"></i>
+                                    Full Name
+                                </label>
+                                <input type="text" id="registerName" name="name" required autocomplete="name">
+                                <div class="form-error" id="registerNameError"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="registerEmail">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                </label>
+                                <input type="email" id="registerEmail" name="email" required autocomplete="email">
+                                <div class="form-error" id="registerEmailError"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="registerPassword">
+                                    <i class="fas fa-lock"></i>
+                                    Password
+                                </label>
+                                <div class="password-input">
+                                    <input type="password" id="registerPassword" name="password" required autocomplete="new-password">
+                                    <button type="button" class="password-toggle" data-target="registerPassword" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="password-generate" data-target="registerPassword" aria-label="Generate strong password">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength" id="passwordStrength">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill"></div>
+                                    </div>
+                                    <div class="strength-text">Password strength</div>
+                                </div>
+                                <div class="form-error" id="registerPasswordError"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirmPassword">
+                                    <i class="fas fa-lock"></i>
+                                    Confirm Password
+                                </label>
+                                <div class="password-input">
+                                    <input type="password" id="confirmPassword" name="confirmPassword" required autocomplete="new-password">
+                                    <button type="button" class="password-toggle" data-target="confirmPassword" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-error" id="confirmPasswordError"></div>
+                            </div>
+
+                            <div class="password-requirements" id="passwordRequirements">
+                                <h4>Password must contain:</h4>
+                                <ul>
+                                    <li id="req-length"><i class="fas fa-times"></i> At least 8 characters</li>
+                                    <li id="req-lowercase"><i class="fas fa-times"></i> One lowercase letter</li>
+                                    <li id="req-uppercase"><i class="fas fa-times"></i> One uppercase letter</li>
+                                    <li id="req-number"><i class="fas fa-times"></i> One number</li>
+                                    <li id="req-special"><i class="fas fa-times"></i> One special character (@$!%*?&)</li>
+                                </ul>
+                            </div>
+
+                            <div class="form-options">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                                    <span class="checkmark"></span>
+                                    I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="submit-btn" id="registerSubmitBtn">
+                                <span class="btn-text">Create Account</span>
+                                <span class="btn-loader"></span>
+                            </button>
+
+                            <div class="divider">
+                                <span>or continue with</span>
+                            </div>
+
+                            <button type="button" class="google-btn" id="googleRegisterBtn">
+                                <i class="fab fa-google"></i>
+                                <span id="googleRegisterText">Sign up with Google</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- OTP Verification Form -->
+                    <div class="auth-form" id="otpForm" style="display: none;">
+                        <div class="otp-header">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Verify Your Email</h3>
+                            <p>We've sent a verification code to <span id="otpEmail"></span></p>
+                        </div>
+
+                        <form id="otpFormElement" novalidate>
+                            <div class="form-group">
+                                <label for="otpDigit0">
+                                    <i class="fas fa-key"></i>
+                                    Enter 6-digit code
+                                </label>
+                                <div class="otp-input-container" role="group" aria-label="Enter 6-digit verification code">
+                                    <input type="text" class="otp-digit" id="otpDigit0" maxlength="1" data-index="0" aria-label="Digit 1" inputmode="numeric" pattern="[0-9]">
+                                    <input type="text" class="otp-digit" id="otpDigit1" maxlength="1" data-index="1" aria-label="Digit 2" inputmode="numeric" pattern="[0-9]">
+                                    <input type="text" class="otp-digit" id="otpDigit2" maxlength="1" data-index="2" aria-label="Digit 3" inputmode="numeric" pattern="[0-9]">
+                                    <input type="text" class="otp-digit" id="otpDigit3" maxlength="1" data-index="3" aria-label="Digit 4" inputmode="numeric" pattern="[0-9]">
+                                    <input type="text" class="otp-digit" id="otpDigit4" maxlength="1" data-index="4" aria-label="Digit 5" inputmode="numeric" pattern="[0-9]">
+                                    <input type="text" class="otp-digit" id="otpDigit5" maxlength="1" data-index="5" aria-label="Digit 6" inputmode="numeric" pattern="[0-9]">
+                                </div>
+                                <div class="form-error" id="otpError"></div>
+                            </div>
+
+                            <div class="otp-actions">
+                                <button type="button" class="resend-btn" id="resendOtpBtn" disabled>
+                                    <i class="fas fa-redo"></i>
+                                    <span>Resend Code</span>
+                                    <span class="countdown" id="otpCountdown"></span>
+                                </button>
+                            </div>
+
+                            <button type="submit" class="submit-btn" id="verifyOtpBtn">
+                                <span class="btn-text">Verify</span>
+                                <span class="btn-loader"></span>
+                            </button>
+
+                            <button type="button" class="back-btn" id="backToFormBtn">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Back</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Forgot Password Form -->
+                    <div class="auth-form" id="forgotPasswordForm" style="display: none;">
+                        <div class="forgot-header">
+                            <i class="fas fa-key"></i>
+                            <h3>Reset Your Password</h3>
+                            <p>Enter your email to receive a reset code</p>
+                        </div>
+
+                        <form id="forgotPasswordFormElement" novalidate>
+                            <div class="form-group">
+                                <label for="forgotEmail">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                </label>
+                                <input type="email" id="forgotEmail" name="email" required autocomplete="email">
+                                <div class="form-error" id="forgotEmailError"></div>
+                            </div>
+
+                            <button type="submit" class="submit-btn" id="forgotSubmitBtn">
+                                <span class="btn-text">Send Reset Code</span>
+                                <span class="btn-loader"></span>
+                            </button>
+
+                            <button type="button" class="back-btn" id="backToLoginBtn">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Back to Login</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Reset Password Form -->
+                    <div class="auth-form" id="resetPasswordForm" style="display: none;">
+                        <div class="reset-header">
+                            <i class="fas fa-lock"></i>
+                            <h3>Create New Password</h3>
+                            <p>Enter the code we sent to your email and create a new password</p>
+                        </div>
+
+                        <form id="resetPasswordFormElement" novalidate>
+                            <div class="form-group">
+                                <label for="resetCode">
+                                    <i class="fas fa-key"></i>
+                                    Reset Code
+                                </label>
+                                <input type="text" id="resetCode" name="code" required>
+                                <div class="form-error" id="resetCodeError"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newPassword">
+                                    <i class="fas fa-lock"></i>
+                                    New Password
+                                </label>
+                                <div class="password-input">
+                                    <input type="password" id="newPassword" name="password" required autocomplete="new-password">
+                                    <button type="button" class="password-toggle" data-target="newPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="password-generate" data-target="newPassword" title="Generate strong password">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength" id="newPasswordStrength">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill"></div>
+                                    </div>
+                                    <div class="strength-text">Password strength</div>
+                                </div>
+                                <div class="form-error" id="newPasswordError"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirmNewPassword">
+                                    <i class="fas fa-lock"></i>
+                                    Confirm New Password
+                                </label>
+                                <div class="password-input">
+                                    <input type="password" id="confirmNewPassword" name="confirmPassword" required autocomplete="new-password">
+                                    <button type="button" class="password-toggle" data-target="confirmNewPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-error" id="confirmNewPasswordError"></div>
+                            </div>
+
+                            <button type="submit" class="submit-btn" id="resetSubmitBtn">
+                                <span class="btn-text">Reset Password</span>
+                                <span class="btn-loader"></span>
+                            </button>
+
+                            <button type="button" class="back-btn" id="backToForgotBtn">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Back</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification System -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script>
+        const BASE_URL = 'https://sanjayraj-n.onrender.com';
+        
+        // Check for auth success on page load
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const authSuccess = urlParams.get('auth_success');
+            
+            if (authSuccess === 'true') {
+                document.body.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: #1a1a1a; color: white; font-family: Arial, sans-serif;">
+                        <div style="text-align: center;">
+                            <h1>✅ Login Successful!</h1>
+                            <p>Getting your profile...</p>
+                            <div style="margin-top: 20px;">
+                                <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #4285f4; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <style>
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    </style>
+                `;
+                
+                // DEBUG: Show all cookies first
+                console.log('🔍 ALL COOKIES:', document.cookie);
+                console.log('🔍 Current URL:', window.location.href);
+                
+                // Get auth data from cookies (set by backend)
+                function getCookie(name) {
+                    const value = `; ${document.cookie}`;
+                    const parts = value.split(`; ${name}=`);
+                    if (parts.length === 2) return parts.pop().split(';').shift();
+                    return null;
+                }
+                
+                const authToken = getCookie('auth_token');
+                const userDataCookie = getCookie('user_data');
+                
+                console.log('🍪 Cookies search results:', { 
+                    authToken: authToken, 
+                    userData: userDataCookie,
+                    allCookies: document.cookie
+                });
+                
+                // Check URL params for token (primary method now)
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlToken = urlParams.get('token');
+                const urlUser = urlParams.get('user');
+                
+                console.log('🔗 URL params:', { urlToken: !!urlToken, urlUser: !!urlUser });
+                console.log('🔗 Raw URL token:', urlToken);
+                console.log('🔗 Raw URL user:', urlUser);
+                
+                if (urlToken && urlUser) {
+                    // PRIMARY METHOD: Use URL params (most reliable)
+                    console.log('✅ Using URL params for auth');
+                    
+                    try {
+                        // Store token
+                        localStorage.setItem('token', urlToken);
+                        console.log('🔑 Token stored:', urlToken.substring(0, 20) + '...');
+                        
+                        // Parse and store user data
+                        const userData = JSON.parse(decodeURIComponent(urlUser));
+                        localStorage.setItem('userInfo', JSON.stringify(userData));
+                        console.log('👤 User data stored:', userData);
+                        
+                        // Update UI with user name
+                        document.querySelector('div div').innerHTML = `
+                            <h1>✅ Welcome ${userData.name || userData.email}!</h1>
+                            <p>Redirecting to home page...</p>
+                        `;
+                        
+                        // Clean URL (remove sensitive params)
+                        window.history.replaceState({}, document.title, window.location.pathname + '?auth_success=true');
+                        
+                        setTimeout(() => window.location.href = '../index.html', 1500);
+                        
+                    } catch (error) {
+                        console.error('❌ Error processing URL auth data:', error);
+                        setTimeout(() => window.location.href = '../index.html', 1500);
+                    }
+                } else if (authToken && userDataCookie) {
+                    // FALLBACK: Try cookies
+                    console.log('🍪 Using cookies for auth');
+                    try {
+                        const userData = JSON.parse(decodeURIComponent(userDataCookie));
+                        localStorage.setItem('token', authToken);
+                        localStorage.setItem('userInfo', JSON.stringify(userData));
+                        
+                        document.querySelector('div div').innerHTML = `
+                            <h1>✅ Welcome ${userData.name || userData.email}!</h1>
+                            <p>Redirecting to home page...</p>
+                        `;
+                        
+                        setTimeout(() => window.location.href = '../index.html', 1500);
+                    } catch (error) {
+                        console.error('❌ Error parsing cookie data:', error);
+                        setTimeout(() => window.location.href = '../index.html', 1500);
+                    }
+                } else {
+                    // Last resort: try to fetch auth from backend directly
+                    console.log('🔄 Trying direct backend auth check...');
+                    fetch(BASE_URL + '/api/auth/profile', {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.user) {
+                            localStorage.setItem('userInfo', JSON.stringify(data.user));
+                            if (data.token) localStorage.setItem('token', data.token);
+                            document.querySelector('div div').innerHTML = `
+                                <h1>✅ Welcome ${data.user.name || data.user.email}!</h1>
+                                <p>Redirecting to home page...</p>
+                            `;
+                        }
+                        setTimeout(() => window.location.href = '../index.html', 1500);
+                    })
+                    .catch(error => {
+                        console.error('❌ All auth methods failed:', error);
+                        document.querySelector('div div').innerHTML = `
+                            <h1>⚠️ Login Issue</h1>
+                            <p>Please try logging in again</p>
+                        `;
+                        setTimeout(() => window.location.href = '../index.html', 3000);
+                    });
+                }
+                
+                return;
+            }
+            
+            // Setup Google buttons
+            const googleLoginBtn = document.getElementById('googleLoginBtn');
+            const googleRegisterBtn = document.getElementById('googleRegisterBtn');
+            
+            if (googleLoginBtn) {
+                googleLoginBtn.onclick = function(e) {
+                    e.preventDefault();
+                    window.location.href = BASE_URL + '/api/auth/google/login';
+                };
+            }
+            
+            if (googleRegisterBtn) {
+                googleRegisterBtn.onclick = function(e) {
+                    e.preventDefault();
+                    window.location.href = BASE_URL + '/api/auth/google/register';
+                };
+            }
+            
+            // Setup tabs
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            if (loginTab) {
+                loginTab.onclick = function() {
+                    loginTab.classList.add('active');
+                    registerTab.classList.remove('active');
+                    loginForm.classList.add('active');
+                    registerForm.classList.remove('active');
+                };
+            }
+            
+            if (registerTab) {
+                registerTab.onclick = function() {
+                    registerTab.classList.add('active');
+                    loginTab.classList.remove('active');
+                    registerForm.classList.add('active');
+                    loginForm.classList.remove('active');
+                };
+            }
+        });
+    </script>
+</body>
+</html>

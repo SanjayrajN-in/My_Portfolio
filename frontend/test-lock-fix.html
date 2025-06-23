@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lock Icon Fix Test</title>
+    <style>
+        .lock-overlay {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .auth-protected.locked .lock-overlay {
+            opacity: 1;
+        }
+
+        .btn {
+            position: relative;
+            padding: 10px 20px;
+            margin: 10px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lock Icon Fix Test</h1>
+    
+    <a href="#" class="btn auth-protected locked" id="test-btn">
+        <span>Download CV</span>
+        <span class="lock-overlay">🔒</span>
+    </a>
+    
+    <br><br>
+    
+    <button onclick="simulateLogin()">Simulate Login</button>
+    <button onclick="simulateLogout()">Simulate Logout</button>
+    
+    <script>
+        function simulateLogin() {
+            localStorage.setItem('token', 'test-token');
+            const btn = document.getElementById('test-btn');
+            btn.classList.remove('locked');
+            console.log('✅ Login simulated - lock should disappear');
+        }
+        
+        function simulateLogout() {
+            localStorage.removeItem('token');
+            const btn = document.getElementById('test-btn');
+            btn.classList.add('locked');
+            console.log('🔒 Logout simulated - lock should appear');
+        }
+        
+        // Test on page load
+        console.log('🔍 Test page loaded');
+        console.log('Button classes:', document.getElementById('test-btn').className);
+    </script>
+</body>
+</html>

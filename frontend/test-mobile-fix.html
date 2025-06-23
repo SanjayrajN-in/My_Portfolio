@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Layout Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+        }
+        
+        .hero {
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .feature-notification {
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.1), rgba(125, 95, 255, 0.1));
+            border: 1px solid rgba(0, 168, 255, 0.3);
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin: 20px 15px 80px;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        
+        .hero-scroll {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        
+        .scroll-indicator {
+            color: #888;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .scroll-arrow {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .scroll-arrow span {
+            width: 2px;
+            height: 10px;
+            background: #00a8ff;
+            animation: scrollAnimation 2s infinite;
+        }
+        
+        @keyframes scrollAnimation {
+            0%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(5px);
+            }
+        }
+        
+        /* Mobile fixes */
+        @media (max-width: 768px) {
+            .feature-notification {
+                margin: 20px 15px 80px;
+                padding: 12px 15px;
+            }
+            
+            .hero-scroll {
+                bottom: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) and (orientation: portrait) {
+            .feature-notification {
+                margin-bottom: 90px !important;
+                margin-left: 10px !important;
+                margin-right: 10px !important;
+            }
+        }
+        
+        @media (max-width: 896px) and (orientation: landscape) and (max-height: 500px) {
+            .feature-notification {
+                margin-bottom: 70px !important;
+                padding: 8px 12px !important;
+                font-size: 0.75rem;
+            }
+            
+            .hero-scroll {
+                bottom: 10px !important;
+            }
+            
+            .scroll-indicator {
+                font-size: 0.75rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <h1>Mobile Layout Test</h1>
+        <p>Test the feature notification and scroll indicator overlap fix</p>
+        
+        <div class="feature-notification">
+            <span>Play Fun Games • Try Amazing Tools • Make Music!</span>
+        </div>
+        
+        <div class="hero-scroll">
+            <div class="scroll-indicator">
+                <span>Scroll Down</span>
+                <div class="scroll-arrow">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section style="height: 100vh; background: #111; padding: 50px; text-align: center;">
+        <h2>Second Section</h2>
+        <p>This section confirms that scrolling works properly</p>
+    </section>
+</body>
+</html>

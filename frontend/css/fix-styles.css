@@ -1,0 +1,50 @@
+/* 
+ * Fix Styles - Addresses specific issues
+ * 1. Font loading transition
+ * 2. Typed cursor appearance
+ */
+
+/* Font Loading Fix */
+@font-face {
+    font-family: 'Rajdhani';
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Orbitron';
+    font-display: swap;
+}
+
+/* Ensure smooth font transition */
+html.wf-loading * {
+    opacity: 0;
+}
+
+html.wf-active *, html.wf-inactive * {
+    opacity: 1;
+    transition: opacity 0.3s ease-in;
+}
+
+/* Fix for typed cursor */
+.hero-subtitle .cursor {
+    display: inline-block;
+    width: 3px !important;
+    height: 1em;
+    background-color: var(--primary-color);
+    margin-left: 2px;
+    animation: blink 1s infinite;
+    position: relative;
+    top: 2px;
+    border-radius: 0 !important;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Ensure typed text is visible */
+.typed-text {
+    color: var(--primary-color);
+    font-weight: 500;
+}
