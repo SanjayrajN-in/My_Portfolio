@@ -30,38 +30,3 @@ html.ready {
     visibility: visible !important;
     opacity: 1 !important;
 }
-
-/* Mobile-specific optimizations */
-@media (max-width: 768px) {
-    /* Ensure faster transitions on mobile */
-    html.ready {
-        transition: opacity 0.2s ease;
-    }
-    
-    /* Ensure page transition is visible on mobile */
-    .page-transition.active {
-        z-index: 999999 !important;
-    }
-}
-
-/* Fix for iOS Safari and other mobile browsers */
-@media (hover: none) and (pointer: coarse) {
-    /* Force hardware acceleration to prevent flicker */
-    html, body {
-        -webkit-transform: translateZ(0);
-        -moz-transform: translateZ(0);
-        -ms-transform: translateZ(0);
-        -o-transform: translateZ(0);
-        transform: translateZ(0);
-        -webkit-backface-visibility: hidden;
-        -moz-backface-visibility: hidden;
-        -ms-backface-visibility: hidden;
-        backface-visibility: hidden;
-    }
-    
-    /* Ensure transitions are smooth on mobile */
-    html.ready {
-        -webkit-transition: opacity 0.2s ease;
-        transition: opacity 0.2s ease;
-    }
-}
