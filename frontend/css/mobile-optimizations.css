@@ -3,6 +3,22 @@
  * Improves the mobile experience and fixes button effects on touch devices
  */
 
+/* Feature notification popup styles */
+.feature-notification {
+    transition: transform 0.3s ease, opacity 0.3s ease !important;
+}
+
+.feature-notification.hidden {
+    transform: translateY(150%) translateX(-50%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.notification-close {
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
 /* Mobile touch optimizations for buttons */
 @media (hover: none) and (pointer: coarse) {
     /* Fix for button effects on mobile devices */
@@ -182,16 +198,24 @@
         left: 0 !important;
     }
     
-    /* Fix feature notification overlap with scroll indicator on mobile */
+    /* Make feature notification a popup that doesn't affect layout */
     .feature-notification {
-        position: relative !important;
-        z-index: 1 !important;
-        margin-bottom: 80px !important;
+        position: fixed !important;
+        z-index: 999998 !important; /* Just below header */
+        bottom: 20px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        margin-bottom: 0 !important;
+        width: 90% !important;
+        max-width: 400px !important;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3) !important;
+        border-radius: 12px !important;
     }
     
     .hero-scroll {
         position: absolute !important;
         z-index: 2 !important;
+        bottom: 20px !important;
     }
     
     /* Mobile More Items Styling */
@@ -265,17 +289,25 @@
 /* Additional mobile portrait fix for feature notification */
 @media (max-width: 480px) and (orientation: portrait) {
     .feature-notification {
-        margin-bottom: 90px !important;
-        margin-left: 10px !important;
-        margin-right: 10px !important;
+        bottom: 15px !important;
+        width: 92% !important;
+        padding: 12px 15px !important;
+    }
+    
+    /* Add close button for notification */
+    .notification-close {
+        padding: 5px !important;
+        font-size: 0.9rem !important;
     }
 }
 
 /* Additional mobile landscape fix for feature notification */
 @media (max-width: 896px) and (orientation: landscape) and (max-height: 500px) {
     .feature-notification {
-        margin-bottom: 70px !important;
+        bottom: 10px !important;
         padding: 8px 12px !important;
+        width: 85% !important;
+        max-width: 450px !important;
     }
     
     .notification-text {
