@@ -180,8 +180,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add visual indicators for protected content
     function addAuthIndicators() {
-        // This function is now handled by initProjectAuthProtection
-        // to prevent duplicate lock icons
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) {
+            viewButtons.forEach(button => {
+                button.classList.add('auth-protected');
+                const lockIcon = document.createElement('i');
+                lockIcon.className = 'fas fa-lock lock-indicator';
+                lockIcon.style.cssText = `
+                    margin-left: 8px;
+                    font-size: 0.8rem;
+                    opacity: 0.7;
+                `;
+                button.appendChild(lockIcon);
+            });
+        }
     }
     
     // Initialize auth indicators
@@ -196,30 +208,26 @@ function initProjectAuthProtection() {
     const viewButtons = document.querySelectorAll('.btn-view-project');
     
     viewButtons.forEach(button => {
-        // First, remove any existing lock indicators to prevent duplicates
-        const existingLockIcons = button.querySelectorAll('.lock-indicator');
-        existingLockIcons.forEach(icon => icon.remove());
-        
         if (!isLoggedIn) {
             button.classList.add('auth-protected');
-            // Add a single lock indicator
-            const lockIcon = document.createElement('i');
-            lockIcon.className = 'fas fa-lock lock-indicator';
-            lockIcon.style.cssText = `
-                margin-left: 8px;
-                font-size: 0.8rem;
-                opacity: 0.7;
-            `;
-            button.appendChild(lockIcon);
-            
-            // Add click event to show login popup
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                showAuthRequiredNotification();
-            });
+            // Add lock indicator if not already present
+            if (!button.querySelector('.lock-indicator')) {
+                const lockIcon = document.createElement('i');
+                lockIcon.className = 'fas fa-lock lock-indicator';
+                lockIcon.style.cssText = `
+                    margin-left: 8px;
+                    font-size: 0.8rem;
+                    opacity: 0.7;
+                `;
+                button.appendChild(lockIcon);
+            }
         } else {
-            // Remove auth protection
+            // Remove auth protection and lock indicators
             button.classList.remove('auth-protected');
+            const lockIcon = button.querySelector('.lock-indicator');
+            if (lockIcon) {
+                lockIcon.remove();
+            }
         }
     });
 }
