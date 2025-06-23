@@ -8,15 +8,125 @@
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
     
+    <!-- Inline critical CSS to prevent FOUC -->
+    <style>
+    /* Critical CSS inline */
+    :root {
+        --primary-color: #00a8ff;
+        --primary-color-dark: #0076b3;
+        --primary-color-light: #66c7ff;
+        --bg-color: #0c0c14;
+        --bg-color-light: #151525;
+        --text-color: #ffffff;
+        --text-color-muted: #a0a0b0;
+        --border-color: rgba(0, 168, 255, 0.2);
+        --header-height: 80px;
+        --section-padding: 100px 0;
+    }
+    
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-color);
+        color: var(--text-color);
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    
+    body {
+        padding-top: var(--header-height);
+    }
+    
+    /* Font Awesome icon preload */
+    .fa, .fas, .far, .fab {
+        font-display: block !important;
+        font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        -webkit-font-smoothing: antialiased !important;
+        display: inline-block !important;
+        font-style: normal !important;
+        font-variant: normal !important;
+        text-rendering: auto !important;
+        line-height: 1 !important;
+    }
+    
+    .fas {
+        font-weight: 900 !important;
+    }
+    
+    .fab {
+        font-family: "Font Awesome 6 Brands" !important;
+        font-weight: 400 !important;
+    }
+    
+    /* Header critical styles */
+    header {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: var(--header-height);
+        z-index: 999999 !important;
+        background: rgba(12, 12, 20, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    
+    /* Navigation styles */
+    .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 100%;
+        padding: 0 30px;
+    }
+    
+    .logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-color);
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 700;
+        font-size: 1.5rem;
+        position: relative;
+    }
+    
+    /* Page transition critical styles */
+    .page-transition {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(12, 12, 20, 0.98);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Project card basic styles */
+    .project-card {
+        background: var(--bg-color-light);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    </style>
+    
+    <!-- Non-critical CSS loaded asynchronously -->
     <link rel="stylesheet" href="../css/critical.css">
     <link rel="stylesheet" href="../css/styles.css?v=3.0">
     <link rel="stylesheet" href="../css/fix-logo.css">
     <link rel="stylesheet" href="../css/fix-styles.css">
     <link rel="stylesheet" href="../css/nav-fix.css?v=6.0">
     <link rel="stylesheet" href="../css/mobile-optimizations.css?v=1.0">
-
     <link rel="stylesheet" href="../css/projects.css">
-
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
