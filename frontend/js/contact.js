@@ -54,28 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Back to top button functionality
-    const backToTopBtn = document.querySelector('.back-to-top');
-    
-    if (backToTopBtn) {
-        // Show/hide back to top button based on scroll position
-        window.addEventListener('scroll', function() {
-            if (window.pageYOffset > 300) {
-                backToTopBtn.classList.add('show');
-            } else {
-                backToTopBtn.classList.remove('show');
-            }
-        });
-        
-        // Smooth scroll to top when clicked
-        backToTopBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-    }
+    // Back to top functionality removed to fix mobile width issues
     
     // Input animation for form fields
     const formInputs = document.querySelectorAll('.form-group input, .form-group textarea');
