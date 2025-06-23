@@ -3,18 +3,6 @@
  * Improves the mobile experience and fixes button effects on touch devices
  */
 
-/* Mobile-specific root variables */
-@media (max-width: 768px) {
-    :root {
-        --header-height: 70px !important; /* Slightly reduce header height on mobile */
-    }
-    
-    /* Ensure body has proper padding for fixed header */
-    body {
-        padding-top: var(--header-height) !important;
-    }
-}
-
 /* Mobile touch optimizations for buttons */
 @media (hover: none) and (pointer: coarse) {
     /* Fix for button effects on mobile devices */
@@ -194,41 +182,16 @@
         left: 0 !important;
     }
     
-    /* Fix for mobile game notifications pushing content under nav bar */
-    .hero {
-        padding-top: 30px !important;
-    }
-    
     /* Fix feature notification overlap with scroll indicator on mobile */
     .feature-notification {
         position: relative !important;
         z-index: 1 !important;
         margin-bottom: 80px !important;
-        margin-top: 20px !important; /* Add space at the top */
     }
     
     .hero-scroll {
         position: absolute !important;
         z-index: 2 !important;
-    }
-    
-    /* Fix for mobile game notifications pushing content */
-    .glitch-container {
-        padding-top: 30px !important; /* Ensure the text is visible */
-        position: relative !important;
-        z-index: 1 !important;
-        margin-top: 20px !important; /* Additional space at the top */
-    }
-    
-    /* Ensure the glitch text is visible */
-    .glitch {
-        margin-top: 20px !important;
-        position: relative !important;
-    }
-    
-    /* Adjust hero section to accommodate notifications */
-    .hero {
-        padding-top: 30px !important;
     }
     
     /* Mobile More Items Styling */
@@ -305,16 +268,6 @@
         margin-bottom: 90px !important;
         margin-left: 10px !important;
         margin-right: 10px !important;
-    }
-    
-    /* Fix for glitch text being covered by nav bar */
-    .glitch-container {
-        margin-top: 20px !important;
-    }
-    
-    /* Ensure hero section has enough space */
-    .hero {
-        padding-top: 40px !important;
     }
 }
 
