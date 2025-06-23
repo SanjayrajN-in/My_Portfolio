@@ -72,9 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
     new PageTransitionHandler();
 });
 
-// Add fade-in effect to body when page loads
+// Add fade-in effect to body when page loads and handle FOUC prevention
 window.addEventListener('load', () => {
     document.body.style.opacity = '1';
+    
+    // Mark document as ready (remove loading class, add ready class)
+    document.documentElement.classList.remove('loading');
+    document.documentElement.classList.add('ready');
 });
 
 // Ensure consistent navigation across pages
