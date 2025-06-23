@@ -891,34 +891,74 @@ function initSnakeGame() {
     const rightBtn = document.querySelector('.control-right');
     const pauseBtn = document.querySelector('.control-pause');
     
+    // Function to handle touch events and ensure proper visual feedback
+    const handleTouchEvents = (element, direction) => {
+        if (!element) return;
+        
+        element.addEventListener('click', () => setDirection(direction));
+        
+        element.addEventListener('touchstart', (e) => { 
+            e.preventDefault();
+            // Add touch-active class for visual feedback
+            element.classList.add('touch-active');
+            setDirection(direction);
+        });
+        
+        // Add touchend event to ensure button returns to normal state
+        element.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            // Remove touch-active class
+            element.classList.remove('touch-active');
+        });
+        
+        // Also handle touch cancel event (e.g., if finger moves outside button)
+        element.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            element.classList.remove('touch-active');
+        });
+    };
+    
     // Add event listeners for control buttons
-    if (upBtn) {
-        upBtn.addEventListener('click', () => setDirection('UP'));
-        upBtn.addEventListener('touchstart', (e) => { e.preventDefault(); setDirection('UP'); });
-    }
-    if (leftBtn) {
-        leftBtn.addEventListener('click', () => setDirection('LEFT'));
-        leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); setDirection('LEFT'); });
-    }
-    if (rightBtn) {
-        rightBtn.addEventListener('click', () => setDirection('RIGHT'));
-        rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); setDirection('RIGHT'); });
-    }
-    if (downBtn) {
-        downBtn.addEventListener('click', () => setDirection('DOWN'));
-        downBtn.addEventListener('touchstart', (e) => { e.preventDefault(); setDirection('DOWN'); });
-    }
+    handleTouchEvents(upBtn, 'UP');
+    handleTouchEvents(leftBtn, 'LEFT');
+    handleTouchEvents(rightBtn, 'RIGHT');
+    handleTouchEvents(downBtn, 'DOWN');
     if (pauseBtn) {
         pauseBtn.addEventListener('click', handlePausePlayButton);
+        
         pauseBtn.addEventListener('touchstart', (e) => { 
-            e.preventDefault(); 
+            e.preventDefault();
+            // Add touch-active class for visual feedback
+            pauseBtn.classList.add('touch-active');
             // Add small delay to prevent accidental touches
             setTimeout(() => handlePausePlayButton(), 50);
+        });
+        
+        // Add touchend event to ensure button returns to normal state
+        pauseBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            pauseBtn.classList.remove('touch-active');
+        });
+        
+        // Also handle touch cancel event
+        pauseBtn.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            pauseBtn.classList.remove('touch-active');
         });
     }
     
     // Keyboard controls
     document.addEventListener('keydown', handleKeyPress);
+    
+    // Global touch handler to reset any stuck buttons
+    document.addEventListener('touchstart', (e) => {
+        // Reset all control buttons if the touch is not on a control button
+        if (!e.target.closest('.control-btn')) {
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('touch-active');
+            });
+        }
+    });
     
     function handleKeyPress(e) {
         const activeGameContainer = document.querySelector('.game-container.active');
