@@ -19,14 +19,46 @@ document.addEventListener('DOMContentLoaded', function() {
     
 
     
+    // Log all project buttons for debugging
+    console.log('Project buttons found:', viewButtons.length);
+    viewButtons.forEach((button, index) => {
+        console.log(`Button ${index}: data-project="${button.getAttribute('data-project')}"`);
+    });
+    
     // Open modal with project details
     viewButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-
-            // Check authentication first
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            if (!token) {
+            console.log('Button clicked:', this.getAttribute('data-project'));
+            
+            // Get the project ID
+            const projectId = this.getAttribute('data-project');
+            
+            // Check if modal is already open with a different project
+            if (modal.classList.contains('active')) {
+                // Close the current modal first
+                closeModal();
+                
+                // Wait for animation to complete before opening new one
+                setTimeout(() => {
+                    openProjectModal(this);
+                }, 300);
+                return;
+            }
+            
+            // Open the project modal
+            openProjectModal(this);
+        });
+    });
+    
+    // Function to open project modal
+    function openProjectModal(button) {
+        // Get project ID
+        const projectId = button.getAttribute('data-project');
+        
+        // Check authentication first
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) {
                 // Show login prompt - copied directly from index.html
                 const notification = document.createElement('div');
                 notification.className = 'auth-notification';
@@ -75,14 +107,28 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get project ID
             const projectId = this.getAttribute('data-project');
             
+            // Debug log to help troubleshoot
+            console.log(`Clicked on project with ID: ${projectId}`);
+            
             // Find corresponding template
             let template;
             if (projectId) {
-                template = document.getElementById(`${projectId}-details`);
+                const templateId = `${projectId}-details`;
+                template = document.getElementById(templateId);
+                console.log(`Looking for template with ID: ${templateId}`);
+                
+                // If template not found, log available templates for debugging
+                if (!template) {
+                    console.warn(`Template not found for project: ${projectId}`);
+                    const allTemplates = document.querySelectorAll('.project-details-template');
+                    console.log('Available templates:');
+                    allTemplates.forEach(t => console.log(t.id));
+                }
             }
             
             // If template exists, load content
             if (template) {
+                console.log(`Template found for ${projectId}, loading content`);
                 modalContent.innerHTML = template.innerHTML;
                 
                 // Initialize gallery functionality
@@ -116,6 +162,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalContentElement.style.scrollBehavior = 'smooth';
             }
             
+            // Store the current project ID to prevent incorrect navigation
+            modal.setAttribute('data-current-project', projectId);
+            console.log(`Set current project to: ${projectId}`);
+            
             // Initialize gallery functionality
             setTimeout(() => {
                 initGallery();
@@ -127,6 +177,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function closeModal() {
         modal.classList.remove('active');
         document.body.style.overflow = 'auto';
+        
+        // Clear the current project ID
+        modal.removeAttribute('data-current-project');
+        console.log('Cleared current project');
+        
+        // Clear modal content after animation completes
+        setTimeout(() => {
+            modalContent.innerHTML = '';
+        }, 300);
     }
     
     // Close modal
