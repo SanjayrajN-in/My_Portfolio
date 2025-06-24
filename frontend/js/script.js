@@ -1,4 +1,4 @@
-/**
+ /**
  * =================================================================
  * SANJAYRAJ N - PORTFOLIO WEBSITE
  * Clean, Consolidated JavaScript (No Duplicates, No Conflicts)
@@ -704,10 +704,16 @@ class PortfolioApp {
     // Handle clicks on protected elements
     handleProtectedClick(e) {
         e.preventDefault();
-        // Redirect to login page with message
-        localStorage.setItem('login-message', 'Please login to access this feature');
-        localStorage.setItem('redirect-after-login', window.location.href);
-        window.location.href = 'pages/login.html';
+        
+        // Show login prompt instead of redirecting
+        if (e.currentTarget.id === 'resume-download') {
+            this.showLoginPrompt();
+        } else {
+            // For other protected elements, keep the original behavior
+            localStorage.setItem('login-message', 'Please login to access this feature');
+            localStorage.setItem('redirect-after-login', window.location.href);
+            window.location.href = 'pages/login.html';
+        }
     }
     
     // Show login prompt
@@ -717,7 +723,7 @@ class PortfolioApp {
         notification.innerHTML = `
             <div class="auth-notification-content">
                 <i class="fas fa-lock"></i>
-                <span>Please login to download the resume</span>
+                <span>Please login first to download the CV</span>
                 <button onclick="window.location.href='pages/login.html'" class="login-btn">Login</button>
                 <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
             </div>
@@ -728,7 +734,7 @@ class PortfolioApp {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.95), rgba(125, 95, 255, 0.95));
             color: white;
             padding: 15px 20px;
             border-radius: 10px;
@@ -736,7 +742,70 @@ class PortfolioApp {
             z-index: 10000;
             animation: slideInRight 0.3s ease;
             backdrop-filter: blur(10px);
+            transform: translateX(0);
+            opacity: 1;
+            max-width: 350px;
+            font-family: 'Poppins', sans-serif;
         `;
+        
+        // Add styles for the content
+        const content = notification.querySelector('.auth-notification-content');
+        if (content) {
+            content.style.cssText = `
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            `;
+        }
+        
+        // Add styles for the buttons
+        const loginBtn = notification.querySelector('.login-btn');
+        if (loginBtn) {
+            loginBtn.style.cssText = `
+                background: #ffffff;
+                color: #7d5fff;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.2s ease;
+                margin-top: 5px;
+            `;
+        }
+        
+        const closeBtn = notification.querySelector('.close-btn');
+        if (closeBtn) {
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                background: transparent;
+                border: none;
+                color: white;
+                font-size: 18px;
+                cursor: pointer;
+                opacity: 0.7;
+                transition: opacity 0.2s ease;
+            `;
+        }
+        
+        // Add animation style
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
         
         document.body.appendChild(notification);
         
