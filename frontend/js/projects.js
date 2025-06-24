@@ -149,17 +149,17 @@ document.addEventListener('DOMContentLoaded', function() {
         notification.className = 'auth-notification';
         notification.innerHTML = `
             <div class="auth-notification-content">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-lock"></i>
                 <span>Please login to view project details</span>
                 <button onclick="window.location.href='login.html'" class="login-btn">Login</button>
                 <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
             </div>
         `;
         
-        // Add styles
+        // Add styles with improved positioning to avoid navbar overlap
         notification.style.cssText = `
             position: fixed;
-            top: 20px;
+            top: 100px; /* Position below navbar */
             right: 20px;
             background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
             color: white;
@@ -169,25 +169,59 @@ document.addEventListener('DOMContentLoaded', function() {
             z-index: 10000;
             animation: slideInRight 0.3s ease;
             backdrop-filter: blur(10px);
+            max-width: 300px;
         `;
+        
+        // Add responsive styles for mobile
+        const mediaQuery = window.matchMedia('(max-width: 768px)');
+        if (mediaQuery.matches) {
+            notification.style.top = '90px'; // Adjust for mobile navbar
+            notification.style.right = '10px';
+            notification.style.left = '10px';
+            notification.style.maxWidth = 'calc(100% - 20px)';
+        }
+        
+        // Style the login button
+        const loginBtn = notification.querySelector('.login-btn');
+        if (loginBtn) {
+            loginBtn.style.cssText = `
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                padding: 5px 15px;
+                border-radius: 5px;
+                color: white;
+                margin-top: 10px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: background 0.3s;
+            `;
+        }
         
         document.body.appendChild(notification);
         
-        // Auto remove after 5 seconds
+        // Auto remove after 7 seconds (increased from 5)
         setTimeout(() => {
             if (notification.parentElement) {
                 notification.remove();
             }
-        }, 5000);
+        }, 7000);
     }
     
-    // Add visual indicators for protected content - removed lock icons
+    // Add visual indicators for protected content - keep one lock icon
     function addAuthIndicators() {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (!token) {
             viewButtons.forEach(button => {
                 button.classList.add('auth-protected');
-                // Lock icons removed as requested
+                // Add a single lock icon
+                const lockIcon = document.createElement('i');
+                lockIcon.className = 'fas fa-lock lock-indicator';
+                lockIcon.style.cssText = `
+                    margin-left: 8px;
+                    font-size: 0.8rem;
+                    opacity: 0.7;
+                `;
+                button.appendChild(lockIcon);
             });
         }
     }
@@ -206,11 +240,16 @@ function initProjectAuthProtection() {
     viewButtons.forEach(button => {
         if (!isLoggedIn) {
             button.classList.add('auth-protected');
-            // Lock icons removed as requested
-            // Remove any existing lock indicators
-            const lockIcon = button.querySelector('.lock-indicator');
-            if (lockIcon) {
-                lockIcon.remove();
+            // Add a single lock icon if not already present
+            if (!button.querySelector('.lock-indicator')) {
+                const lockIcon = document.createElement('i');
+                lockIcon.className = 'fas fa-lock lock-indicator';
+                lockIcon.style.cssText = `
+                    margin-left: 8px;
+                    font-size: 0.8rem;
+                    opacity: 0.7;
+                `;
+                button.appendChild(lockIcon);
             }
         } else {
             // Remove auth protection and lock indicators
