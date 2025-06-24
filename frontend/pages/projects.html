@@ -494,6 +494,34 @@
                         </a>
                     </div>
                 </div>
+                
+                <!-- Project: Keithley Data Logger -->
+                <div class="project-item" id="keithley" data-aos="fade-up" data-aos-delay="300">
+                    <div class="project-image">
+                        <img src="../images/DataLoggerVisualization.png" alt="Advanced Data Acquisition System for Precision Instrumentation">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="#" class="project-github"><i class="fab fa-github"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3>Advanced Data Acquisition System for Precision Instrumentation</h3>
+                        <p>A sophisticated data acquisition and logging system for Keithley 2000 multimeter, bridging high-precision laboratory equipment with modern data analysis workflows. Features real-time visualization, multi-parameter measurement, and robust error recovery.</p>
+                        <div class="project-tech">
+                            <span>Python</span>
+                            <span>PyQt5</span>
+                            <span>PySerial</span>
+                            <span>Matplotlib</span>
+                            <span>Pandas</span>
+                            <span>Multi-threading</span>
+                        </div>
+                        <a href="#" class="btn-view-project" data-project="keithley">
+                            <span>View Details</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -931,40 +959,128 @@
     <div class="project-details-template" id="keithley-details" style="display: none;">
         <div class="project-details">
             <div class="project-details-header">
-                <h2>KEITHLEY Data Logger</h2>
+                <h2>Advanced Data Acquisition System for Precision Instrumentation</h2>
                 <div class="project-details-meta">
                     <span><i class="far fa-calendar-alt"></i> 2023</span>
                     <span><i class="fas fa-code"></i> Python</span>
-                    <span><i class="fas fa-database"></i> SQL</span>
+                    <span><i class="fas fa-desktop"></i> PyQt5</span>
+                    <span><i class="fas fa-chart-line"></i> Matplotlib</span>
+                    <span><i class="fas fa-database"></i> Pandas</span>
                 </div>
             </div>
             <div class="project-details-gallery">
                 <div class="gallery-main">
-                    <img src="../images/memory/circuit.png" alt="KEITHLEY Data Logger">
+                    <img src="../images/DataLoggerVisualization.png" alt="Keithley Data Logger Visualization">
                 </div>
                 <div class="gallery-thumbs">
-                    <img src="../images/memory/circuit.png" alt="KEITHLEY Data Logger" class="active">
+                    <img src="../images/DataLoggerVisualization.png" alt="Keithley Data Logger Visualization" class="active">
+                    <img src="../images/DataLoggerConnection.png" alt="Keithley Data Logger Connection">
+                    <img src="../images/DataLoggerLogging.png" alt="Keithley Data Logger Logging">
                 </div>
             </div>
             <div class="project-details-content">
                 <div class="details-section">
                     <h3>Project Overview</h3>
-                    <p>The KEITHLEY Data Logger is a desktop application designed to interface with KEITHLEY measurement instruments, collect data in real-time, and provide visualization and analysis tools for the captured data.</p>
+                    <p>I designed and developed a sophisticated data acquisition and logging system for precision measurement instruments, specifically targeting the Keithley 2000 multimeter. This application bridges the gap between high-precision laboratory equipment and modern data analysis workflows, enabling researchers and engineers to collect, visualize, and analyze measurement data with unprecedented ease.</p>
                 </div>
                 <div class="details-section">
-                    <h3>Key Features</h3>
+                    <h3>Core Technologies</h3>
                     <ul>
-                        <li>Real-time data acquisition from KEITHLEY instruments</li>
-                        <li>Interactive data visualization with customizable charts</li>
-                        <li>Data export in multiple formats (CSV, Excel, PDF)</li>
-                        <li>Automated test sequences and reporting</li>
-                        <li>SQL database for data storage and retrieval</li>
+                        <li><strong>Python:</strong> Built with Python 3.7+ for cross-platform compatibility</li>
+                        <li><strong>PyQt5:</strong> Created a responsive, modern GUI with tabbed navigation</li>
+                        <li><strong>PySerial:</strong> Implemented robust serial communication with error recovery</li>
+                        <li><strong>Matplotlib:</strong> Integrated interactive data visualization with real-time plotting</li>
+                        <li><strong>Pandas:</strong> Utilized for efficient data manipulation and analysis</li>
+                        <li><strong>PyInstaller:</strong> Packaged as a standalone Windows executable</li>
                     </ul>
                 </div>
                 <div class="details-section">
-                    <h3>Technical Implementation</h3>
-                    <p>The application is built using Python with PyQt5 for the user interface. It communicates with KEITHLEY instruments via VISA/GPIB interfaces and stores data in an SQLite database for efficient retrieval and analysis.</p>
-                    <p>The visualization component uses Matplotlib and PyQtGraph to create interactive charts that update in real-time as data is collected.</p>
+                    <h3>Architecture & Design</h3>
+                    <ul>
+                        <li><strong>Modular Architecture:</strong> Separated concerns into distinct modules (GUI, device communication, data logging, utilities)</li>
+                        <li><strong>Multi-threaded Design:</strong> Implemented background threads for non-blocking data acquisition</li>
+                        <li><strong>Event-Driven Programming:</strong> Used PyQt's signal/slot mechanism for responsive UI</li>
+                        <li><strong>Error Recovery System:</strong> Built sophisticated error detection and recovery mechanisms</li>
+                        <li><strong>Configurable Settings:</strong> Implemented persistent user preferences</li>
+                    </ul>
+                </div>
+                <div class="details-section">
+                    <h3>Key Features</h3>
+                    <h4>Advanced Connectivity</h4>
+                    <ul>
+                        <li><strong>Serial Communication:</strong> Robust RS-232/USB communication with automatic port detection</li>
+                        <li><strong>Connection Diagnostics:</strong> Built-in tools to diagnose and troubleshoot connection issues</li>
+                        <li><strong>Virtual Port Management:</strong> Implemented virtual port disconnection/reconnection capability</li>
+                        <li><strong>Error Recovery:</strong> Automatic recovery from communication errors and device timeouts</li>
+                    </ul>
+                    
+                    <h4>Data Acquisition & Management</h4>
+                    <ul>
+                        <li><strong>Multi-parameter Measurement:</strong> Support for voltage, current, resistance, frequency, and temperature</li>
+                        <li><strong>Configurable Sampling:</strong> Adjustable sampling rates and buffer sizes</li>
+                        <li><strong>CSV Data Logging:</strong> Structured data storage with timestamps and measurement metadata</li>
+                        <li><strong>Automatic Backup:</strong> Intelligent file versioning to prevent data loss</li>
+                        <li><strong>Data Export:</strong> Export capabilities for further analysis in other tools</li>
+                    </ul>
+                    
+                    <h4>Visualization & Analysis</h4>
+                    <ul>
+                        <li><strong>Real-time Plotting:</strong> Dynamic visualization of measurement data as it's collected</li>
+                        <li><strong>Interactive Charts:</strong> Zoom, pan, and explore data with interactive matplotlib integration</li>
+                        <li><strong>Data Preview:</strong> Built-in data preview with filtering and sorting capabilities</li>
+                        <li><strong>Statistical Analysis:</strong> Real-time calculation of min, max, average, and standard deviation</li>
+                    </ul>
+                </div>
+                <div class="details-section">
+                    <h3>Technical Challenges Overcome</h3>
+                    <h4>Serial Communication Reliability</h4>
+                    <p>I implemented a multi-layered approach to serial communication that addresses common issues with USB-to-Serial adapters:</p>
+                    <ul>
+                        <li>Developed a custom connection manager with fallback mechanisms</li>
+                        <li>Created a virtual port reset capability to recover from hardware errors</li>
+                        <li>Implemented automatic retry logic with exponential backoff</li>
+                        <li>Added detailed diagnostics for Windows-specific serial port issues</li>
+                    </ul>
+                    
+                    <h4>Real-time Data Visualization</h4>
+                    <p>Creating a responsive visualization system that could handle high-frequency data collection required:</p>
+                    <ul>
+                        <li>Implementing a custom plotting widget with optimized rendering</li>
+                        <li>Designing an efficient data buffer system to prevent UI blocking</li>
+                        <li>Creating a thread-safe communication channel between acquisition and visualization threads</li>
+                        <li>Optimizing memory usage for long-duration data collection sessions</li>
+                    </ul>
+                </div>
+                <div class="details-section">
+                    <h3>Impact & Results</h3>
+                    <p>This data acquisition system has significantly improved the workflow for laboratory measurements by:</p>
+                    <ul>
+                        <li>Reducing setup time from hours to minutes</li>
+                        <li>Eliminating manual data transcription errors</li>
+                        <li>Enabling real-time visualization of measurement trends</li>
+                        <li>Providing a standardized format for measurement data</li>
+                        <li>Allowing for longer unattended measurement sessions</li>
+                    </ul>
+                </div>
+                <div class="details-section">
+                    <h3>Technical Specifications</h3>
+                    <ul>
+                        <li><strong>Lines of Code:</strong> ~5,000</li>
+                        <li><strong>Development Time:</strong> 3 months</li>
+                        <li><strong>Target Platform:</strong> Windows 10/11</li>
+                        <li><strong>Dependencies:</strong> Python 3.7+, PyQt5, PySerial, Matplotlib, Pandas</li>
+                        <li><strong>Distribution Size:</strong> ~25MB (standalone executable)</li>
+                    </ul>
+                </div>
+                <div class="details-section">
+                    <h3>Future Enhancements</h3>
+                    <ul>
+                        <li>Cloud synchronization for remote monitoring</li>
+                        <li>Support for additional instrument models</li>
+                        <li>Advanced statistical analysis tools</li>
+                        <li>Automated report generation</li>
+                        <li>Mobile companion app for notifications</li>
+                    </ul>
                 </div>
             </div>
             <div class="project-details-footer">
