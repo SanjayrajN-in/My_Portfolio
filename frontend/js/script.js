@@ -846,33 +846,20 @@ class PortfolioApp {
     
     // Initialize feature notifications
     initFeatureNotifications() {
-        // Don't show notification if it was previously dismissed
+        // Check if notification was previously dismissed
         if (localStorage.getItem('feature-notification-dismissed')) {
-            return;
+            return; // Don't show notification if it was previously dismissed
         }
         
-        // Show notification immediately
+        // Get the notification element
         const notification = document.getElementById('feature-notification');
-        if (notification) {
-            // Make sure notification doesn't have hidden class
-            notification.classList.remove('hidden');
-            
-            // Show the notification - always visible
+        if (!notification) return;
+        
+        // Show notification after a short delay
+        setTimeout(() => {
+            // Make sure notification is visible
             notification.style.display = 'block';
-            
-            // Make sure the notification stays visible
-            window.addEventListener('scroll', () => {
-                // Ensure it's always displayed
-                if (notification.style.display !== 'block') {
-                    notification.style.display = 'block';
-                }
-                
-                // Ensure it's not hidden
-                if (notification.classList.contains('hidden')) {
-                    notification.classList.remove('hidden');
-                }
-            });
-        }
+        }, 1500);
     }
     
     // Adjust notification positioning for mobile devices
@@ -1041,12 +1028,6 @@ function hideFeatureNotification() {
         
         // Store in localStorage that notification was dismissed
         localStorage.setItem('feature-notification-dismissed', 'true');
-        
-        // Prevent event from bubbling
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
     }
 }
 
