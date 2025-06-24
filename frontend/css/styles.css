@@ -534,8 +534,10 @@ header.scrolled {
     transform: translateX(-50%);
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
     
-    /* Ensure it's always visible */
+    /* Ensure it's always visible and centered */
     margin: 0;
+    margin-left: 0;
+    right: auto;
 }
 
 .notification-content {

@@ -209,6 +209,8 @@
         left: 50% !important;
         transform: translateX(-50%) !important;
         position: fixed !important;
+        margin-left: 0 !important; /* Reset any margin that might be causing offset */
+        right: auto !important; /* Ensure right property doesn't interfere */
     }
     
     .hero-scroll {
@@ -294,6 +296,8 @@
         left: 50% !important;
         transform: translateX(-50%) !important;
         position: fixed !important;
+        margin-left: 0 !important;
+        right: auto !important;
     }
     
     /* Add close button for notification */
@@ -313,6 +317,8 @@
         left: 50% !important;
         transform: translateX(-50%) !important;
         position: fixed !important;
+        margin-left: 0 !important;
+        right: auto !important;
     }
     
     .notification-text {
