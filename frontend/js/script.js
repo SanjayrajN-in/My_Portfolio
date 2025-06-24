@@ -855,6 +855,16 @@ class PortfolioApp {
         const notification = document.getElementById('feature-notification');
         if (!notification) return;
         
+        // Determine if we're on mobile or desktop
+        const isMobile = window.innerWidth <= 768;
+        
+        // Apply appropriate styles based on device type
+        if (isMobile) {
+            this.adjustNotificationForMobile(notification);
+        } else {
+            this.adjustNotificationForDesktop(notification);
+        }
+        
         // Show notification after a short delay
         setTimeout(() => {
             // Make sure notification is visible
@@ -884,6 +894,14 @@ class PortfolioApp {
         
         // Ensure the notification is visible
         notification.classList.remove('hidden');
+        
+        // Add desktop-specific class for enhanced styling
+        notification.classList.add('desktop-notification');
+        
+        // Ensure proper positioning
+        notification.style.left = '50%';
+        notification.style.transform = 'translateX(-50%)';
+        notification.style.bottom = '25px';
     }
     
     // Setup auth state listener
