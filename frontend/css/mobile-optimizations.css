@@ -27,6 +27,27 @@
         touch-action: manipulation !important;
     }
     
+    /* Ensure modal close button is visible on mobile */
+    .modal-close {
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        width: 45px !important;
+        height: 45px !important;
+        z-index: 100000 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-color: var(--primary-color) !important;
+        border-radius: 50% !important;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    .modal-close i {
+        color: white !important;
+        font-size: 1.2rem !important;
+    }
+    
     /* Active state for buttons on touch */
     .btn:active, button:active, a.btn:active {
         transform: scale(0.98) !important;
