@@ -483,7 +483,7 @@ header .nav-links li a i,
 
 .dropdown-menu {
     position: absolute !important;
-    top: calc(100% + 5px) !important; /* Small gap from dropdown button */
+    top: 100% !important; /* No gap - dropdown starts immediately below the button */
     left: 50% !important; /* Center align with dropdown button */
     transform: translateX(-50%) translateY(-10px) !important; /* Center horizontally and start slightly above */
     background: rgba(12, 12, 20, 0.95) !important;
@@ -491,11 +491,11 @@ header .nav-links li a i,
     -webkit-backdrop-filter: blur(20px) !important;
     border: 1px solid rgba(0, 168, 255, 0.15) !important;
     border-radius: 10px !important;
-    padding: 10px 5px 5px 5px !important; /* Added top padding to create a buffer zone */
+    padding: 15px 5px 5px 5px !important; /* Increased top padding to create better buffer zone */
     min-width: 240px !important; /* Slightly wider dropdown for better readability */
     opacity: 0 !important;
     visibility: hidden !important;
-    transition: opacity 0.3s ease, visibility 0.3s ease !important; /* Simplified transition */
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease !important; /* Faster transition */
     z-index: 999999 !important; /* Always keep high z-index to prevent flickering */
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25) !important;
     text-align: left !important; /* Force left alignment for all content */
@@ -504,34 +504,57 @@ header .nav-links li a i,
     bottom: auto !important; /* Ensure it doesn't stick to bottom */
 }
 
-/* Add a buffer zone above the dropdown menu */
+/* Create a hover bridge between the trigger and dropdown menu */
 .dropdown-menu::before {
     content: '' !important;
     position: absolute !important;
-    top: -10px !important;
+    top: -15px !important; /* Extended buffer zone that connects to the trigger */
     left: 0 !important;
     width: 100% !important;
-    height: 10px !important;
+    height: 15px !important; /* Larger buffer zone for better hover stability */
     background: transparent !important;
+    z-index: 1 !important;
 }
 
-/* Dropdown hover effects - Simplified to prevent conflicts */
+/* Enhanced dropdown hover effects with stable hover bridge */
 .dropdown:hover .dropdown-menu,
-.dropdown-menu:hover {
+.dropdown:hover .dropdown-menu::before,
+.dropdown-menu:hover,
+.dropdown-menu::before:hover {
     opacity: 1 !important;
     visibility: visible !important;
     transform: translateX(-50%) translateY(0) !important; /* Move to final position while maintaining horizontal centering */
     pointer-events: auto !important;
 }
 
-/* Prevent dropdown conflicts with other page elements - simplified */
+/* Ensure the dropdown trigger maintains hover state when moving to menu */
+.dropdown {
+    /* Add a small delay before hiding to prevent flickering */
+    transition: all 0.1s ease !important;
+}
+
+/* Prevent dropdown conflicts with other page elements - enhanced */
 .dropdown-menu {
     pointer-events: none !important; /* Disable pointer events when hidden */
 }
 
 .dropdown:hover .dropdown-menu,
-.dropdown-menu:hover {
+.dropdown-menu:hover,
+.dropdown-menu::before:hover {
     pointer-events: auto !important; /* Enable pointer events when visible */
+}
+
+/* Create a larger invisible hover area to prevent dropdown from closing */
+.dropdown::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 15px !important; /* Bridge height that connects to dropdown */
+    background: transparent !important;
+    z-index: 999998 !important;
+    pointer-events: auto !important;
 }
 
 /* Ensure hero email and other key elements have proper z-index */
