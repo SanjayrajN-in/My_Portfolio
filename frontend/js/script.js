@@ -702,7 +702,9 @@ class PortfolioApp {
             
             // For resume download, ensure it works properly
             if (element.id === 'resume-download') {
-                element.href = 'resume.pdf';
+                // Check if we're on the about page or another page
+                const isAboutPage = window.location.pathname.includes('/pages/about.html');
+                element.href = isAboutPage ? '../resume.pdf' : 'resume.pdf';
                 element.download = 'Sanjayraj_N_Resume.pdf';
                 element.target = '_blank';
             }

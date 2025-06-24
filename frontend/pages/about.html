@@ -289,9 +289,10 @@
                     </div>
                     
                     <div class="about-cta">
-                        <a href="../resume.pdf" class="btn primary-btn" download>
+                        <a href="../resume.pdf" class="btn primary-btn glow-effect auth-protected locked" id="resume-download" download>
                             <span class="btn-text">Download CV</span>
                             <span class="btn-icon"><i class="fas fa-download"></i></span>
+                            <span class="lock-overlay"><i class="fas fa-lock"></i></span>
                         </a>
                     </div>
                 </div>
@@ -455,9 +456,77 @@
     <script src="../js/common.js"></script>
     <script src="../js/navigation.js?v=4.0"></script>
     <script src="../js/api-config.js"></script>
+    <script src="../js/script.js"></script>
     <script src="../js/about.js"></script>
     <script src="../js/page-transition.js"></script>
     <script src="../js/auth.js"></script>
+    
+    <!-- Resume download button click handler with overlay -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resumeBtn = document.getElementById('resume-download');
+            if (resumeBtn && resumeBtn.classList.contains('locked')) {
+                // Create a clickable overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'resume-download-overlay';
+                overlay.style.cssText = `
+                    position: absolute;
+                    cursor: pointer;
+                    z-index: 1000;
+                    background: transparent;
+                `;
+                
+                // Position the overlay over the button
+                function positionOverlay() {
+                    const rect = resumeBtn.getBoundingClientRect();
+                    overlay.style.top = (rect.top + window.scrollY) + 'px';
+                    overlay.style.left = rect.left + 'px';
+                    overlay.style.width = rect.width + 'px';
+                    overlay.style.height = rect.height + 'px';
+                }
+                
+                // Position initially and on resize
+                positionOverlay();
+                window.addEventListener('resize', positionOverlay);
+                window.addEventListener('scroll', positionOverlay);
+                
+                // Add click handler to the overlay
+                overlay.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Show login prompt
+                    const notification = document.createElement('div');
+                    notification.className = 'auth-notification';
+                    notification.innerHTML = `
+                        <div class="auth-notification-content">
+                            <i class="fas fa-lock"></i>
+                            <span>Please login to download the resume</span>
+                            <button onclick="window.location.href='login.html'" class="login-btn">Login</button>
+                            <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
+                        </div>
+                    `;
+                    document.body.appendChild(notification);
+                    
+                    // Remove notification after 5 seconds
+                    setTimeout(() => {
+                        if (document.body.contains(notification)) {
+                            notification.remove();
+                        }
+                    }, 5000);
+                });
+                
+                document.body.appendChild(overlay);
+                
+                // Check if user is already authenticated
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                if (token) {
+                    resumeBtn.classList.remove('locked');
+                    overlay.remove();
+                }
+            }
+        });
+    </script>
 </body>
 </html>
 
