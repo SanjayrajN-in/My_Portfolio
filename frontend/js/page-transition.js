@@ -1,6 +1,6 @@
 /**
  * Page Transition Handler
- * Provides smooth transitions between pages
+ * Provides smooth transitions between pages and prevents FOUC
  */
 
 class PageTransitionHandler {
@@ -12,8 +12,9 @@ class PageTransitionHandler {
         this.pageTransition = document.querySelector('.page-transition');
         this.links = document.querySelectorAll('a[href]:not([href^="#"]):not([href^="javascript:"]):not([href^="mailto:"]):not([href^="tel:"]):not([target="_blank"])');
         
+        // Keep the page transition visible during initial load
+        // It will be hidden by the window load event
         this.bindEvents();
-        this.hidePageTransition();
     }
     
     bindEvents() {
@@ -74,11 +75,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Add fade-in effect to body when page loads and handle FOUC prevention
 window.addEventListener('load', () => {
-    document.body.style.opacity = '1';
-    
-    // Mark document as ready (remove loading class, add ready class)
-    document.documentElement.classList.remove('loading');
-    document.documentElement.classList.add('ready');
+    // First make sure all resources are loaded
+    setTimeout(() => {
+        // Hide the page transition
+        const pageTransition = document.querySelector('.page-transition');
+        if (pageTransition) {
+            pageTransition.style.opacity = '0';
+            pageTransition.style.visibility = 'hidden';
+        }
+        
+        // Make the body visible
+        document.body.style.opacity = '1';
+        
+        // Remove loading class from html element to make content visible
+        document.documentElement.classList.remove('loading');
+        document.documentElement.classList.add('ready');
+        
+        console.log('✅ Page fully loaded and displayed');
+    }, 300); // Small delay to ensure everything is rendered
 });
 
 // Ensure consistent navigation across pages

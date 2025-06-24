@@ -1,5 +1,5 @@
 ﻿﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="loading">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0">
@@ -8,6 +8,43 @@
     <meta http-equiv="Expires" content="0">
 
     <title>Sanjayraj N | Electrical & Electronics Engineer</title>
+    
+    <!-- FOUC Prevention - Hide content until fully loaded -->
+    <style>
+        html.loading {
+            visibility: hidden;
+        }
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0c0c14;
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+    <script>
+        // Immediate execution to prevent FOUC
+        (function() {
+            // Create and show page transition immediately
+            if (!document.querySelector('.page-transition')) {
+                var overlay = document.createElement('div');
+                overlay.className = 'page-transition';
+                overlay.innerHTML = '<div class="loader"></div>';
+                document.body ? 
+                    document.body.appendChild(overlay) : 
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.body.appendChild(overlay);
+                    });
+            }
+        })();
+    </script>
     
     <!-- Cache control script - load this first -->
     <script src="js/cache-control.js?v=1.0.0"></script>
@@ -47,6 +84,8 @@
     
     body {
         padding-top: var(--header-height);
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
     
     /* Font Awesome icon preload */

@@ -88,10 +88,10 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
-    visibility: hidden;
+    opacity: 1; /* Start visible */
+    visibility: visible;
     transition: opacity 0.4s ease, visibility 0.4s ease;
-    pointer-events: none;
+    pointer-events: all;
     will-change: opacity, visibility;
     transform: translateZ(0);
 }
