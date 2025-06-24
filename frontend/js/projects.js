@@ -27,13 +27,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Check authentication first
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (!token) {
-                // Show notification instead of redirecting
-                if (window.authSystem && typeof window.authSystem.showFloatingNotification === 'function') {
-                    window.authSystem.showFloatingNotification('Please login to view project details', 'warning');
-                } else {
-                    // Fallback to simple notification if authSystem is not available
-                    showAuthRequiredNotification();
-                }
+                // Simple alert instead of custom notification
+                alert('Please login to view project details');
                 return;
             }
             
@@ -142,45 +137,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Tilt effect removed for better performance
-    
-    // Show authentication required notification
-    function showAuthRequiredNotification() {
-        const notification = document.createElement('div');
-        notification.className = 'auth-notification';
-        notification.innerHTML = `
-            <div class="auth-notification-content">
-                <i class="fas fa-lock"></i>
-                <span>Please login to view project details</span>
-                <button onclick="window.location.href='login.html'" class="login-btn">Login</button>
-                <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
-            </div>
-        `;
-        
-        // Add styles with improved positioning to avoid navbar overlap
-        notification.style.cssText = `
-            position: fixed;
-            top: 120px; /* Position further below navbar to avoid overlap */
-            right: 20px;
-            background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            z-index: 10000;
-            animation: slideInRight 0.3s ease;
-            backdrop-filter: blur(10px);
-            max-width: 300px;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentElement) {
-                notification.remove();
-            }
-        }, 5000);
-    }
     
     // Add visual indicators for protected content - keep one lock icon
     function addAuthIndicators() {
