@@ -654,27 +654,63 @@ class PortfolioApp {
     initAuthProtection() {
         const resumeBtn = document.getElementById('resume-download');
         if (resumeBtn) {
-            this.checkAuthStatus(resumeBtn);
+            // Check if user is already authenticated
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const isLoggedIn = !!token;
             
-            // Add direct click handler for the resume button
-            resumeBtn.addEventListener('click', (e) => {
-                if (resumeBtn.classList.contains('locked')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this.showLoginPrompt();
-                    return false;
+            // Remove any existing click handlers first
+            if (resumeBtn._protectedClickHandler) {
+                resumeBtn.removeEventListener('click', resumeBtn._protectedClickHandler);
+                delete resumeBtn._protectedClickHandler;
+            }
+            
+            if (!isLoggedIn) {
+                // For locked buttons, set href to javascript:void(0) to prevent any navigation
+                resumeBtn.setAttribute('data-original-href', resumeBtn.href);
+                resumeBtn.href = 'javascript:void(0)';
+                
+                // Only add the click handler if the user is not logged in
+                resumeBtn._protectedClickHandler = (e) => {
+                    // Always prevent default for locked buttons
+                    if (resumeBtn.classList.contains('locked')) {
+                        console.log('🔒 Preventing download for locked resume button');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.showLoginPrompt();
+                        return false;
+                    }
+                };
+                
+                resumeBtn.addEventListener('click', resumeBtn._protectedClickHandler);
+            } else {
+                // If user is logged in, make sure the button works correctly
+                resumeBtn.classList.remove('locked');
+                
+                // Restore original href if it was saved, otherwise set it based on the page
+                if (resumeBtn.hasAttribute('data-original-href')) {
+                    resumeBtn.href = resumeBtn.getAttribute('data-original-href');
+                    resumeBtn.removeAttribute('data-original-href');
+                } else {
+                    const isAboutPage = window.location.pathname.includes('/pages/about.html');
+                    resumeBtn.href = isAboutPage ? '../resume.pdf' : 'resume.pdf';
                 }
-            });
+                
+                resumeBtn.download = 'Sanjayraj_N_Resume.pdf';
+                resumeBtn.target = '_blank';
+            }
+            
+            // Check auth status but don't add another click handler
+            this.checkAuthStatusWithoutHandler(resumeBtn);
         }
         
-        // Also check immediately for any auth-protected elements
-        const authProtectedElements = document.querySelectorAll('.auth-protected');
+        // Check immediately for any other auth-protected elements
+        const authProtectedElements = document.querySelectorAll('.auth-protected:not(#resume-download)');
         authProtectedElements.forEach(element => {
             this.checkAuthStatus(element);
         });
     }
     
-    // Check authentication status
+    // Check authentication status and add click handler
     checkAuthStatus(element) {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         const isLoggedIn = !!token;
@@ -705,6 +741,46 @@ class PortfolioApp {
                 // Check if we're on the about page or another page
                 const isAboutPage = window.location.pathname.includes('/pages/about.html');
                 element.href = isAboutPage ? '../resume.pdf' : 'resume.pdf';
+                element.download = 'Sanjayraj_N_Resume.pdf';
+                element.target = '_blank';
+            }
+            
+            console.log('🔓 Lock removed from:', element.id, 'Classes now:', element.className);
+        }
+    }
+    
+    // Check authentication status without adding click handler
+    checkAuthStatusWithoutHandler(element) {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const isLoggedIn = !!token;
+        
+        console.log('🔍 Checking auth for element (no handler):', element.id, 'Token exists:', !!token);
+        
+        if (!isLoggedIn) {
+            element.classList.add('auth-protected', 'locked');
+            
+            // For resume download, save original href and set to javascript:void(0)
+            if (element.id === 'resume-download' && element.href !== 'javascript:void(0)') {
+                element.setAttribute('data-original-href', element.href);
+                element.href = 'javascript:void(0)';
+            }
+            
+            console.log('🔒 Lock added to:', element.id, '(no handler)');
+        } else {
+            // Remove locked state and hide lock overlay
+            element.classList.remove('locked');
+            
+            // For resume download, ensure it works properly
+            if (element.id === 'resume-download') {
+                // Restore original href if it was saved, otherwise set it based on the page
+                if (element.hasAttribute('data-original-href')) {
+                    element.href = element.getAttribute('data-original-href');
+                    element.removeAttribute('data-original-href');
+                } else {
+                    const isAboutPage = window.location.pathname.includes('/pages/about.html');
+                    element.href = isAboutPage ? '../resume.pdf' : 'resume.pdf';
+                }
+                
                 element.download = 'Sanjayraj_N_Resume.pdf';
                 element.target = '_blank';
             }
@@ -842,7 +918,8 @@ class PortfolioApp {
     refreshAuthState() {
         const resumeBtn = document.getElementById('resume-download');
         if (resumeBtn) {
-            this.checkAuthStatus(resumeBtn);
+            // Use the version without adding click handler to avoid conflicts
+            this.checkAuthStatusWithoutHandler(resumeBtn);
         }
         
         // Also refresh project buttons if on projects page
@@ -892,9 +969,30 @@ class PortfolioApp {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (token) {
             const resumeBtn = document.getElementById('resume-download');
-            if (resumeBtn && resumeBtn.classList.contains('locked')) {
-                resumeBtn.classList.remove('locked');
-                console.log('🔓 Force removed lock - user is authenticated');
+            if (resumeBtn) {
+                // Remove locked class
+                if (resumeBtn.classList.contains('locked')) {
+                    resumeBtn.classList.remove('locked');
+                    console.log('🔓 Force removed lock - user is authenticated');
+                }
+                
+                // Restore original href if it was saved, otherwise set it based on the page
+                if (resumeBtn.hasAttribute('data-original-href')) {
+                    resumeBtn.href = resumeBtn.getAttribute('data-original-href');
+                    resumeBtn.removeAttribute('data-original-href');
+                } else {
+                    const isAboutPage = window.location.pathname.includes('/pages/about.html');
+                    resumeBtn.href = isAboutPage ? '../resume.pdf' : 'resume.pdf';
+                }
+                
+                resumeBtn.download = 'Sanjayraj_N_Resume.pdf';
+                resumeBtn.target = '_blank';
+                
+                // Remove any click handlers that might be preventing the download
+                const newResumeBtn = resumeBtn.cloneNode(true);
+                resumeBtn.parentNode.replaceChild(newResumeBtn, resumeBtn);
+                
+                console.log('🔄 Resume button reset to ensure download works');
             }
         }
     }
