@@ -631,8 +631,8 @@ class PortfolioApp {
         // Initialize authentication protection
         this.initAuthProtection();
         
-        // Initialize feature notifications
-        this.initFeatureNotifications();
+        // Initialize feature notifications - DISABLED
+        // this.initFeatureNotifications(); // Handled by notification-fix.js
         
         // Listen for auth state changes
         this.setupAuthStateListener();
@@ -844,98 +844,23 @@ class PortfolioApp {
         }, 5000);
     }
     
-    // Initialize feature notifications
+    // Initialize feature notifications - DISABLED
+    // Now handled by notification-fix.js to prevent conflicts
     initFeatureNotifications() {
-        // For testing purposes, always show the notification
-        // Remove the localStorage check temporarily
-        // if (localStorage.getItem('feature-notification-dismissed')) {
-        //     return; // Don't show notification if it was previously dismissed
-        // }
-        
-        // Get the notification element
-        const notification = document.getElementById('feature-notification');
-        if (!notification) return;
-        
-        // Determine if we're on mobile or desktop
-        const isMobile = window.innerWidth <= 768;
-        
-        // Apply appropriate styles based on device type
-        if (isMobile) {
-            this.adjustNotificationForMobile(notification);
-        } else {
-            this.adjustNotificationForDesktop(notification);
-        }
-        
-        // Move the notification to be a direct child of the body
-        if (notification.parentElement !== document.body) {
-            document.body.appendChild(notification);
-        }
-        
-        // Show notification immediately
-        notification.style.display = 'block';
-        
-        // Force the notification to be at the bottom
-        notification.style.bottom = '5px';
-        notification.style.position = 'fixed';
-        notification.style.zIndex = '9999999';
+        console.log('🚫 PortfolioApp notification system disabled - using notification-fix.js');
+        return;
     }
     
-    // Adjust notification positioning for mobile devices
+    // Adjust notification positioning - DISABLED
     adjustNotificationForMobile(notification) {
-        // Make sure the scroll indicator is above the notification in z-index
-        const heroScroll = document.querySelector('.hero-scroll');
-        if (heroScroll) {
-            heroScroll.style.zIndex = '10';
-        }
-        
-        // Ensure the notification is visible
-        notification.classList.remove('hidden');
-        
-        // Remove desktop-specific class if it exists
-        notification.classList.remove('desktop-notification');
-        
-        // Ensure proper positioning for mobile
-        notification.style.position = 'fixed';
-        notification.style.left = '50%';
-        notification.style.transform = 'translateX(-50%)';
-        notification.style.bottom = '5px';
-        notification.style.zIndex = '9999999';
-        
-        // Move the notification to be a direct child of the body to ensure proper positioning
-        if (notification.parentElement !== document.body) {
-            document.body.appendChild(notification);
-        }
+        console.log('🚫 PortfolioApp mobile notification adjustment disabled');
+        return;
     }
     
-    // Adjust notification positioning for desktop devices
+    // Adjust notification positioning - DISABLED
     adjustNotificationForDesktop(notification) {
-        // Make sure the scroll indicator is above the notification in z-index
-        const heroScroll = document.querySelector('.hero-scroll');
-        if (heroScroll) {
-            heroScroll.style.zIndex = '10';
-        }
-        
-        // Ensure the notification is visible
-        notification.classList.remove('hidden');
-        
-        // Add desktop-specific class for enhanced styling
-        notification.classList.add('desktop-notification');
-        
-        // Ensure proper positioning
-        notification.style.position = 'fixed';
-        notification.style.left = '50%';
-        notification.style.transform = 'translateX(-50%)';
-        notification.style.bottom = '5px';
-        notification.style.zIndex = '9999999';
-        
-        // Ensure the notification has the glass blur effect
-        notification.style.backdropFilter = 'blur(20px) saturate(180%)';
-        notification.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
-        
-        // Move the notification to be a direct child of the body to ensure proper positioning
-        if (notification.parentElement !== document.body) {
-            document.body.appendChild(notification);
-        }
+        console.log('🚫 PortfolioApp desktop notification adjustment disabled');
+        return;
     }
     
     // Setup auth state listener
@@ -1066,36 +991,27 @@ window.forceRemoveLock = function() {
     portfolioApp.forceRemoveLockIfAuthenticated();
 };
 
-// Global function to hide feature notification
+// Legacy notification function - DEPRECATED
+// Now handled by notification-fix.js
 function hideFeatureNotification() {
+    console.log('🚫 Legacy hideFeatureNotification called - using notification-fix.js system instead');
+    
+    // Fallback to new system
     const notification = document.getElementById('feature-notification');
-    if (notification) {
-        // Add hidden class for animation
-        notification.classList.add('hidden');
-        
-        // Remove from DOM after animation completes
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 300);
-        
-        // Remember dismissal for this session only
-        sessionStorage.setItem('feature-notification-dismissed', 'true');
-        console.log('Notification dismissed for this session');
+    if (notification && window.hideNotification) {
+        window.hideNotification(notification, 'legacy-call');
+    } else {
+        // Basic fallback
+        if (notification) {
+            notification.classList.add('hidden');
+            sessionStorage.setItem('feature-notification-dismissed', 'true');
+            setTimeout(() => notification.style.display = 'none', 300);
+        }
     }
 }
 
-// Add window resize listener to adjust notification on orientation change
-window.addEventListener('resize', function() {
-    const notification = document.getElementById('feature-notification');
-    if (notification && notification.style.display === 'block') {
-        // Recheck mobile status and adjust if needed
-        const isMobile = window.innerWidth <= 768;
-        if (portfolioApp) {
-            if (isMobile) {
-                portfolioApp.adjustNotificationForMobile(notification);
-            } else {
-                portfolioApp.adjustNotificationForDesktop(notification);
-            }
-        }
-    }
-});
+// Resize listener for notifications - DISABLED
+// Now handled by notification-fix.js to prevent conflicts
+// window.addEventListener('resize', function() {
+//     console.log('🚫 PortfolioApp resize listener disabled - using notification-fix.js');
+// });

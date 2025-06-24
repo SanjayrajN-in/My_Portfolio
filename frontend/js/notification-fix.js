@@ -13,16 +13,46 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initNotificationSystem() {
+    console.log('🔔 Initializing enhanced notification system...');
+    
+    // Prevent multiple initializations
+    if (window.notificationSystemInitialized) {
+        console.log('⚠️ Notification system already initialized - skipping');
+        return;
+    }
+    window.notificationSystemInitialized = true;
+    
     // Check if notification was already dismissed in this session
     if (sessionStorage.getItem('feature-notification-dismissed') === 'true') {
-        console.log('Notification already dismissed this session');
+        console.log('✅ Notification already dismissed this session');
         return;
     }
 
-    // Find all feature notifications
-    const notifications = document.querySelectorAll('.feature-notification');
+    // Find all feature notifications and clean up any duplicates
+    let notifications = document.querySelectorAll('.feature-notification');
+    console.log(`📋 Found ${notifications.length} notification(s)`);
     
-    notifications.forEach(notification => {
+    // If multiple notifications exist, remove duplicates
+    if (notifications.length > 1) {
+        console.log('🚨 Multiple notifications detected - cleaning up duplicates...');
+        
+        // Keep only the first one and remove others
+        for (let i = 1; i < notifications.length; i++) {
+            console.log(`🗑️ Removing duplicate notification ${i + 1}`);
+            notifications[i].remove();
+        }
+        
+        // Re-query after cleanup
+        notifications = document.querySelectorAll('.feature-notification');
+        console.log(`✅ After cleanup: ${notifications.length} notification(s) remain`);
+    }
+    
+    notifications.forEach((notification, index) => {
+        console.log(`🔧 Setting up notification ${index + 1}...`);
+        
+        // Add unique identifier to prevent conflicts
+        notification.setAttribute('data-notification-system', 'enhanced');
+        
         // Setup proper z-index to avoid dropdown conflicts
         setupNotificationZIndex(notification);
         
@@ -31,6 +61,7 @@ function initNotificationSystem() {
         
         // Show notification with a slight delay
         setTimeout(() => {
+            console.log(`🎯 Showing notification ${index + 1} with timer`);
             showNotificationWithTimer(notification);
         }, 1500);
     });
@@ -67,6 +98,10 @@ function addTimerProgressBar(notification) {
     // Check if progress bar already exists
     if (notification.querySelector('.notification-timer-bar')) return;
     
+    // Ensure the notification is positioned relatively for absolute positioning of progress bar
+    notification.style.position = 'fixed';
+    notification.style.overflow = 'hidden';
+    
     // Create progress bar
     const progressBar = document.createElement('div');
     progressBar.className = 'notification-timer-bar';
@@ -79,7 +114,9 @@ function addTimerProgressBar(notification) {
         width: 100%;
         border-radius: 0 0 15px 15px;
         animation: notificationTimer 5s linear forwards;
-        opacity: 0.8;
+        opacity: 0.7;
+        box-shadow: 0 0 8px rgba(0, 168, 255, 0.4);
+        z-index: 1;
     `;
     
     // Add CSS animation if not already present
@@ -88,12 +125,62 @@ function addTimerProgressBar(notification) {
         style.id = 'notification-timer-styles';
         style.textContent = `
             @keyframes notificationTimer {
-                from { width: 100%; }
-                to { width: 0%; }
+                from { 
+                    width: 100%; 
+                    opacity: 0.7;
+                }
+                to { 
+                    width: 0%; 
+                    opacity: 0.3;
+                }
             }
             
             .notification-timer-bar:hover {
-                opacity: 1;
+                opacity: 1 !important;
+            }
+            
+            /* Ensure notification has proper positioning for progress bar */
+            .feature-notification {
+                position: fixed !important;
+                overflow: hidden !important;
+            }
+            
+            /* Progress bar alignment fixes */
+            .notification-timer-bar {
+                margin: 0 !important;
+                padding: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* Fix mobile alignment issues */
+            @media (max-width: 768px) {
+                .feature-notification {
+                    border-radius: 12px !important;
+                }
+                .notification-timer-bar {
+                    border-radius: 0 0 12px 12px !important;
+                }
+            }
+            
+            @media (max-width: 480px) and (orientation: portrait) {
+                .feature-notification {
+                    border-radius: 12px !important;
+                }
+                .notification-timer-bar {
+                    border-radius: 0 0 12px 12px !important;
+                }
+            }
+            
+            @media (max-width: 896px) and (orientation: landscape) and (max-height: 500px) {
+                .feature-notification {
+                    border-radius: 12px !important;
+                }
+                .notification-timer-bar {
+                    border-radius: 0 0 12px 12px !important;
+                }
             }
         `;
         document.head.appendChild(style);
@@ -176,10 +263,59 @@ window.showFeatureNotification = function() {
     }
 };
 
+// Disable any conflicting notification systems
+window.disableConflictingNotificationSystems = function() {
+    console.log('🚫 Disabling all conflicting notification systems...');
+    
+    // Disable PortfolioApp methods
+    if (window.portfolioApp) {
+        window.portfolioApp.initFeatureNotifications = () => console.log('🚫 PortfolioApp.initFeatureNotifications disabled');
+        window.portfolioApp.adjustNotificationForMobile = () => console.log('🚫 PortfolioApp.adjustNotificationForMobile disabled');
+        window.portfolioApp.adjustNotificationForDesktop = () => console.log('🚫 PortfolioApp.adjustNotificationForDesktop disabled');
+    }
+    
+    // Remove any unauthorized notifications
+    document.querySelectorAll('.feature-notification:not([data-notification-system="enhanced"])').forEach(notification => {
+        console.log('🗑️ Removing unauthorized notification');
+        notification.remove();
+    });
+};
+
+// Add mutation observer to catch dynamically created notifications
+const observeForConflictingNotifications = () => {
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && node.classList && node.classList.contains('feature-notification')) {
+                    // Check if it's not our enhanced notification
+                    if (!node.getAttribute('data-notification-system')) {
+                        console.log('🚨 Unauthorized notification detected and removed');
+                        node.remove();
+                    }
+                }
+            });
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    console.log('👁️ Notification conflict observer active');
+};
+
+// Run conflict prevention immediately
+window.disableConflictingNotificationSystems();
+
+// Start watching for conflicting notifications
+observeForConflictingNotifications();
+
 // Add session info to console for debugging
-console.log('Notification System Loaded:', {
+console.log('Enhanced Notification System Loaded:', {
     dismissed: sessionStorage.getItem('feature-notification-dismissed'),
     dismissReason: sessionStorage.getItem('feature-notification-dismiss-reason'),
     dismissTime: sessionStorage.getItem('feature-notification-dismiss-time'),
-    currentSession: new Date().toISOString()
+    currentSession: new Date().toISOString(),
+    systemInitialized: window.notificationSystemInitialized || false
 });
