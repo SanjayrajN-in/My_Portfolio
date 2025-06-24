@@ -171,10 +171,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Close modal
     if (modalClose) {
+        console.log('Modal close button found:', modalClose);
         modalClose.addEventListener('click', function(e) {
             e.preventDefault();
+            console.log('Close button clicked');
             closeModal();
         });
+    } else {
+        console.warn('Modal close button not found!');
     }
     
     // Close modal when clicking outside content
