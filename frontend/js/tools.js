@@ -50,7 +50,7 @@ class ToolsManager {
                 if (this.isImageFile(file)) {
                     this.handleImageFile(file, controls, resultArea, fileInfo);
                 } else {
-                    alert('Please upload an image file only (JPG, PNG, WebP, etc.).');
+                    this.showNotification('Please upload an image file only (JPG, PNG, WebP, etc.).', 'error');
                 }
             }
         });
@@ -62,7 +62,7 @@ class ToolsManager {
                 if (this.isImageFile(file)) {
                     this.handleImageFile(file, controls, resultArea, fileInfo);
                 } else {
-                    alert('Please upload an image file only (JPG, PNG, WebP, etc.).');
+                    this.showNotification('Please upload an image file only (JPG, PNG, WebP, etc.).', 'error');
                     e.target.value = ''; // Clear the input
                 }
             }
@@ -114,10 +114,15 @@ class ToolsManager {
                 </div>
             `;
         }
+        
+        // Show success notification
+        this.showNotification(`Image uploaded successfully! File: ${file.name} (${this.formatFileSize(file.size)})`);
     }
 
     async compressImage(quality, resultArea) {
         if (!this.currentImageFile) return;
+
+        this.showNotification('Compressing image...', 'info');
 
         try {
             const canvas = document.createElement('canvas');
@@ -131,13 +136,24 @@ class ToolsManager {
 
                 canvas.toBlob((blob) => {
                     this.displayImageComparison(this.currentImageFile, blob, resultArea);
+                    
+                    // Calculate compression ratio
+                    const originalSize = this.currentImageFile.size;
+                    const compressedSize = blob.size;
+                    const reduction = Math.round(((originalSize - compressedSize) / originalSize) * 100);
+                    
+                    if (reduction > 0) {
+                        this.showNotification(`Image compressed successfully! Reduced by ${reduction}% (${this.formatFileSize(originalSize)} → ${this.formatFileSize(compressedSize)})`);
+                    } else {
+                        this.showNotification('Image compression completed, but file size may be similar due to quality settings.', 'warning');
+                    }
                 }, 'image/jpeg', quality);
             };
 
             img.src = URL.createObjectURL(this.currentImageFile);
         } catch (error) {
             console.error('Error compressing image:', error);
-            alert('Error compressing image. Please try again.');
+            this.showNotification('Error compressing image. Please try again.', 'error');
         }
     }
 
@@ -183,6 +199,8 @@ class ToolsManager {
         if (controls) controls.style.display = 'none';
         if (resultArea) resultArea.style.display = 'none';
         if (fileInfo) fileInfo.innerHTML = '';
+        
+        this.showNotification('Image compressor cleared successfully');
     }
 
     // PDF Compression Tool
@@ -220,7 +238,7 @@ class ToolsManager {
                 if (this.isPDFFile(file)) {
                     this.handlePDFFile(file, controls, resultArea);
                 } else {
-                    alert('Please upload a PDF file only.');
+                    this.showNotification('Please upload a PDF file only.', 'error');
                 }
             }
         });
@@ -232,7 +250,7 @@ class ToolsManager {
                 if (this.isPDFFile(file)) {
                     this.handlePDFFile(file, controls, resultArea);
                 } else {
-                    alert('Please upload a PDF file only.');
+                    this.showNotification('Please upload a PDF file only.', 'error');
                     e.target.value = ''; // Clear the input
                 }
             }
@@ -279,14 +297,19 @@ class ToolsManager {
                 </div>
             `;
         }
+        
+        // Show success notification
+        this.showNotification(`PDF uploaded successfully! File: ${file.name} (${this.formatFileSize(file.size)})`);
     }
 
     async compressPDF(quality, resultArea, processingArea) {
         if (!this.currentPDFFile) return;
 
-        // Show processing indicator
+        // Show processing indicator and notification
         if (processingArea) processingArea.style.display = 'block';
         if (resultArea) resultArea.style.display = 'none';
+        
+        this.showNotification(`Starting PDF compression with ${Math.round(quality * 100)}% quality...`, 'info');
 
         const originalSizeEl = document.getElementById('originalPdfSize');
         const compressedSizeEl = document.getElementById('compressedPdfSize');
@@ -386,6 +409,16 @@ class ToolsManager {
             // Hide processing and show results
             if (processingArea) processingArea.style.display = 'none';
             if (resultArea) resultArea.style.display = 'block';
+            
+            // Show success notification with compression results
+            const originalSize = this.currentPDFFile.size;
+            if (actualReduction > 0) {
+                this.showNotification(`PDF compressed successfully! Reduced by ${actualReduction}% (${this.formatFileSize(originalSize)} → ${this.formatFileSize(finalSize)})`);
+            } else if (actualReduction === 0) {
+                this.showNotification('PDF compression completed, but no size reduction achieved.', 'warning');
+            } else {
+                this.showNotification('PDF compression completed, but file size increased. You may want to try a different quality setting.', 'warning');
+            }
 
         } catch (error) {
             console.error('Error compressing PDF:', error);
@@ -398,7 +431,7 @@ class ToolsManager {
             if (compressedSizeEl) compressedSizeEl.textContent = 'Error';
             if (reductionEl) reductionEl.textContent = 'Error';
             
-            alert('Error compressing PDF. The file might be corrupted or password-protected.');
+            this.showNotification('Error compressing PDF. The file might be corrupted or password-protected.', 'error');
         }
     }
 
@@ -439,6 +472,8 @@ class ToolsManager {
         
         const fileInfo = document.getElementById('pdfCompressFileInfo');
         if (fileInfo) fileInfo.innerHTML = '';
+        
+        this.showNotification('PDF compressor cleared successfully');
     }
 
 
@@ -876,15 +911,38 @@ class ToolsManager {
         display.innerHTML = html;
     }
 
-    // Mobile-friendly notification system
+    // Enhanced notification system for all tools
     showNotification(message, type = 'success') {
-        // Remove existing notifications
-        const existingNotifications = document.querySelectorAll('.scale-measurement-notification');
+        // Remove existing notifications to prevent overlap
+        const existingNotifications = document.querySelectorAll('.tools-notification');
         existingNotifications.forEach(notification => notification.remove());
 
         const notification = document.createElement('div');
-        notification.className = `scale-measurement-notification ${type}`;
+        notification.className = `tools-notification ${type}`;
         notification.textContent = message;
+        
+        // Define colors and styling for different notification types
+        let backgroundColor, borderColor, textColor = 'white';
+        switch (type) {
+            case 'error':
+                backgroundColor = 'rgba(220, 53, 69, 0.95)';
+                borderColor = 'rgba(220, 53, 69, 0.6)';
+                break;
+            case 'warning':
+                backgroundColor = 'rgba(255, 193, 7, 0.95)';
+                borderColor = 'rgba(255, 193, 7, 0.6)';
+                textColor = '#212529';
+                break;
+            case 'info':
+                backgroundColor = 'rgba(13, 202, 240, 0.95)';
+                borderColor = 'rgba(13, 202, 240, 0.6)';
+                break;
+            case 'success':
+            default:
+                backgroundColor = 'rgba(40, 167, 69, 0.95)';
+                borderColor = 'rgba(40, 167, 69, 0.6)';
+                break;
+        }
         
         // Style the notification with proper z-index hierarchy
         notification.style.cssText = `
@@ -892,8 +950,8 @@ class ToolsManager {
             top: calc(var(--header-height, 80px) + 20px);
             left: 50%;
             transform: translateX(-50%) translateY(-10px);
-            background: ${type === 'error' ? 'rgba(220, 53, 69, 0.95)' : 'rgba(40, 167, 69, 0.95)'};
-            color: white;
+            background: ${backgroundColor};
+            color: ${textColor};
             padding: 12px 20px;
             border-radius: 8px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
@@ -903,12 +961,13 @@ class ToolsManager {
             text-align: center;
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            border: 1px solid ${type === 'error' ? 'rgba(220, 53, 69, 0.6)' : 'rgba(40, 167, 69, 0.6)'};
+            border: 1px solid ${borderColor};
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-weight: 500;
             letter-spacing: 0.3px;
             opacity: 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            line-height: 1.4;
         `;
         
         document.body.appendChild(notification);
@@ -919,8 +978,23 @@ class ToolsManager {
             notification.style.transform = 'translateX(-50%) translateY(0)';
         });
         
-        // Auto remove after 3 seconds (or 4 seconds for errors)
-        const displayTime = type === 'error' ? 4000 : 3000;
+        // Auto remove after different times based on type
+        let displayTime;
+        switch (type) {
+            case 'error':
+                displayTime = 5000; // 5 seconds for errors
+                break;
+            case 'warning':
+                displayTime = 4000; // 4 seconds for warnings
+                break;
+            case 'info':
+                displayTime = 3500; // 3.5 seconds for info
+                break;
+            default:
+                displayTime = 3000; // 3 seconds for success
+                break;
+        }
+        
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.style.opacity = '0';
