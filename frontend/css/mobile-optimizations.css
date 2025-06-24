@@ -12,7 +12,6 @@
     transform: translateY(150%) translateX(-50%) !important;
     opacity: 0 !important;
     pointer-events: none !important;
-    transition: transform 0.3s ease, opacity 0.3s ease !important;
 }
 
 .notification-close {
@@ -201,10 +200,18 @@
         left: 0 !important;
     }
     
-    /* Mobile-specific adjustments for feature notification */
+    /* Make feature notification a popup that doesn't affect layout */
     .feature-notification {
+        position: fixed !important;
+        z-index: 999998 !important; /* Just below header */
+        bottom: 20px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        margin-bottom: 0 !important;
         width: 90% !important;
         max-width: 400px !important;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3) !important;
+        border-radius: 12px !important;
     }
     
     .hero-scroll {

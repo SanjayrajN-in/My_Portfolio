@@ -1036,8 +1036,18 @@ function hideFeatureNotification() {
     }
 }
 
-// Resize event handler - notification positioning is now handled by CSS
+// Add window resize listener to adjust notification on orientation change
 window.addEventListener('resize', function() {
-    // No need to adjust notification position as it's now fixed positioned for all screen sizes
-    // and handled by CSS media queries
+    const notification = document.getElementById('feature-notification');
+    if (notification && notification.style.display === 'block') {
+        // Recheck mobile status and adjust if needed
+        const isMobile = window.innerWidth <= 768;
+        if (portfolioApp) {
+            if (isMobile) {
+                portfolioApp.adjustNotificationForMobile(notification);
+            } else {
+                portfolioApp.adjustNotificationForDesktop(notification);
+            }
+        }
+    }
 });
