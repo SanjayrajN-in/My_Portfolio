@@ -200,17 +200,10 @@
         left: 0 !important;
     }
     
-    /* Make feature notification a popup that doesn't affect layout */
+    /* Mobile-specific adjustments for feature notification */
     .feature-notification {
-        position: fixed !important;
-        z-index: 999998 !important; /* Just below header */
-        bottom: 20px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        margin-bottom: 0 !important;
         width: 90% !important;
         max-width: 400px !important;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3) !important;
         border-radius: 12px !important;
     }
     

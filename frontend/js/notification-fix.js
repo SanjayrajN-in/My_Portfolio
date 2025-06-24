@@ -16,14 +16,9 @@ function initNotificationSystem() {
         // Make sure notification has a close button
         ensureCloseButton(notification);
         
-        // Show notification with a slight delay
+        // Show notification with a slight delay - always visible, no auto-hide
         setTimeout(() => {
             notification.style.display = 'block';
-            
-            // Auto-hide after 8 seconds
-            setTimeout(() => {
-                hideNotification(notification);
-            }, 8000);
         }, 1500);
     });
 }

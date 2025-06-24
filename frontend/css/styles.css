@@ -515,14 +515,18 @@ header.scrolled {
     border: 1px solid rgba(0, 168, 255, 0.3);
     border-radius: 15px;
     padding: 15px 20px;
-    margin-top: 30px;
     max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 80px; /* Added margin to prevent overlap with scroll indicator */
     backdrop-filter: blur(10px);
     animation: notificationPulse 3s ease-in-out infinite;
     display: none; /* Hidden by default */
+    
+    /* Fixed positioning for all screen sizes */
+    position: fixed;
+    z-index: 999998; /* Just below header */
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
 }
 
 .notification-content {
@@ -572,38 +576,15 @@ header.scrolled {
     color: var(--text-color);
 }
 
-/* Desktop notification fix - make it fixed positioned like on mobile */
-@media (min-width: 769px) {
-    .feature-notification {
-        /* Fixed positioning at bottom center */
-        position: fixed !important;
-        z-index: 999998 !important; /* Just below header */
-        bottom: 20px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        
-        /* Reset margins that might affect positioning */
-        margin: 0 !important;
-        
-        /* Visual styling */
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3) !important;
-        max-width: 500px !important;
-        width: auto !important;
-        
-        /* Same blur effect as mobile */
-        backdrop-filter: blur(15px) !important;
-        -webkit-backdrop-filter: blur(15px) !important;
-        
-        /* Animation */
-        transition: transform 0.3s ease, opacity 0.3s ease !important;
-    }
-    
-    /* Hidden state animation */
-    .feature-notification.hidden {
-        transform: translateY(150%) translateX(-50%) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
+/* Animation for notification hide/show */
+.feature-notification {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.feature-notification.hidden {
+    transform: translateY(150%) translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
 }
 
 @keyframes notificationPulse {

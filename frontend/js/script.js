@@ -870,47 +870,34 @@ class PortfolioApp {
                     this.adjustNotificationForDesktop(notification);
                 }
                 
-                // Show the notification
+                // Show the notification - always visible, no auto-hide
                 notification.style.display = 'block';
-                
-                // Auto-hide after 8 seconds
-                setTimeout(() => {
-                    hideFeatureNotification();
-                }, 8000);
             }
         }, delay);
     }
     
     // Adjust notification positioning for mobile devices
     adjustNotificationForMobile(notification) {
-        const heroScroll = document.querySelector('.hero-scroll');
-        if (heroScroll && notification) {
-            // Ensure notification doesn't overlap with scroll indicator
-            const scrollRect = heroScroll.getBoundingClientRect();
-            const notificationRect = notification.getBoundingClientRect();
-            
-            // If they would overlap, add extra margin
-            if (notificationRect.bottom > scrollRect.top - 20) {
-                notification.style.marginBottom = '90px';
-            }
-        }
-    }
-    
-    // Adjust notification positioning for desktop devices
-    adjustNotificationForDesktop(notification) {
-        // For desktop, we're using fixed positioning via CSS
-        // No need to adjust margins as it's now positioned at the bottom of the viewport
-        
         // Make sure the scroll indicator is above the notification in z-index
         const heroScroll = document.querySelector('.hero-scroll');
         if (heroScroll) {
             heroScroll.style.zIndex = '10';
         }
         
-        // Ensure the notification has the hidden class for proper animations
-        if (!notification.classList.contains('hidden')) {
-            notification.classList.remove('hidden');
+        // Ensure the notification is visible
+        notification.classList.remove('hidden');
+    }
+    
+    // Adjust notification positioning for desktop devices
+    adjustNotificationForDesktop(notification) {
+        // Make sure the scroll indicator is above the notification in z-index
+        const heroScroll = document.querySelector('.hero-scroll');
+        if (heroScroll) {
+            heroScroll.style.zIndex = '10';
         }
+        
+        // Ensure the notification is visible
+        notification.classList.remove('hidden');
     }
     
     // Setup auth state listener
