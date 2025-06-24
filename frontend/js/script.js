@@ -846,57 +846,26 @@ class PortfolioApp {
     
     // Initialize feature notifications
     initFeatureNotifications() {
-        // Check if mobile device
-        const isMobile = window.innerWidth <= 768;
+        // Notification handling is now managed by notification-fix.js
+        // which implements a fixed popup for all screen sizes
+        console.log('✅ Feature notifications initialized - using fixed positioning for all screen sizes');
         
-        // Show notification after appropriate delay if not dismissed
-        const delay = isMobile ? 4000 : 3000; // Longer delay on mobile to let page settle
-        
-        setTimeout(() => {
-            const notification = document.getElementById('feature-notification');
-            if (notification && !localStorage.getItem('feature-notification-dismissed')) {
-                // Ensure proper spacing before showing
-                if (isMobile) {
-                    this.adjustNotificationForMobile(notification);
-                } else {
-                    // For desktop, ensure it doesn't overlap with scroll indicator
-                    this.adjustNotificationForDesktop(notification);
-                }
-                notification.style.display = 'block';
-            }
-        }, delay);
+        // For backward compatibility, we'll still check for the old localStorage key
+        if (localStorage.getItem('feature-notification-dismissed')) {
+            localStorage.setItem('feature_notification_closed', 'true');
+        }
     }
     
-    // Adjust notification positioning for mobile devices
+    // These methods are kept for backward compatibility but are no longer used
+    // as notification-fix.js now handles all notification positioning
     adjustNotificationForMobile(notification) {
-        const heroScroll = document.querySelector('.hero-scroll');
-        if (heroScroll && notification) {
-            // Ensure notification doesn't overlap with scroll indicator
-            const scrollRect = heroScroll.getBoundingClientRect();
-            const notificationRect = notification.getBoundingClientRect();
-            
-            // If they would overlap, add extra margin
-            if (notificationRect.bottom > scrollRect.top - 20) {
-                notification.style.marginBottom = '90px';
-            }
-        }
+        // No longer needed - notification is now fixed positioned for all screen sizes
+        console.log('Mobile notification adjustment bypassed - using fixed positioning');
     }
     
-    // Adjust notification positioning for desktop devices
     adjustNotificationForDesktop(notification) {
-        const heroScroll = document.querySelector('.hero-scroll');
-        if (heroScroll && notification) {
-            // Ensure notification doesn't overlap with scroll indicator
-            const scrollRect = heroScroll.getBoundingClientRect();
-            const notificationRect = notification.getBoundingClientRect();
-            
-            // For desktop, we need more space to ensure no overlap
-            // Add extra margin to ensure scroll indicator is visible
-            notification.style.marginBottom = '120px';
-            
-            // Make sure the scroll indicator is above the notification in z-index
-            heroScroll.style.zIndex = '10';
-        }
+        // No longer needed - notification is now fixed positioned for all screen sizes
+        console.log('Desktop notification adjustment bypassed - using fixed positioning');
     }
     
     // Setup auth state listener
@@ -1031,23 +1000,22 @@ window.forceRemoveLock = function() {
 function hideFeatureNotification() {
     const notification = document.getElementById('feature-notification');
     if (notification) {
-        notification.style.display = 'none';
+        // Add hidden class for animation
+        notification.classList.add('hidden');
+        
+        // Remove from DOM after animation completes
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 300);
+        
+        // Store in both localStorage keys for backward compatibility
         localStorage.setItem('feature-notification-dismissed', 'true');
+        localStorage.setItem('feature_notification_closed', 'true');
     }
 }
 
-// Add window resize listener to adjust notification on orientation change
+// Resize event handler - notification positioning is now handled by CSS
 window.addEventListener('resize', function() {
-    const notification = document.getElementById('feature-notification');
-    if (notification && notification.style.display === 'block') {
-        // Recheck mobile status and adjust if needed
-        const isMobile = window.innerWidth <= 768;
-        if (portfolioApp) {
-            if (isMobile) {
-                portfolioApp.adjustNotificationForMobile(notification);
-            } else {
-                portfolioApp.adjustNotificationForDesktop(notification);
-            }
-        }
-    }
+    // No need to adjust notification position as it's now fixed positioned for all screen sizes
+    // and handled by CSS media queries
 });

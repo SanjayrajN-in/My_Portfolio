@@ -509,20 +509,24 @@ header.scrolled {
     visibility: hidden !important;
 }
 
-/* Feature Notification */
+/* Feature Notification - Fixed Popup for all screen sizes */
 .feature-notification {
     background: linear-gradient(135deg, rgba(0, 168, 255, 0.1), rgba(125, 95, 255, 0.1));
     border: 1px solid rgba(0, 168, 255, 0.3);
     border-radius: 15px;
     padding: 15px 20px;
-    margin-top: 30px;
     max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 80px; /* Added margin to prevent overlap with scroll indicator */
     backdrop-filter: blur(10px);
     animation: notificationPulse 3s ease-in-out infinite;
     display: none; /* Hidden by default */
+    
+    /* Fixed positioning for all screen sizes */
+    position: fixed;
+    z-index: 999998; /* Just below header */
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
 }
 
 .notification-content {
@@ -546,19 +550,23 @@ header.scrolled {
 }
 
 .notification-close {
-    background: none;
+    background: transparent;
     border: none;
-    color: var(--text-color-dark);
+    color: var(--text-color-muted);
+    font-size: 0.9rem;
     cursor: pointer;
     padding: 5px;
-    border-radius: 50%;
-    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
 }
 
 .notification-close:hover {
-    background: rgba(255, 255, 255, 0.1);
     color: var(--text-color);
 }
+
+/* Animation definitions are already present elsewhere in the file */
 
 @keyframes notificationPulse {
     0%, 100% {
