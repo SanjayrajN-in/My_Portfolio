@@ -156,6 +156,21 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
+        // Add styles exactly like in index.html
+        notification.style.cssText = `
+            position: fixed;
+            top: calc(var(--header-height) + 20px);
+            right: 20px;
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000000;
+            animation: slideInRight 0.3s ease;
+            backdrop-filter: blur(10px);
+        `;
+        
         document.body.appendChild(notification);
         
         // Auto remove after 5 seconds

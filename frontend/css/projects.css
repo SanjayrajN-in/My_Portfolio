@@ -194,9 +194,11 @@
     font-size: 1rem;
     gap: 10px;
     transition: var(--transition);
-    outline: none; /* Remove outline when clicked */
-    border: none; /* Remove border */
-    background: none; /* Ensure no background */
+    outline: none !important; /* Remove outline when clicked */
+    border: none !important; /* Remove border */
+    background: none !important; /* Ensure no background */
+    text-decoration: none !important; /* Remove underline */
+    -webkit-tap-highlight-color: transparent !important; /* Remove tap highlight on mobile */
 }
 
 .btn-view-project i {
@@ -211,9 +213,14 @@
     transform: translateX(5px);
 }
 
-.btn-view-project:focus {
-    outline: none; /* Remove outline when focused */
-    box-shadow: none; /* Remove any box shadow */
+.btn-view-project:focus,
+.btn-view-project:active,
+.btn-view-project:visited {
+    outline: none !important; /* Remove outline when focused */
+    box-shadow: none !important; /* Remove any box shadow */
+    border: none !important; /* Remove border */
+    text-decoration: none !important; /* Remove underline */
+    color: var(--accent-color); /* Use accent color when focused */
 }
 
 /* Project Modal */
