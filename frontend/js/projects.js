@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add styles with improved positioning to avoid navbar overlap
         notification.style.cssText = `
             position: fixed;
-            top: 100px; /* Position below navbar */
+            top: 120px; /* Position further below navbar to avoid overlap */
             right: 20px;
             background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
             color: white;
