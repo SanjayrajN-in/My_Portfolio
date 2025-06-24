@@ -26,38 +26,9 @@ class ToolsManager {
 
         if (!uploadArea || !fileInput) return;
 
-        // Upload area click - Fixed for PC
-        uploadArea.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Image upload area clicked');
-            if (fileInput) {
-                // Try multiple methods to trigger file input
-                try {
-                    fileInput.click();
-                    this.showNotification('Select an image file to compress', 'info');
-                } catch (error) {
-                    console.error('Error triggering file input:', error);
-                    // Fallback: create a new file input and trigger it
-                    const newInput = document.createElement('input');
-                    newInput.type = 'file';
-                    newInput.accept = 'image/*';
-                    newInput.onchange = (e) => {
-                        if (e.target.files.length > 0) {
-                            const file = e.target.files[0];
-                            if (this.isImageFile(file)) {
-                                this.handleImageFile(file, controls, resultArea, fileInfo);
-                            } else {
-                                this.showNotification('Please upload an image file only (JPG, PNG, WebP, etc.).', 'error');
-                            }
-                        }
-                    };
-                    newInput.click();
-                }
-            } else {
-                console.error('Image file input not found');
-                this.showNotification('Error: File input not found. Please refresh the page.', 'error');
-            }
+        // Upload area click
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
         });
 
         // Drag and drop
@@ -243,38 +214,9 @@ class ToolsManager {
 
         if (!uploadArea || !fileInput) return;
 
-        // Upload area click - Fixed for PC
-        uploadArea.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('PDF upload area clicked');
-            if (fileInput) {
-                // Try multiple methods to trigger file input
-                try {
-                    fileInput.click();
-                    this.showNotification('Select a PDF file to compress', 'info');
-                } catch (error) {
-                    console.error('Error triggering PDF file input:', error);
-                    // Fallback: create a new file input and trigger it
-                    const newInput = document.createElement('input');
-                    newInput.type = 'file';
-                    newInput.accept = '.pdf';
-                    newInput.onchange = (e) => {
-                        if (e.target.files.length > 0) {
-                            const file = e.target.files[0];
-                            if (this.isPDFFile(file)) {
-                                this.handlePDFFile(file, controls, resultArea);
-                            } else {
-                                this.showNotification('Please upload a PDF file only.', 'error');
-                            }
-                        }
-                    };
-                    newInput.click();
-                }
-            } else {
-                console.error('PDF file input not found');
-                this.showNotification('Error: File input not found. Please refresh the page.', 'error');
-            }
+        // Upload area click
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
         });
 
         // Drag and drop
@@ -563,17 +505,9 @@ class ToolsManager {
         let isDrawing = false;
         let startPoint = null;
 
-        // Upload area click - Fixed for PC
-        uploadArea.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Scale measurement upload area clicked');
-            if (fileInput) {
-                fileInput.click();
-                this.showNotification('Select an image to measure', 'info');
-            } else {
-                console.error('Scale measurement file input not found');
-            }
+        // Upload area click
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
         });
 
         // Drag and drop
@@ -1086,15 +1020,5 @@ class ToolsManager {
 
 // Initialize tools when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Debug: Check if all elements are found
-    console.log('=== Tools Debug Info ===');
-    console.log('Image upload area:', document.getElementById('imageCompressUpload'));
-    console.log('Image file input:', document.getElementById('imageCompressInput'));
-    console.log('PDF upload area:', document.getElementById('pdfCompressUpload'));
-    console.log('PDF file input:', document.getElementById('pdfCompressInput'));
-    console.log('Scale upload area:', document.getElementById('scaleUpload'));
-    console.log('Scale file input:', document.getElementById('scaleInput'));
-    console.log('========================');
-    
     new ToolsManager();
 });
