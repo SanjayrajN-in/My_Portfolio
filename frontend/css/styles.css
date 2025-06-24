@@ -571,6 +571,9 @@ header.scrolled {
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     
+    /* Enhanced z-index for all cases */
+    z-index: 10000000 !important;
+    
     /* Animation */
     animation: notificationPulse 3s ease-in-out infinite;
     display: none; /* Hidden by default */

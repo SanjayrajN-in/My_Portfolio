@@ -211,7 +211,7 @@
         position: fixed !important;
         margin-left: 0 !important; /* Reset any margin that might be causing offset */
         right: auto !important; /* Ensure right property doesn't interfere */
-        z-index: 9999999 !important; /* Ensure it's above everything */
+        z-index: 10000000 !important; /* Higher than navigation (999999, 1000001, 9999999) */
     }
     
     .hero-scroll {
@@ -299,7 +299,7 @@
         position: fixed !important;
         margin-left: 0 !important;
         right: auto !important;
-        z-index: 9999999 !important;
+        z-index: 10000000 !important; /* Consistent higher z-index */
     }
     
     /* Add close button for notification */
@@ -321,7 +321,7 @@
         position: fixed !important;
         margin-left: 0 !important;
         right: auto !important;
-        z-index: 9999999 !important;
+        z-index: 10000000 !important; /* Consistent higher z-index */
     }
     
     .notification-text {

@@ -1076,18 +1076,11 @@ function hideFeatureNotification() {
         // Remove from DOM after animation completes
         setTimeout(() => {
             notification.style.display = 'none';
-            
-            // For testing purposes, show the notification again after 3 seconds
-            setTimeout(() => {
-                notification.classList.remove('hidden');
-                notification.style.display = 'block';
-                notification.style.bottom = '5px';
-                notification.style.zIndex = '9999999';
-            }, 3000);
         }, 300);
         
-        // Comment out localStorage for testing
-        // localStorage.setItem('feature-notification-dismissed', 'true');
+        // Remember dismissal for this session only
+        sessionStorage.setItem('feature-notification-dismissed', 'true');
+        console.log('Notification dismissed for this session');
     }
 }
 
