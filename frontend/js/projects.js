@@ -9,18 +9,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalContent = document.querySelector('.modal-body');
     const modalClose = document.querySelector('.modal-close');
     const viewButtons = document.querySelectorAll('.btn-view-project');
-    const projectTemplates = document.querySelectorAll('.project-details-template');
     
     // Check if modal elements exist
     if (!modal || !modalContent) {
         console.warn('Modal elements not found. Modal functionality will not work.');
-        // Don't return here - let other functionality work
+        return;
     }
     
-    // Log all project buttons for debugging
+    // Debug: Log all project buttons
     console.log('Project buttons found:', viewButtons.length);
     viewButtons.forEach((button, index) => {
         console.log(`Button ${index}: data-project="${button.getAttribute('data-project')}"`);
+    });
+    
+    // Debug: Log all project templates
+    const projectTemplates = document.querySelectorAll('.project-details-template');
+    console.log('Project templates found:', projectTemplates.length);
+    projectTemplates.forEach(template => {
+        console.log(`Template: ${template.id}`);
     });
     
     // Close modal function
@@ -28,167 +34,106 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.classList.remove('active');
         document.body.style.overflow = 'auto';
         
-        // Clear the current project ID
-        modal.removeAttribute('data-current-project');
-        console.log('Cleared current project');
-        
         // Clear modal content after animation completes
         setTimeout(() => {
             modalContent.innerHTML = '';
         }, 300);
     }
     
-    // Function to open project modal
-    function openProjectModal(button) {
-        // Get project ID
-        const projectId = button.getAttribute('data-project');
-        console.log(`Opening project modal for: ${projectId}`);
+    // Function to show login notification
+    function showLoginNotification() {
+        const notification = document.createElement('div');
+        notification.className = 'auth-notification';
+        notification.innerHTML = `
+            <div class="auth-notification-content">
+                <i class="fas fa-lock"></i>
+                <span>Please login to view project details</span>
+                <button onclick="window.location.href='login.html'" class="login-btn">Login</button>
+                <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
+            </div>
+        `;
         
-        // Check authentication first
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        if (!token) {
-            // Show login prompt
-            const notification = document.createElement('div');
-            notification.className = 'auth-notification';
-            notification.innerHTML = `
-                <div class="auth-notification-content">
-                    <i class="fas fa-lock"></i>
-                    <span>Please login to view project details</span>
-                    <button onclick="window.location.href='login.html'" class="login-btn">Login</button>
-                    <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
-                </div>
-            `;
-            
-            // Add styles
-            notification.style.cssText = `
-                position: fixed;
-                top: calc(var(--header-height) + 20px);
-                right: 20px;
-                background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
-                color: white;
-                padding: 15px 20px;
-                border-radius: 10px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                z-index: 1000000;
-                animation: slideInRight 0.3s ease;
-                backdrop-filter: blur(10px);
-            `;
-            
-            document.body.appendChild(notification);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 5000);
-            
-            return;
-        }
+        notification.style.cssText = `
+            position: fixed;
+            top: calc(var(--header-height) + 20px);
+            right: 20px;
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000000;
+            animation: slideInRight 0.3s ease;
+            backdrop-filter: blur(10px);
+        `;
         
-        // Check if modal elements exist before proceeding
-        if (!modal || !modalContent) {
-            console.error('Modal elements not found!');
-            return;
-        }
+        document.body.appendChild(notification);
         
-        // Find corresponding template
-        const templateId = `${projectId}-details`;
-        const template = document.getElementById(templateId);
-        console.log(`Looking for template with ID: ${templateId}`);
-        
-        // If template not found, log available templates for debugging
-        if (!template) {
-            console.warn(`Template not found for project: ${projectId}`);
-            const allTemplates = document.querySelectorAll('.project-details-template');
-            console.log('Available templates:');
-            allTemplates.forEach(t => console.log(t.id));
-            
-            // Show a fallback message
-            modalContent.innerHTML = `
-                <div class="project-details">
-                    <div class="project-details-header">
-                        <h2>Project Details</h2>
-                    </div>
-                    <div class="project-details-content">
-                        <div class="details-section">
-                            <h3>Error</h3>
-                            <p>Project details template not found for: ${projectId}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            console.log(`Template found for ${projectId}, loading content`);
-            modalContent.innerHTML = template.innerHTML;
-        }
-        
-        // Show modal with animation
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        // Reset scroll position to top and enable smooth scrolling
-        const modalContentElement = modal.querySelector('.modal-content');
-        if (modalContentElement) {
-            modalContentElement.scrollTop = 0;
-            modalContentElement.style.scrollBehavior = 'smooth';
-        }
-        
-        // Store the current project ID to prevent incorrect navigation
-        modal.setAttribute('data-current-project', projectId);
-        console.log(`Set current project to: ${projectId}`);
-        
-        // Initialize gallery functionality
+        // Auto remove after 5 seconds
         setTimeout(() => {
-            initGallery();
-        }, 100);
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
     }
     
-    // Open modal with project details
+    // Handle view project button clicks
     viewButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Get the project ID
+            // Check authentication first
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (!token) {
+                showLoginNotification();
+                return;
+            }
+            
+            // Get the project ID directly from the button
             const projectId = this.getAttribute('data-project');
             console.log(`Button clicked for project: ${projectId}`);
             
-            // Check if modal is already open
-            if (modal.classList.contains('active')) {
-                // Close the current modal first
-                closeModal();
-                
-                // Wait for animation to complete before opening new one
-                setTimeout(() => {
-                    openProjectModal(this);
-                }, 300);
-            } else {
-                // Open the project modal immediately
-                openProjectModal(this);
+            // Find the template for this project
+            const templateId = `${projectId}-details`;
+            const template = document.getElementById(templateId);
+            
+            if (!template) {
+                console.error(`Template not found: ${templateId}`);
+                console.log('Available templates:');
+                document.querySelectorAll('.project-details-template').forEach(t => {
+                    console.log(`- ${t.id}`);
+                });
+                return;
             }
+            
+            console.log(`Loading template: ${templateId}`);
+            
+            // Load the template content
+            modalContent.innerHTML = template.innerHTML;
+            
+            // Show the modal
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Initialize gallery
+            initGallery();
         });
     });
     
-    // Close modal
+    // Close modal when close button is clicked
     if (modalClose) {
-        console.log('Modal close button found:', modalClose);
         modalClose.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('Close button clicked');
             closeModal();
         });
-    } else {
-        console.warn('Modal close button not found!');
     }
     
     // Close modal when clicking outside content
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-    }
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
     
     // Close modal with Escape key
     document.addEventListener('keydown', function(e) {
@@ -205,11 +150,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (galleryMain && galleryThumbs.length > 0) {
             galleryThumbs.forEach(thumb => {
                 thumb.addEventListener('click', function() {
-                    // Update main image
                     galleryMain.src = this.src;
                     galleryMain.alt = this.alt;
                     
-                    // Update active thumb
                     galleryThumbs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                 });
