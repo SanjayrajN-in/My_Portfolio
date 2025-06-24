@@ -704,32 +704,21 @@ class PortfolioApp {
     // Handle clicks on protected elements
     handleProtectedClick(e) {
         e.preventDefault();
-        
-        // Check if this is the resume download button
-        if (e.currentTarget.id === 'resume-download') {
-            // Show login prompt instead of redirecting
-            this.showLoginPrompt();
-        } else {
-            // For other protected elements, redirect to login page
-            localStorage.setItem('login-message', 'Please login to access this feature');
-            localStorage.setItem('redirect-after-login', window.location.href);
-            window.location.href = 'pages/login.html';
-        }
+        // Redirect to login page with message
+        localStorage.setItem('login-message', 'Please login to access this feature');
+        localStorage.setItem('redirect-after-login', window.location.href);
+        window.location.href = 'pages/login.html';
     }
     
     // Show login prompt
     showLoginPrompt() {
         const notification = document.createElement('div');
         notification.className = 'auth-notification';
-        
-        // Determine the correct login page path based on current location
-        const loginPath = window.location.pathname.includes('/pages/') ? 'login.html' : 'pages/login.html';
-        
         notification.innerHTML = `
             <div class="auth-notification-content">
                 <i class="fas fa-lock"></i>
                 <span>Please login to download the resume</span>
-                <button onclick="window.location.href='${loginPath}'" class="login-btn">Login</button>
+                <button onclick="window.location.href='pages/login.html'" class="login-btn">Login</button>
                 <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
             </div>
         `;
