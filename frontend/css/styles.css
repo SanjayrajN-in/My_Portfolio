@@ -519,6 +519,7 @@ header.scrolled {
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
+    margin-bottom: 80px; /* Added margin to prevent overlap with scroll indicator */
     backdrop-filter: blur(10px);
     animation: notificationPulse 3s ease-in-out infinite;
     display: none; /* Hidden by default */
@@ -737,6 +738,16 @@ header.scrolled {
         grid-template-columns: repeat(5, 1fr);
         max-width: 950px;
         gap: 15px;
+    }
+    
+    /* Ensure feature notification doesn't overlap with scroll indicator on desktop */
+    .feature-notification {
+        margin-bottom: 100px; /* Increased margin to prevent overlap with scroll indicator */
+    }
+    
+    /* Ensure scroll indicator is always visible */
+    .hero-scroll {
+        z-index: 10;
     }
 }
 

@@ -769,9 +769,12 @@ class PortfolioApp {
         setTimeout(() => {
             const notification = document.getElementById('feature-notification');
             if (notification && !localStorage.getItem('feature-notification-dismissed')) {
-                // Ensure proper spacing on mobile before showing
+                // Ensure proper spacing before showing
                 if (isMobile) {
                     this.adjustNotificationForMobile(notification);
+                } else {
+                    // For desktop, ensure it doesn't overlap with scroll indicator
+                    this.adjustNotificationForDesktop(notification);
                 }
                 notification.style.display = 'block';
             }
@@ -790,6 +793,23 @@ class PortfolioApp {
             if (notificationRect.bottom > scrollRect.top - 20) {
                 notification.style.marginBottom = '90px';
             }
+        }
+    }
+    
+    // Adjust notification positioning for desktop devices
+    adjustNotificationForDesktop(notification) {
+        const heroScroll = document.querySelector('.hero-scroll');
+        if (heroScroll && notification) {
+            // Ensure notification doesn't overlap with scroll indicator
+            const scrollRect = heroScroll.getBoundingClientRect();
+            const notificationRect = notification.getBoundingClientRect();
+            
+            // For desktop, we need more space to ensure no overlap
+            // Add extra margin to ensure scroll indicator is visible
+            notification.style.marginBottom = '120px';
+            
+            // Make sure the scroll indicator is above the notification in z-index
+            heroScroll.style.zIndex = '10';
         }
     }
     
@@ -914,8 +934,12 @@ window.addEventListener('resize', function() {
     if (notification && notification.style.display === 'block') {
         // Recheck mobile status and adjust if needed
         const isMobile = window.innerWidth <= 768;
-        if (isMobile && portfolioApp) {
-            portfolioApp.adjustNotificationForMobile(notification);
+        if (portfolioApp) {
+            if (isMobile) {
+                portfolioApp.adjustNotificationForMobile(notification);
+            } else {
+                portfolioApp.adjustNotificationForDesktop(notification);
+            }
         }
     }
 });
