@@ -12,13 +12,6 @@ function initNotificationSystem() {
     // Find all feature notifications
     const notifications = document.querySelectorAll('.feature-notification');
     
-    // Check if notification was previously closed
-    const notificationClosed = localStorage.getItem('feature_notification_closed') === 'true';
-    
-    if (notificationClosed) {
-        return; // Don't show notification if it was previously closed
-    }
-    
     notifications.forEach(notification => {
         // Make sure notification has a close button
         ensureCloseButton(notification);
@@ -27,10 +20,10 @@ function initNotificationSystem() {
         setTimeout(() => {
             notification.style.display = 'block';
             
-            // Auto-hide after 10 seconds
+            // Auto-hide after 8 seconds
             setTimeout(() => {
                 hideNotification(notification);
-            }, 10000);
+            }, 8000);
         }, 1500);
     });
 }
@@ -70,16 +63,5 @@ function hideNotification(notification) {
     // Remove from DOM after animation completes
     setTimeout(() => {
         notification.style.display = 'none';
-        
-        // Store in localStorage that notification was closed
-        localStorage.setItem('feature_notification_closed', 'true');
     }, 300);
-}
-
-// Global function to hide notification (for onclick handler)
-window.hideFeatureNotification = function() {
-    const notification = document.getElementById('feature-notification');
-    if (notification) {
-        hideNotification(notification);
-    }
 }
