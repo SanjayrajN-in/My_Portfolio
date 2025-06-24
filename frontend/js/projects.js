@@ -131,7 +131,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Close modal
     if (modalClose) {
-        modalClose.addEventListener('click', closeModal);
+        modalClose.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeModal();
+        });
     }
     
     // Close modal when clicking outside content
