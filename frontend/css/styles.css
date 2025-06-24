@@ -1192,7 +1192,7 @@ header.scrolled {
     .auth-notification {
         left: 10px !important;
         right: 10px !important;
-        top: 10px !important;
+        top: 80px !important; /* Increased to avoid navbar overlap */
         width: auto !important;
     }
     

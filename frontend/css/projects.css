@@ -194,6 +194,9 @@
     font-size: 1rem;
     gap: 10px;
     transition: var(--transition);
+    outline: none; /* Remove outline when clicked */
+    border: none; /* Remove border */
+    background: none; /* Ensure no background */
 }
 
 .btn-view-project i {
@@ -206,6 +209,11 @@
 
 .btn-view-project:hover i {
     transform: translateX(5px);
+}
+
+.btn-view-project:focus {
+    outline: none; /* Remove outline when focused */
+    box-shadow: none; /* Remove any box shadow */
 }
 
 /* Project Modal */
