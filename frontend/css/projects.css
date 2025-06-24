@@ -241,6 +241,7 @@
     backdrop-filter: blur(10px);
     pointer-events: none;
     padding-top: 20px;
+    overflow-y: auto; /* Allow scrolling within the modal */
 }
 
 .project-modal.active {
@@ -269,6 +270,7 @@
     /* Custom scrollbar styling */
     scrollbar-width: thin;
     scrollbar-color: var(--primary-color) var(--card-bg);
+    padding-bottom: 30px; /* Add padding to bottom to prevent content from being cut off */
 }
 
 /* Webkit scrollbar styling for better theme integration */
@@ -299,7 +301,7 @@
 .modal-close {
     position: fixed;
     top: calc(var(--header-height) + 20px);
-    right: 20px;
+    right: 5%;
     width: 50px;
     height: 50px;
     background: var(--primary-color);
@@ -984,6 +986,31 @@
     
     .gallery-main {
         height: 250px;
+    }
+    
+    /* Improved modal positioning for mobile */
+    .project-modal {
+        padding-top: 0;
+        align-items: center;
+    }
+    
+    .modal-content {
+        margin-top: 0;
+        max-height: 85vh;
+        padding-bottom: 20px;
+    }
+    
+    .project-details {
+        padding: 20px 15px;
+    }
+    
+    .modal-close {
+        top: 15px;
+        right: 15px;
+    }
+    
+    .project-details-header h2 {
+        font-size: 1.8rem;
     }
 }
 
