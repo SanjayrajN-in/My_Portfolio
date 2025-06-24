@@ -602,6 +602,27 @@ header.scrolled {
     font-size: 1.1rem;
 }
 
+/* Responsive styles for auth notification */
+@media (max-width: 768px) {
+    .auth-notification {
+        left: 10px;
+        right: 10px;
+        width: calc(100% - 20px);
+        top: calc(var(--header-height) + 10px) !important;
+    }
+    
+    .auth-notification-content {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .auth-notification-content span {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
+
 .login-btn {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
