@@ -882,6 +882,21 @@ class PortfolioApp {
         
         // Ensure the notification is visible
         notification.classList.remove('hidden');
+        
+        // Remove desktop-specific class if it exists
+        notification.classList.remove('desktop-notification');
+        
+        // Ensure proper positioning for mobile
+        notification.style.position = 'fixed';
+        notification.style.left = '50%';
+        notification.style.transform = 'translateX(-50%)';
+        notification.style.bottom = '20px';
+        notification.style.zIndex = '999998';
+        
+        // Move the notification to be a direct child of the body to ensure proper positioning
+        if (notification.parentElement !== document.body) {
+            document.body.appendChild(notification);
+        }
     }
     
     // Adjust notification positioning for desktop devices
@@ -899,9 +914,20 @@ class PortfolioApp {
         notification.classList.add('desktop-notification');
         
         // Ensure proper positioning
+        notification.style.position = 'fixed';
         notification.style.left = '50%';
         notification.style.transform = 'translateX(-50%)';
         notification.style.bottom = '25px';
+        notification.style.zIndex = '999998';
+        
+        // Ensure the notification has the glass blur effect
+        notification.style.backdropFilter = 'blur(20px) saturate(180%)';
+        notification.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
+        
+        // Move the notification to be a direct child of the body to ensure proper positioning
+        if (notification.parentElement !== document.body) {
+            document.body.appendChild(notification);
+        }
     }
     
     // Setup auth state listener

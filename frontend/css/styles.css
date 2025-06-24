@@ -342,10 +342,13 @@ header.scrolled {
         padding: 18px 25px;
         bottom: 25px;
         border-radius: 18px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 168, 255, 0.2);
         background: linear-gradient(135deg, rgba(0, 168, 255, 0.15), rgba(125, 95, 255, 0.15));
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(0, 168, 255, 0.3);
+        position: fixed !important;
+        z-index: 999998 !important;
     }
     
     .notification-text {
@@ -573,8 +576,8 @@ header.scrolled {
     display: none; /* Hidden by default */
     
     /* Fixed positioning for all screen sizes */
-    position: fixed;
-    z-index: 999998; /* Just below header */
+    position: fixed !important;
+    z-index: 999998 !important; /* Just below header */
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
@@ -584,6 +587,11 @@ header.scrolled {
     margin: 0;
     margin-left: 0;
     right: auto;
+    
+    /* Ensure it's not affected by container styles */
+    width: auto;
+    float: none;
+    clear: both;
 }
 
 .notification-content {
