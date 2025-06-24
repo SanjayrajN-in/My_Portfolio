@@ -340,7 +340,7 @@ header.scrolled {
     .feature-notification, .feature-notification.desktop-notification {
         max-width: 550px;
         padding: 18px 25px;
-        bottom: 20px;
+        bottom: 40px;
         border-radius: 18px;
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 168, 255, 0.2);
         background: linear-gradient(135deg, rgba(0, 168, 255, 0.15), rgba(125, 95, 255, 0.15));
@@ -578,7 +578,7 @@ header.scrolled {
     /* Fixed positioning for all screen sizes */
     position: fixed !important;
     z-index: 999998 !important; /* Just below header */
-    bottom: 15px;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
