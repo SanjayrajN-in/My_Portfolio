@@ -489,65 +489,139 @@ class ToolsManager {
             e.preventDefault();
             uploadArea.style.borderColor = 'rgba(0, 255, 255, 0.3)';
             const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type.startsWith('image/')) {
-                currentImage = this.loadImageForScale(files[0], workspace, canvas, ctx, fileInfo, measurements);
+            if (files.length > 0) {
+                const file = files[0];
+                if (this.isImageFile(file)) {
+                    // Reset previous state when new image is loaded
+                    measurements.length = 0;
+                    referencePixelLength = null;
+                    referenceRealLength = null;
+                    currentMode = 'none';
+                    if (referenceLength) referenceLength.value = '';
+                    currentImage = this.loadImageForScale(file, workspace, canvas, ctx, fileInfo, measurements);
+                } else {
+                    this.showNotification('Please upload an image file only (JPG, PNG, WebP, etc.)', 'error');
+                }
             }
         });
 
         // File input change
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                currentImage = this.loadImageForScale(e.target.files[0], workspace, canvas, ctx, fileInfo, measurements);
+                const file = e.target.files[0];
+                if (this.isImageFile(file)) {
+                    // Reset previous state when new image is loaded
+                    measurements.length = 0;
+                    referencePixelLength = null;
+                    referenceRealLength = null;
+                    currentMode = 'none';
+                    if (referenceLength) referenceLength.value = '';
+                    currentImage = this.loadImageForScale(file, workspace, canvas, ctx, fileInfo, measurements);
+                } else {
+                    this.showNotification('Please upload an image file only (JPG, PNG, WebP, etc.)', 'error');
+                    e.target.value = ''; // Clear the input
+                }
             }
         });
 
-        // Canvas mouse events
-        canvas.addEventListener('mousedown', (e) => {
+        // Helper function to get coordinates from both mouse and touch events
+        const getEventCoordinates = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let clientX, clientY;
+            
+            if (e.type.startsWith('touch')) {
+                // Handle touch events
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                // Handle mouse events
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        };
+
+        // Unified event handler for both mouse and touch start
+        const handleStart = (e) => {
             if (currentMode === 'none' || !currentImage) return;
             
+            // Prevent default touch behavior (scrolling, zooming)
+            if (e.type.startsWith('touch')) {
+                e.preventDefault();
+            }
+            
             isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            startPoint = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
-        });
+            startPoint = getEventCoordinates(e);
+        };
 
-        canvas.addEventListener('mousemove', (e) => {
+        // Unified event handler for both mouse and touch move
+        const handleMove = (e) => {
             if (!isDrawing || !startPoint) return;
             
-            const rect = canvas.getBoundingClientRect();
-            const currentPoint = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
-
+            // Prevent default touch behavior
+            if (e.type.startsWith('touch')) {
+                e.preventDefault();
+            }
+            
+            const currentPoint = getEventCoordinates(e);
             this.redrawCanvas(canvas, ctx, currentImage, measurements);
             this.drawTempLine(ctx, startPoint, currentPoint);
-        });
+        };
 
-        canvas.addEventListener('mouseup', (e) => {
+        // Unified event handler for both mouse and touch end
+        const handleEnd = (e) => {
             if (!isDrawing || !startPoint) return;
             
-            const rect = canvas.getBoundingClientRect();
-            const endPoint = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
+            // Prevent default touch behavior
+            if (e.type.startsWith('touch')) {
+                e.preventDefault();
+            }
+            
+            let endPoint;
+            if (e.type.startsWith('touch')) {
+                // For touch end, use changedTouches since touches array is empty
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                endPoint = {
+                    x: (e.changedTouches[0].clientX - rect.left) * scaleX,
+                    y: (e.changedTouches[0].clientY - rect.top) * scaleY
+                };
+            } else {
+                endPoint = getEventCoordinates(e);
+            }
 
             const pixelLength = Math.sqrt(
                 Math.pow(endPoint.x - startPoint.x, 2) + 
                 Math.pow(endPoint.y - startPoint.y, 2)
             );
 
+            // Validate minimum line length (prevent accidental clicks)
+            if (pixelLength < 5) {
+                this.showNotification('Line too short. Please draw a longer line.', 'error');
+                this.redrawCanvas(canvas, ctx, currentImage, measurements);
+                isDrawing = false;
+                startPoint = null;
+                return;
+            }
+
             if (currentMode === 'reference') {
                 referencePixelLength = pixelLength;
                 const refLength = parseFloat(referenceLength.value);
                 if (refLength > 0) {
                     referenceRealLength = refLength;
-                    alert(`Reference scale set: ${pixelLength.toFixed(2)} pixels = ${refLength} ${referenceUnit.value}`);
+                    this.showNotification(`Reference scale set: ${pixelLength.toFixed(2)} pixels = ${refLength} ${referenceUnit.value}`);
                 } else {
-                    alert('Please enter a reference length first!');
+                    this.showNotification('Please enter a reference length first!', 'error');
+                    // Reset reference if no length entered
+                    referencePixelLength = null;
                 }
             } else if (currentMode === 'measure' && referencePixelLength && referenceRealLength) {
                 const realLength = (pixelLength / referencePixelLength) * referenceRealLength;
@@ -560,37 +634,99 @@ class ToolsManager {
                     unit: referenceUnit.value
                 });
                 this.updateMeasurementsDisplay(measurementsDisplay, measurements);
+                this.showNotification(`Measurement added: ${realLength.toFixed(3)} ${referenceUnit.value}`);
             }
 
             this.redrawCanvas(canvas, ctx, currentImage, measurements);
             isDrawing = false;
             startPoint = null;
+        };
+
+        // Mouse events
+        canvas.addEventListener('mousedown', handleStart);
+        canvas.addEventListener('mousemove', handleMove);
+        canvas.addEventListener('mouseup', handleEnd);
+
+        // Touch events for mobile support
+        canvas.addEventListener('touchstart', handleStart, { passive: false });
+        canvas.addEventListener('touchmove', handleMove, { passive: false });
+        canvas.addEventListener('touchend', handleEnd, { passive: false });
+
+        // Prevent context menu on canvas for better mobile experience
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
         });
+
+        // Keyboard shortcuts support
+        document.addEventListener('keydown', (e) => {
+            if (!currentImage) return;
+            
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key.toLowerCase()) {
+                    case 'r':
+                        e.preventDefault();
+                        if (setReferenceBtn) setReferenceBtn.click();
+                        break;
+                    case 'm':
+                        e.preventDefault();
+                        if (measureBtn) measureBtn.click();
+                        break;
+                    case 'c':
+                        e.preventDefault();
+                        if (clearBtn) clearBtn.click();
+                        break;
+                }
+            } else if (e.key === 'Escape') {
+                // Cancel current drawing mode
+                if (isDrawing) {
+                    isDrawing = false;
+                    startPoint = null;
+                    this.redrawCanvas(canvas, ctx, currentImage, measurements);
+                }
+                currentMode = 'none';
+                canvas.style.cursor = 'default';
+                this.showNotification('Drawing mode cancelled');
+            }
+        });
+
+        // Add visual feedback for active modes
+        const updateCanvasStyle = () => {
+            canvas.classList.remove('drawing-mode', 'measuring-mode');
+            if (currentMode === 'reference') {
+                canvas.classList.add('drawing-mode');
+            } else if (currentMode === 'measure') {
+                canvas.classList.add('measuring-mode');
+            }
+        };
 
         // Button events
         if (setReferenceBtn) {
             setReferenceBtn.addEventListener('click', () => {
                 if (!currentImage) {
-                    alert('Please upload an image first!');
+                    this.showNotification('Please upload an image first!', 'error');
                     return;
                 }
                 currentMode = 'reference';
                 canvas.style.cursor = 'crosshair';
+                updateCanvasStyle();
+                this.showNotification('Click and drag to draw reference line');
             });
         }
 
         if (measureBtn) {
             measureBtn.addEventListener('click', () => {
                 if (!currentImage) {
-                    alert('Please upload an image first!');
+                    this.showNotification('Please upload an image first!', 'error');
                     return;
                 }
                 if (!referencePixelLength) {
-                    alert('Please set a reference scale first!');
+                    this.showNotification('Please set a reference scale first!', 'error');
                     return;
                 }
                 currentMode = 'measure';
                 canvas.style.cursor = 'crosshair';
+                updateCanvasStyle();
+                this.showNotification('Click and drag to measure objects');
             });
         }
 
@@ -601,9 +737,11 @@ class ToolsManager {
                 referenceRealLength = null;
                 currentMode = 'none';
                 canvas.style.cursor = 'default';
+                updateCanvasStyle();
                 if (referenceLength) referenceLength.value = '';
                 this.redrawCanvas(canvas, ctx, currentImage, measurements);
                 this.updateMeasurementsDisplay(measurementsDisplay, measurements);
+                this.showNotification('All measurements cleared');
             });
         }
 
@@ -624,20 +762,43 @@ class ToolsManager {
     loadImageForScale(file, workspace, canvas, ctx, fileInfo, measurements) {
         const img = new Image();
         img.onload = () => {
+            // Set canvas dimensions to match image
             canvas.width = img.width;
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
+            
+            // Make canvas responsive while maintaining aspect ratio
+            const containerWidth = canvas.parentElement.offsetWidth - 40; // Account for padding
+            const aspectRatio = img.height / img.width;
+            
+            if (img.width > containerWidth) {
+                canvas.style.width = containerWidth + 'px';
+                canvas.style.height = (containerWidth * aspectRatio) + 'px';
+            } else {
+                canvas.style.width = img.width + 'px';
+                canvas.style.height = img.height + 'px';
+            }
             
             if (workspace) workspace.style.display = 'block';
             if (fileInfo) {
                 fileInfo.innerHTML = `
                     <div class="file-details">
                         <strong>${file.name}</strong><br>
-                        Dimensions: ${img.width} × ${img.height}px
+                        Dimensions: ${img.width} × ${img.height}px<br>
+                        <small style="color: rgba(255,255,255,0.7);">
+                            ${window.innerWidth <= 768 ? 'Tap and drag to draw lines' : 'Click and drag to draw lines'}
+                        </small>
                     </div>
                 `;
             }
+            
+            this.showNotification('Image loaded successfully! Set a reference scale to start measuring.');
         };
+        
+        img.onerror = () => {
+            this.showNotification('Error loading image. Please try another file.', 'error');
+        };
+        
         img.src = URL.createObjectURL(file);
         return img;
     }
@@ -681,16 +842,79 @@ class ToolsManager {
         if (!display) return;
         
         if (measurements.length === 0) {
-            display.innerHTML = '<p>No measurements yet</p>';
+            display.innerHTML = '<p style="color: rgba(255,255,255,0.7); text-align: center; padding: 20px;">No measurements yet</p>';
             return;
         }
         
-        let html = '<h4>Measurements:</h4><ul>';
+        let html = '<h4 style="margin-bottom: 15px; color: #00ffff;">Measurements:</h4>';
         measurements.forEach((measurement, index) => {
-            html += `<li>Measurement ${index + 1}: ${measurement.realLength.toFixed(2)} ${measurement.unit}</li>`;
+            html += `
+                <div class="measurement-item" onclick="this.style.background = this.style.background === 'rgba(0, 255, 255, 0.2)' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 255, 255, 0.2)'">
+                    <span>Measurement ${index + 1}</span>
+                    <span class="measurement-value">${measurement.realLength.toFixed(3)} ${measurement.unit}</span>
+                    <small style="color: rgba(255,255,255,0.6); font-size: 0.8em;">
+                        ${measurement.pixelLength.toFixed(1)} pixels
+                    </small>
+                </div>
+            `;
         });
-        html += '</ul>';
+        
+        // Add summary if multiple measurements
+        if (measurements.length > 1) {
+            const total = measurements.reduce((sum, m) => sum + m.realLength, 0);
+            const avg = total / measurements.length;
+            html += `
+                <div style="margin-top: 15px; padding: 10px; background: rgba(0, 255, 255, 0.1); border-radius: 5px; border: 1px solid rgba(0, 255, 255, 0.3);">
+                    <strong>Summary:</strong><br>
+                    Total: ${total.toFixed(3)} ${measurements[0].unit}<br>
+                    Average: ${avg.toFixed(3)} ${measurements[0].unit}<br>
+                    Count: ${measurements.length} measurements
+                </div>
+            `;
+        }
+        
         display.innerHTML = html;
+    }
+
+    // Mobile-friendly notification system
+    showNotification(message, type = 'success') {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.scale-measurement-notification');
+        existingNotifications.forEach(notification => notification.remove());
+
+        const notification = document.createElement('div');
+        notification.className = `scale-measurement-notification ${type}`;
+        notification.textContent = message;
+        
+        // Style the notification
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${type === 'error' ? 'rgba(220, 53, 69, 0.9)' : 'rgba(40, 167, 69, 0.9)'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            font-size: 14px;
+            max-width: 90vw;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid ${type === 'error' ? 'rgba(220, 53, 69, 0.5)' : 'rgba(40, 167, 69, 0.5)'};
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(-50%) translateY(-20px)';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 3000);
     }
 
     // Utility functions

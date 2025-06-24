@@ -455,6 +455,8 @@
     align-items: flex-start;
 }
 
+/* Enhanced Mobile Support for Scale Measurement Tool */
+
 /* Responsive design for scale workspace */
 @media (max-width: 1024px) {
     .scale-workspace {
@@ -468,6 +470,175 @@
     
     .canvas-container {
         order: 1;
+    }
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+    .scale-workspace {
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .scale-controls {
+        padding: 15px;
+        margin: 0 10px;
+    }
+    
+    .canvas-container {
+        margin: 10px;
+        padding: 10px;
+    }
+    
+    #scaleCanvas {
+        /* Ensure canvas is touch-friendly */
+        touch-action: none; /* Prevent browser gestures */
+        -webkit-touch-callout: none; /* Disable callout on iOS */
+        -webkit-user-select: none; /* Disable text selection */
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        /* Better mobile sizing */
+        width: 100%;
+        height: auto;
+        max-width: calc(100vw - 40px);
+        border-width: 1px; /* Thinner border on mobile */
+    }
+    
+    /* Improve button sizes for touch */
+    .btn {
+        min-height: 44px; /* iOS recommended minimum touch target */
+        padding: 12px 20px;
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    
+    /* Better spacing for mobile controls */
+    .control-group {
+        margin-bottom: 15px;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+    }
+    
+    /* Input improvements for mobile */
+    input[type="number"], select {
+        min-height: 44px;
+        font-size: 16px; /* Prevent zoom on iOS */
+        padding: 10px;
+    }
+    
+    /* Measurements display improvements */
+    .measurements-display {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .measurement-item {
+        padding: 10px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .measurement-value {
+        font-size: 1rem;
+        align-self: flex-end;
+    }
+    
+    /* Instructions improvements */
+    .instructions {
+        padding: 15px;
+        font-size: 14px;
+    }
+    
+    .instructions ol {
+        padding-left: 20px;
+    }
+    
+    .instructions li {
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+    .scale-workspace {
+        margin: 10px 5px;
+    }
+    
+    .scale-controls {
+        margin: 0 5px;
+        padding: 10px;
+    }
+    
+    .canvas-container {
+        margin: 5px;
+        padding: 5px;
+    }
+    
+    #scaleCanvas {
+        max-width: calc(100vw - 20px);
+    }
+    
+    /* Stack reference input and unit selector */
+    .control-group div[style*="flex"] {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    
+    .control-group select {
+        flex: none !important;
+        width: 100% !important;
+    }
+    
+    /* Smaller text in instructions */
+    .instructions {
+        font-size: 13px;
+        padding: 10px;
+    }
+    
+    .instructions h4 {
+        font-size: 16px;
+    }
+}
+
+/* Canvas cursor improvements for mobile */
+#scaleCanvas.drawing-mode,
+#scaleCanvas.measuring-mode {
+    cursor: crosshair;
+}
+
+/* On mobile, use default cursor since crosshair may not be visible */
+@media (max-width: 768px) {
+    #scaleCanvas.drawing-mode,
+    #scaleCanvas.measuring-mode {
+        cursor: default;
+    }
+}
+
+/* Notification styles for mobile */
+.scale-measurement-notification {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .scale-measurement-notification {
+        left: 10px !important;
+        right: 10px !important;
+        top: 10px !important;
+        transform: none !important;
+        max-width: none !important;
+        width: calc(100vw - 20px) !important;
+        box-sizing: border-box;
     }
 }
 
