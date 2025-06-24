@@ -886,35 +886,52 @@ class ToolsManager {
         notification.className = `scale-measurement-notification ${type}`;
         notification.textContent = message;
         
-        // Style the notification
+        // Style the notification with proper z-index hierarchy
         notification.style.cssText = `
             position: fixed;
-            top: 20px;
+            top: calc(var(--header-height, 80px) + 20px);
             left: 50%;
-            transform: translateX(-50%);
-            background: ${type === 'error' ? 'rgba(220, 53, 69, 0.9)' : 'rgba(40, 167, 69, 0.9)'};
+            transform: translateX(-50%) translateY(-10px);
+            background: ${type === 'error' ? 'rgba(220, 53, 69, 0.95)' : 'rgba(40, 167, 69, 0.95)'};
             color: white;
             padding: 12px 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            z-index: 10000;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            z-index: 10000000;
             font-size: 14px;
             max-width: 90vw;
             text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid ${type === 'error' ? 'rgba(220, 53, 69, 0.5)' : 'rgba(40, 167, 69, 0.5)'};
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid ${type === 'error' ? 'rgba(220, 53, 69, 0.6)' : 'rgba(40, 167, 69, 0.6)'};
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         `;
         
         document.body.appendChild(notification);
         
-        // Auto remove after 3 seconds
+        // Animate in
+        requestAnimationFrame(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(-50%) translateY(0)';
+        });
+        
+        // Auto remove after 3 seconds (or 4 seconds for errors)
+        const displayTime = type === 'error' ? 4000 : 3000;
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.style.opacity = '0';
                 notification.style.transform = 'translateX(-50%) translateY(-20px)';
-                setTimeout(() => notification.remove(), 300);
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
             }
-        }, 3000);
+        }, displayTime);
     }
 
     // Utility functions
