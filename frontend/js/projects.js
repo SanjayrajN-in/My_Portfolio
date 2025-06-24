@@ -172,39 +172,14 @@ document.addEventListener('DOMContentLoaded', function() {
             max-width: 300px;
         `;
         
-        // Add responsive styles for mobile
-        const mediaQuery = window.matchMedia('(max-width: 768px)');
-        if (mediaQuery.matches) {
-            notification.style.top = '90px'; // Adjust for mobile navbar
-            notification.style.right = '10px';
-            notification.style.left = '10px';
-            notification.style.maxWidth = 'calc(100% - 20px)';
-        }
-        
-        // Style the login button
-        const loginBtn = notification.querySelector('.login-btn');
-        if (loginBtn) {
-            loginBtn.style.cssText = `
-                background: rgba(255, 255, 255, 0.2);
-                border: none;
-                padding: 5px 15px;
-                border-radius: 5px;
-                color: white;
-                margin-top: 10px;
-                cursor: pointer;
-                font-weight: bold;
-                transition: background 0.3s;
-            `;
-        }
-        
         document.body.appendChild(notification);
         
-        // Auto remove after 7 seconds (increased from 5)
+        // Auto remove after 5 seconds
         setTimeout(() => {
             if (notification.parentElement) {
                 notification.remove();
             }
-        }, 7000);
+        }, 5000);
     }
     
     // Add visual indicators for protected content - keep one lock icon
@@ -213,6 +188,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!token) {
             viewButtons.forEach(button => {
                 button.classList.add('auth-protected');
+                
+                // Remove any existing lock indicators first to avoid duplicates
+                const existingLocks = button.querySelectorAll('.lock-indicator');
+                existingLocks.forEach(lock => lock.remove());
+                
                 // Add a single lock icon
                 const lockIcon = document.createElement('i');
                 lockIcon.className = 'fas fa-lock lock-indicator';
@@ -240,24 +220,25 @@ function initProjectAuthProtection() {
     viewButtons.forEach(button => {
         if (!isLoggedIn) {
             button.classList.add('auth-protected');
-            // Add a single lock icon if not already present
-            if (!button.querySelector('.lock-indicator')) {
-                const lockIcon = document.createElement('i');
-                lockIcon.className = 'fas fa-lock lock-indicator';
-                lockIcon.style.cssText = `
-                    margin-left: 8px;
-                    font-size: 0.8rem;
-                    opacity: 0.7;
-                `;
-                button.appendChild(lockIcon);
-            }
+            
+            // Remove any existing lock indicators first to avoid duplicates
+            const existingLocks = button.querySelectorAll('.lock-indicator');
+            existingLocks.forEach(lock => lock.remove());
+            
+            // Add a single lock icon
+            const lockIcon = document.createElement('i');
+            lockIcon.className = 'fas fa-lock lock-indicator';
+            lockIcon.style.cssText = `
+                margin-left: 8px;
+                font-size: 0.8rem;
+                opacity: 0.7;
+            `;
+            button.appendChild(lockIcon);
         } else {
             // Remove auth protection and lock indicators
             button.classList.remove('auth-protected');
-            const lockIcon = button.querySelector('.lock-indicator');
-            if (lockIcon) {
-                lockIcon.remove();
-            }
+            const lockIcons = button.querySelectorAll('.lock-indicator');
+            lockIcons.forEach(icon => icon.remove());
         }
     });
 }
