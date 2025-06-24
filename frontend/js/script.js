@@ -704,10 +704,17 @@ class PortfolioApp {
     // Handle clicks on protected elements
     handleProtectedClick(e) {
         e.preventDefault();
-        // Redirect to login page with message
-        localStorage.setItem('login-message', 'Please login to access this feature');
-        localStorage.setItem('redirect-after-login', window.location.href);
-        window.location.href = 'pages/login.html';
+        
+        // Check if it's the resume download button
+        if (e.currentTarget.id === 'resume-download') {
+            // Show a simple alert for the resume download button
+            alert('Please login first to download the CV');
+        } else {
+            // For other protected elements, redirect to login page
+            localStorage.setItem('login-message', 'Please login to access this feature');
+            localStorage.setItem('redirect-after-login', window.location.href);
+            window.location.href = 'pages/login.html';
+        }
     }
     
     // Show login prompt
