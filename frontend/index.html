@@ -905,50 +905,87 @@
         });
     </script>
     
-    <!-- Resume download button click handler -->
+    <!-- Resume download button click handler with overlay -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const resumeBtn = document.getElementById('resume-download');
-            if (resumeBtn) {
-                resumeBtn.addEventListener('click', function(e) {
-                    if (this.classList.contains('locked')) {
-                        e.preventDefault();
-                        // Show login prompt
-                        const notification = document.createElement('div');
-                        notification.className = 'auth-notification';
-                        notification.innerHTML = `
-                            <div class="auth-notification-content">
-                                <i class="fas fa-lock"></i>
-                                <span>Please login to download the resume</span>
-                                <button onclick="window.location.href='pages/login.html'" class="login-btn">Login</button>
-                                <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
-                            </div>
-                        `;
-                        
-                        // Add styles
-                        notification.style.cssText = `
-                            position: fixed;
-                            top: 20px;
-                            right: 20px;
-                            background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
-                            color: white;
-                            padding: 15px 20px;
-                            border-radius: 10px;
-                            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                            z-index: 10000;
-                            animation: slideInRight 0.3s ease;
-                            backdrop-filter: blur(10px);
-                        `;
-                        
-                        document.body.appendChild(notification);
-                        
-                        // Auto remove after 5 seconds
-                        setTimeout(() => {
-                            if (notification.parentElement) {
-                                notification.remove();
-                            }
-                        }, 5000);
-                    }
+            if (resumeBtn && resumeBtn.classList.contains('locked')) {
+                // Create a clickable overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'resume-download-overlay';
+                overlay.style.cssText = `
+                    position: absolute;
+                    cursor: pointer;
+                    z-index: 1000;
+                    background: transparent;
+                `;
+                
+                // Position the overlay over the button
+                function positionOverlay() {
+                    const rect = resumeBtn.getBoundingClientRect();
+                    overlay.style.top = (rect.top + window.scrollY) + 'px';
+                    overlay.style.left = rect.left + 'px';
+                    overlay.style.width = rect.width + 'px';
+                    overlay.style.height = rect.height + 'px';
+                }
+                
+                // Position initially and on resize
+                positionOverlay();
+                window.addEventListener('resize', positionOverlay);
+                window.addEventListener('scroll', positionOverlay);
+                
+                // Add click handler to the overlay
+                overlay.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Show login prompt
+                    const notification = document.createElement('div');
+                    notification.className = 'auth-notification';
+                    notification.innerHTML = `
+                        <div class="auth-notification-content">
+                            <i class="fas fa-lock"></i>
+                            <span>Please login to download the resume</span>
+                            <button onclick="window.location.href='pages/login.html'" class="login-btn">Login</button>
+                            <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
+                        </div>
+                    `;
+                    
+                    // Add styles
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
+                        color: white;
+                        padding: 15px 20px;
+                        border-radius: 10px;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                        z-index: 10000;
+                        animation: slideInRight 0.3s ease;
+                        backdrop-filter: blur(10px);
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    
+                    // Auto remove after 5 seconds
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 5000);
+                });
+                
+                // Add the overlay to the document
+                document.body.appendChild(overlay);
+                
+                // Reposition on DOM changes that might affect layout
+                const observer = new MutationObserver(positionOverlay);
+                observer.observe(document.body, { 
+                    childList: true, 
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['style', 'class']
                 });
             }
         });

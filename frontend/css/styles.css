@@ -477,7 +477,8 @@ header.scrolled {
 .auth-protected.locked {
     opacity: 0.6;
     cursor: not-allowed;
-    pointer-events: none;
+    /* Allow clicks on locked elements */
+    pointer-events: auto;
 }
 
 .lock-overlay {

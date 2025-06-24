@@ -655,6 +655,16 @@ class PortfolioApp {
         const resumeBtn = document.getElementById('resume-download');
         if (resumeBtn) {
             this.checkAuthStatus(resumeBtn);
+            
+            // Add direct click handler for the resume button
+            resumeBtn.addEventListener('click', (e) => {
+                if (resumeBtn.classList.contains('locked')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.showLoginPrompt();
+                    return false;
+                }
+            });
         }
         
         // Also check immediately for any auth-protected elements
