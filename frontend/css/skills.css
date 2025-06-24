@@ -82,7 +82,7 @@
     padding: 20px 30px;
     text-align: center;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1); /* Smoother transition */
     border: 1px solid var(--border-color);
     min-width: 180px;
     position: relative;
@@ -108,31 +108,46 @@
     background: rgba(0, 168, 255, 0.05);
 }
 
+/* Enhanced active state styling to clearly show selected category */
 .skill-category.active {
-    border-color: var(--border-color); /* Same as normal state */
-    background: var(--card-bg); /* Same as normal state */
-    box-shadow: none; /* No shadow */
+    border-color: var(--primary-color); /* Highlighted border */
+    background: rgba(0, 168, 255, 0.08); /* Subtle blue background */
+    box-shadow: 0 0 15px rgba(0, 168, 255, 0.2); /* Soft glow */
     position: relative; /* Ensure positioning for the indicator */
+    transform: translateY(-3px); /* Slight elevation */
 }
 
-/* Add an extremely subtle dot indicator at the bottom that's barely visible */
+/* Add a visible indicator at the bottom for active state */
 .skill-category.active::after {
     content: '';
     position: absolute;
-    bottom: 4px;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 2px;
-    height: 2px;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-    opacity: 0.2; /* Extremely low opacity */
+    width: 50px;
+    height: 4px;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    opacity: 1; /* Fully visible */
+    box-shadow: 0 0 10px rgba(0, 168, 255, 0.6); /* Subtle glow for the indicator */
+    animation: pulseIndicator 2s ease-in-out infinite; /* Subtle pulse animation */
+}
+
+@keyframes pulseIndicator {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px rgba(0, 168, 255, 0.6);
+    }
+    50% {
+        opacity: 0.8;
+        box-shadow: 0 0 15px rgba(0, 168, 255, 0.8);
+    }
 }
 
 .skill-category.active:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--card-shadow);
-    background: rgba(0, 168, 255, 0.05);
+    transform: translateY(-8px); /* Even higher elevation */
+    box-shadow: 0 0 25px rgba(0, 168, 255, 0.4), var(--card-shadow); /* Enhanced glow + shadow */
+    background: rgba(0, 168, 255, 0.12); /* Slightly more prominent background */
 }
 
 .skill-category:hover::before {
@@ -140,11 +155,11 @@
 }
 
 .skill-category.active::before {
-    opacity: 0; /* Hide the line by default for active state */
+    opacity: 1; /* Show the line for active state */
 }
 
 .skill-category.active:hover::before {
-    opacity: 1; /* Show the line only when hovering over an active category */
+    opacity: 1; /* Keep the line visible when hovering over an active category */
 }
 
 .category-icon {
@@ -166,8 +181,9 @@
 }
 
 .skill-category.active .category-icon {
-    background: rgba(0, 168, 255, 0.1); /* Same as normal state */
-    box-shadow: none; /* No shadow */
+    background: rgba(0, 168, 255, 0.25); /* More prominent background */
+    box-shadow: 0 0 15px rgba(0, 168, 255, 0.4); /* Subtle glow */
+    transform: scale(1.05); /* Slightly larger */
 }
 
 .skill-category.active:hover .category-icon {
@@ -192,8 +208,9 @@
 }
 
 .skill-category.active h3 {
-    color: var(--text-color); /* Same as normal state */
-    font-weight: normal; /* Same as normal state */
+    color: var(--primary-color); /* Highlighted text color */
+    font-weight: 600; /* Slightly bolder */
+    text-shadow: 0 0 8px rgba(0, 168, 255, 0.3); /* Subtle glow */
 }
 
 .skill-category.active:hover h3 {
