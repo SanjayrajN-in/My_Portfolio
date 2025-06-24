@@ -145,37 +145,33 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show authentication required notification
     function showAuthRequiredNotification() {
-        // Create a custom notification that doesn't use existing CSS classes
         const notification = document.createElement('div');
-        notification.id = 'projectAuthNotification'; // Use ID instead of class
+        notification.className = 'auth-notification';
         notification.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-lock" style="font-size: 1.1rem;"></i>
+            <div class="auth-notification-content">
+                <i class="fas fa-lock"></i>
                 <span>Please login to view project details</span>
-                <button onclick="window.location.href='login.html'" style="background: rgba(255, 255, 255, 0.2); border: none; padding: 5px 15px; border-radius: 5px; color: white; margin-left: 10px; cursor: pointer;">Login</button>
-                <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; margin-left: auto;">×</button>
+                <button onclick="window.location.href='login.html'" class="login-btn">Login</button>
+                <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
             </div>
         `;
         
-        // Apply all styles directly to the element to avoid CSS conflicts
-        notification.style.position = 'fixed';
-        notification.style.top = '120px';
-        notification.style.right = '20px';
-        notification.style.background = 'linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9))';
-        notification.style.color = 'white';
-        notification.style.padding = '15px 20px';
-        notification.style.borderRadius = '10px';
-        notification.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
-        notification.style.zIndex = '99999'; // Higher than anything else
-        notification.style.maxWidth = '300px';
+        // Add styles with improved positioning to avoid navbar overlap
+        notification.style.cssText = `
+            position: fixed;
+            top: 120px; /* Position further below navbar to avoid overlap */
+            right: 20px;
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.9), rgba(125, 95, 255, 0.9));
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+        `;
         
-        // Remove any existing notification first
-        const existingNotification = document.getElementById('projectAuthNotification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
-        
-        // Add to page
         document.body.appendChild(notification);
         
         // Auto remove after 5 seconds
