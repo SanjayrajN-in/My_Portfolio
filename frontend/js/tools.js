@@ -411,7 +411,6 @@ class ToolsManager {
             if (resultArea) resultArea.style.display = 'block';
             
             // Show success notification with compression results
-            const originalSize = this.currentPDFFile.size;
             if (actualReduction > 0) {
                 this.showNotification(`PDF compressed successfully! Reduced by ${actualReduction}% (${this.formatFileSize(originalSize)} → ${this.formatFileSize(finalSize)})`);
             } else if (actualReduction === 0) {
