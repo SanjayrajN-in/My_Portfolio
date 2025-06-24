@@ -15,11 +15,6 @@ function initNotificationSystem() {
     notifications.forEach(notification => {
         // Make sure notification has a close button
         ensureCloseButton(notification);
-        
-        // Show notification with a slight delay - always visible, no auto-hide
-        setTimeout(() => {
-            notification.style.display = 'block';
-        }, 1500);
     });
 }
 

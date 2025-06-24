@@ -846,34 +846,33 @@ class PortfolioApp {
     
     // Initialize feature notifications
     initFeatureNotifications() {
-        // Check if mobile device
-        const isMobile = window.innerWidth <= 768;
-        
         // Don't show notification if it was previously dismissed
         if (localStorage.getItem('feature-notification-dismissed')) {
             return;
         }
         
-        // Show notification after appropriate delay
-        const delay = isMobile ? 4000 : 3000; // Longer delay on mobile to let page settle
-        
-        setTimeout(() => {
-            const notification = document.getElementById('feature-notification');
-            if (notification) {
-                // Make sure notification doesn't have hidden class initially
-                notification.classList.remove('hidden');
-                
-                // Ensure proper positioning based on device
-                if (isMobile) {
-                    this.adjustNotificationForMobile(notification);
-                } else {
-                    this.adjustNotificationForDesktop(notification);
+        // Show notification immediately
+        const notification = document.getElementById('feature-notification');
+        if (notification) {
+            // Make sure notification doesn't have hidden class
+            notification.classList.remove('hidden');
+            
+            // Show the notification - always visible
+            notification.style.display = 'block';
+            
+            // Make sure the notification stays visible
+            window.addEventListener('scroll', () => {
+                // Ensure it's always displayed
+                if (notification.style.display !== 'block') {
+                    notification.style.display = 'block';
                 }
                 
-                // Show the notification - always visible, no auto-hide
-                notification.style.display = 'block';
-            }
-        }, delay);
+                // Ensure it's not hidden
+                if (notification.classList.contains('hidden')) {
+                    notification.classList.remove('hidden');
+                }
+            });
+        }
     }
     
     // Adjust notification positioning for mobile devices
@@ -1040,8 +1039,14 @@ function hideFeatureNotification() {
             notification.style.display = 'none';
         }, 300);
         
-        // Store in localStorage
+        // Store in localStorage that notification was dismissed
         localStorage.setItem('feature-notification-dismissed', 'true');
+        
+        // Prevent event from bubbling
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
     }
 }
 

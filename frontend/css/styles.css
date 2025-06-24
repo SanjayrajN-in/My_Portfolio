@@ -511,12 +511,18 @@ header.scrolled {
 
 /* Feature Notification */
 .feature-notification {
+    /* Visual styling */
     background: linear-gradient(135deg, rgba(0, 168, 255, 0.1), rgba(125, 95, 255, 0.1));
     border: 1px solid rgba(0, 168, 255, 0.3);
     border-radius: 15px;
     padding: 15px 20px;
     max-width: 500px;
-    backdrop-filter: blur(10px);
+    
+    /* Blur effect */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    
+    /* Animation */
     animation: notificationPulse 3s ease-in-out infinite;
     display: none; /* Hidden by default */
     
@@ -527,6 +533,9 @@ header.scrolled {
     left: 50%;
     transform: translateX(-50%);
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+    
+    /* Ensure it's always visible */
+    margin: 0;
 }
 
 .notification-content {
