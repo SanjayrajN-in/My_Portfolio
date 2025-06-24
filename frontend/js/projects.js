@@ -9,15 +9,72 @@ document.addEventListener('DOMContentLoaded', function() {
         const projectId = window.location.hash.substring(1); // Remove the # character
         console.log(`Direct link detected to project: ${projectId}`);
         
-        // Only scroll to the project item
-        const projectItem = document.getElementById(projectId);
-        if (projectItem) {
-            console.log(`Scrolling to project: ${projectId}`);
+        // Special handling for keithley project (Data Logger)
+        if (projectId === 'keithley') {
+            console.log('Special handling for Data Logger project');
+            
+            // Wait for page to fully load
             setTimeout(() => {
-                projectItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
-        } else {
-            console.warn(`No project found with ID: ${projectId}`);
+                // Get the keithley project element
+                const keithleyProject = document.getElementById('keithley');
+                
+                if (keithleyProject) {
+                    // Get the position of the element
+                    const rect = keithleyProject.getBoundingClientRect();
+                    const absoluteTop = rect.top + window.pageYOffset;
+                    
+                    // Scroll to the element with a larger offset to ensure it's visible
+                    window.scrollTo({
+                        top: absoluteTop - 120,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Add a more noticeable highlight
+                    keithleyProject.style.transition = 'all 0.5s ease';
+                    keithleyProject.style.boxShadow = '0 0 30px rgba(0, 123, 255, 0.9)';
+                    keithleyProject.style.transform = 'scale(1.02)';
+                    
+                    // Remove highlight after animation
+                    setTimeout(() => {
+                        keithleyProject.style.boxShadow = 'none';
+                        keithleyProject.style.transform = 'scale(1)';
+                    }, 2000);
+                }
+            }, 500);
+        } 
+        // Handle other projects
+        else {
+            const projectItem = document.getElementById(projectId);
+            if (projectItem) {
+                console.log(`Scrolling to project: ${projectId}`);
+                
+                // Wait for page to fully load
+                setTimeout(() => {
+                    // Get the position of the element relative to the viewport
+                    const rect = projectItem.getBoundingClientRect();
+                    
+                    // Calculate the absolute position by adding the scroll position
+                    const absoluteTop = rect.top + window.pageYOffset;
+                    
+                    // Scroll to the element with an offset for the header
+                    window.scrollTo({
+                        top: absoluteTop - 100, // Offset for header
+                        behavior: 'smooth'
+                    });
+                    
+                    // Highlight the element briefly
+                    projectItem.style.transition = 'box-shadow 0.5s ease';
+                    projectItem.style.boxShadow = '0 0 20px rgba(0, 123, 255, 0.7)';
+                    
+                    // Remove highlight after animation
+                    setTimeout(() => {
+                        projectItem.style.boxShadow = 'none';
+                    }, 1500);
+                    
+                }, 300);
+            } else {
+                console.warn(`No project found with ID: ${projectId}`);
+            }
         }
     }
     
