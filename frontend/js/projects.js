@@ -27,10 +27,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Check authentication first
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (!token) {
-                // Redirect to login page with message
-                localStorage.setItem('login-message', 'Please login to view project details');
-                localStorage.setItem('redirect-after-login', window.location.href);
-                window.location.href = 'login.html';
+                // Show notification instead of redirecting
+                if (window.authSystem && typeof window.authSystem.showFloatingNotification === 'function') {
+                    window.authSystem.showFloatingNotification('Please login to view project details', 'warning');
+                } else {
+                    // Fallback to simple notification if authSystem is not available
+                    showAuthRequiredNotification();
+                }
                 return;
             }
             
@@ -146,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
         notification.className = 'auth-notification';
         notification.innerHTML = `
             <div class="auth-notification-content">
-                <i class="fas fa-lock"></i>
+                <i class="fas fa-info-circle"></i>
                 <span>Please login to view project details</span>
                 <button onclick="window.location.href='login.html'" class="login-btn">Login</button>
                 <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
@@ -178,20 +181,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
     
-    // Add visual indicators for protected content
+    // Add visual indicators for protected content - removed lock icons
     function addAuthIndicators() {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (!token) {
             viewButtons.forEach(button => {
                 button.classList.add('auth-protected');
-                const lockIcon = document.createElement('i');
-                lockIcon.className = 'fas fa-lock lock-indicator';
-                lockIcon.style.cssText = `
-                    margin-left: 8px;
-                    font-size: 0.8rem;
-                    opacity: 0.7;
-                `;
-                button.appendChild(lockIcon);
+                // Lock icons removed as requested
             });
         }
     }
@@ -210,16 +206,11 @@ function initProjectAuthProtection() {
     viewButtons.forEach(button => {
         if (!isLoggedIn) {
             button.classList.add('auth-protected');
-            // Add lock indicator if not already present
-            if (!button.querySelector('.lock-indicator')) {
-                const lockIcon = document.createElement('i');
-                lockIcon.className = 'fas fa-lock lock-indicator';
-                lockIcon.style.cssText = `
-                    margin-left: 8px;
-                    font-size: 0.8rem;
-                    opacity: 0.7;
-                `;
-                button.appendChild(lockIcon);
+            // Lock icons removed as requested
+            // Remove any existing lock indicators
+            const lockIcon = button.querySelector('.lock-indicator');
+            if (lockIcon) {
+                lockIcon.remove();
             }
         } else {
             // Remove auth protection and lock indicators
