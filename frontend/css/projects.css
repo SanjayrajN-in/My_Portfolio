@@ -300,39 +300,7 @@
     opacity: 1;
 }
 
-.modal-close {
-    position: fixed;
-    top: calc(var(--header-height) + 20px);
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    background: var(--primary-color);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 10001; /* Higher than modal content */
-    transition: var(--transition);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-    border: none;
-    outline: none;
-}
-
-.modal-close:hover {
-    background: var(--primary-color);
-    transform: rotate(90deg);
-}
-
-.modal-close i {
-    color: white;
-    font-size: 1.2rem;
-    display: block;
-}
-
-.modal-close:hover i {
-    color: white;
-}
+/* Modal close button styles moved to inline styles for better mobile compatibility */
 
 .modal-body {
     padding: 0;
@@ -1007,12 +975,7 @@
         padding: 20px 15px;
     }
     
-    .modal-close {
-        top: 20px;
-        right: 20px;
-        width: 45px;
-        height: 45px;
-    }
+    /* Modal close button styles moved to inline styles for better mobile compatibility */
     
     .project-details-header h2 {
         font-size: 1.8rem;

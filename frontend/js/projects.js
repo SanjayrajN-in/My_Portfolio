@@ -9,25 +9,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const projectId = window.location.hash.substring(1); // Remove the # character
         console.log(`Direct link detected to project: ${projectId}`);
         
-        // First scroll to the project item
+        // Only scroll to the project item
         const projectItem = document.getElementById(projectId);
         if (projectItem) {
             console.log(`Scrolling to project: ${projectId}`);
             setTimeout(() => {
                 projectItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 300);
-        }
-        
-        // Find the button for this project
-        const projectButton = document.querySelector(`.btn-view-project[data-project="${projectId}"]`);
-        if (projectButton) {
-            console.log(`Found button for project: ${projectId}`);
-            // Simulate a click on the button after a short delay to ensure page is loaded
-            setTimeout(() => {
-                projectButton.click();
-            }, 800);
         } else {
-            console.warn(`No button found for project: ${projectId}`);
+            console.warn(`No project found with ID: ${projectId}`);
         }
     }
     
