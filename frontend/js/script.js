@@ -704,14 +704,10 @@ class PortfolioApp {
     // Handle clicks on protected elements
     handleProtectedClick(e) {
         e.preventDefault();
-        
-        // Show notification instead of redirecting
-        if (window.authSystem) {
-            window.authSystem.showFloatingNotification('Please login to download the CV', 'warning');
-        } else {
-            // Fallback if authSystem is not available
-            this.showLoginPrompt();
-        }
+        // Redirect to login page with message
+        localStorage.setItem('login-message', 'Please login to access this feature');
+        localStorage.setItem('redirect-after-login', window.location.href);
+        window.location.href = 'pages/login.html';
     }
     
     // Show login prompt
