@@ -295,19 +295,20 @@
 }
 
 .modal-close {
-    position: absolute;
+    position: fixed;
     top: 20px;
     right: 20px;
     width: 40px;
     height: 40px;
-    background: var(--card-bg);
+    background: var(--primary-color);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 10;
+    z-index: 9999;
     transition: var(--transition);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
 }
 
 .modal-close:hover {
@@ -316,7 +317,7 @@
 }
 
 .modal-close i {
-    color: var(--text-color);
+    color: white;
     font-size: 1.2rem;
 }
 
@@ -331,6 +332,7 @@
 /* Project Details */
 .project-details {
     padding: 40px;
+    padding-top: 60px; /* Extra padding at the top to avoid header overlap */
     background: var(--bg-color);
     position: relative;
 }
@@ -874,6 +876,11 @@
     
     .project-details {
         padding: 20px;
+        padding-top: 70px; /* Extra padding at the top for mobile */
+    }
+    
+    .project-details-header {
+        margin-top: 20px;
     }
     
     .project-details-header h2 {
@@ -914,6 +921,28 @@
     .details-section {
         padding: 15px;
         margin-bottom: 25px;
+    }
+    
+    /* Ensure modal close button is always visible and accessible */
+    .modal-close {
+        top: 15px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .modal-close i {
+        font-size: 1.4rem;
+    }
+    
+    /* Ensure modal content starts below the fixed header */
+    .modal-content {
+        padding-top: 10px;
+    }
+    
+    /* Add extra space for project details header */
+    .project-details-header {
+        padding-top: 30px;
     }
     
     .details-section h3 {
