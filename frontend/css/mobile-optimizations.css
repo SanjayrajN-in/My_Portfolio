@@ -205,12 +205,13 @@
         width: 90% !important;
         max-width: 400px !important;
         border-radius: 12px !important;
-        bottom: 30px !important;
+        bottom: 5px !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
         position: fixed !important;
         margin-left: 0 !important; /* Reset any margin that might be causing offset */
         right: auto !important; /* Ensure right property doesn't interfere */
+        z-index: 9999999 !important; /* Ensure it's above everything */
     }
     
     .hero-scroll {
@@ -290,7 +291,7 @@
 /* Additional mobile portrait fix for feature notification */
 @media (max-width: 480px) and (orientation: portrait) {
     .feature-notification {
-        bottom: 25px !important;
+        bottom: 5px !important;
         width: 92% !important;
         padding: 12px 15px !important;
         left: 50% !important;
@@ -298,6 +299,7 @@
         position: fixed !important;
         margin-left: 0 !important;
         right: auto !important;
+        z-index: 9999999 !important;
     }
     
     /* Add close button for notification */
@@ -310,7 +312,7 @@
 /* Additional mobile landscape fix for feature notification */
 @media (max-width: 896px) and (orientation: landscape) and (max-height: 500px) {
     .feature-notification {
-        bottom: 20px !important;
+        bottom: 5px !important;
         padding: 8px 12px !important;
         width: 85% !important;
         max-width: 450px !important;
@@ -319,6 +321,7 @@
         position: fixed !important;
         margin-left: 0 !important;
         right: auto !important;
+        z-index: 9999999 !important;
     }
     
     .notification-text {

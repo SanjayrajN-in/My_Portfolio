@@ -846,10 +846,11 @@ class PortfolioApp {
     
     // Initialize feature notifications
     initFeatureNotifications() {
-        // Check if notification was previously dismissed
-        if (localStorage.getItem('feature-notification-dismissed')) {
-            return; // Don't show notification if it was previously dismissed
-        }
+        // For testing purposes, always show the notification
+        // Remove the localStorage check temporarily
+        // if (localStorage.getItem('feature-notification-dismissed')) {
+        //     return; // Don't show notification if it was previously dismissed
+        // }
         
         // Get the notification element
         const notification = document.getElementById('feature-notification');
@@ -865,11 +866,18 @@ class PortfolioApp {
             this.adjustNotificationForDesktop(notification);
         }
         
-        // Show notification after a short delay
-        setTimeout(() => {
-            // Make sure notification is visible
-            notification.style.display = 'block';
-        }, 1500);
+        // Move the notification to be a direct child of the body
+        if (notification.parentElement !== document.body) {
+            document.body.appendChild(notification);
+        }
+        
+        // Show notification immediately
+        notification.style.display = 'block';
+        
+        // Force the notification to be at the bottom
+        notification.style.bottom = '5px';
+        notification.style.position = 'fixed';
+        notification.style.zIndex = '9999999';
     }
     
     // Adjust notification positioning for mobile devices
@@ -890,8 +898,8 @@ class PortfolioApp {
         notification.style.position = 'fixed';
         notification.style.left = '50%';
         notification.style.transform = 'translateX(-50%)';
-        notification.style.bottom = '30px';
-        notification.style.zIndex = '999998';
+        notification.style.bottom = '5px';
+        notification.style.zIndex = '9999999';
         
         // Move the notification to be a direct child of the body to ensure proper positioning
         if (notification.parentElement !== document.body) {
@@ -917,8 +925,8 @@ class PortfolioApp {
         notification.style.position = 'fixed';
         notification.style.left = '50%';
         notification.style.transform = 'translateX(-50%)';
-        notification.style.bottom = '40px';
-        notification.style.zIndex = '999998';
+        notification.style.bottom = '5px';
+        notification.style.zIndex = '9999999';
         
         // Ensure the notification has the glass blur effect
         notification.style.backdropFilter = 'blur(20px) saturate(180%)';
@@ -1068,10 +1076,18 @@ function hideFeatureNotification() {
         // Remove from DOM after animation completes
         setTimeout(() => {
             notification.style.display = 'none';
+            
+            // For testing purposes, show the notification again after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('hidden');
+                notification.style.display = 'block';
+                notification.style.bottom = '5px';
+                notification.style.zIndex = '9999999';
+            }, 3000);
         }, 300);
         
-        // Store in localStorage that notification was dismissed
-        localStorage.setItem('feature-notification-dismissed', 'true');
+        // Comment out localStorage for testing
+        // localStorage.setItem('feature-notification-dismissed', 'true');
     }
 }
 
