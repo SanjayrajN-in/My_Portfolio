@@ -47,6 +47,8 @@
     
     body {
         padding-top: var(--header-height);
+        opacity: 0; /* Start with opacity 0 */
+        transition: opacity 0.3s ease; /* Smooth transition when made visible */
     }
     
     /* Font Awesome icon preload */
@@ -116,6 +118,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Make visible by default to prevent FOUC */
+        opacity: 1;
+        visibility: visible;
+        pointer-events: all;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
     }
     
     /* Button styles */
@@ -356,7 +363,7 @@
 </head>
 <body class="dark-theme">
     <!-- Page Transition -->
-    <div class="page-transition">
+    <div class="page-transition active">
         <div class="loader"></div>
     </div>
     

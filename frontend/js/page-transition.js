@@ -1,6 +1,6 @@
 /**
  * Page Transition Handler
- * Provides smooth transitions between pages
+ * Provides smooth transitions between pages and prevents FOUC
  */
 
 class PageTransitionHandler {
@@ -12,8 +12,10 @@ class PageTransitionHandler {
         this.pageTransition = document.querySelector('.page-transition');
         this.links = document.querySelectorAll('a[href]:not([href^="#"]):not([href^="javascript:"]):not([href^="mailto:"]):not([href^="tel:"]):not([target="_blank"])');
         
+        // Show page transition immediately on initial page load
+        this.showPageTransition();
+        
         this.bindEvents();
-        this.hidePageTransition();
     }
     
     bindEvents() {
@@ -74,11 +76,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Add fade-in effect to body when page loads and handle FOUC prevention
 window.addEventListener('load', () => {
+    // First make sure body is visible
     document.body.style.opacity = '1';
     
     // Mark document as ready (remove loading class, add ready class)
     document.documentElement.classList.remove('loading');
     document.documentElement.classList.add('ready');
+    
+    // Hide the page transition overlay after a short delay to ensure all CSS is applied
+    setTimeout(() => {
+        const pageTransitionHandler = document.querySelector('.page-transition');
+        if (pageTransitionHandler) {
+            pageTransitionHandler.classList.remove('active');
+        }
+    }, 300); // 300ms delay to ensure everything is rendered properly
 });
 
 // Ensure consistent navigation across pages
