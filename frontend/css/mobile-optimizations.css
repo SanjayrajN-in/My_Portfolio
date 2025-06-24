@@ -206,6 +206,9 @@
         max-width: 400px !important;
         border-radius: 12px !important;
         bottom: 20px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        position: fixed !important;
     }
     
     .hero-scroll {
@@ -288,6 +291,9 @@
         bottom: 15px !important;
         width: 92% !important;
         padding: 12px 15px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        position: fixed !important;
     }
     
     /* Add close button for notification */
@@ -304,6 +310,9 @@
         padding: 8px 12px !important;
         width: 85% !important;
         max-width: 450px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        position: fixed !important;
     }
     
     .notification-text {
