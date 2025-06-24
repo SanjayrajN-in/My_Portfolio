@@ -1,11 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "**/*",
-      "use": "@vercel/static"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -21,7 +14,12 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
-        },
+        }
+      ]
+    },
+    {
+      "source": "/static/(.*)",
+      "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
@@ -36,12 +34,6 @@
           "value": "public, max-age=0, must-revalidate"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/pages/(.*)",
-      "destination": "/pages/$1"
     }
   ]
 }
