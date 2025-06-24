@@ -232,7 +232,7 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.9);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 9999;
     opacity: 0;
@@ -240,7 +240,7 @@
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     pointer-events: none;
-    padding: 0;
+    padding-top: 20px;
 }
 
 .project-modal.active {
@@ -254,8 +254,8 @@
     border-radius: var(--border-radius);
     width: 90%;
     max-width: 1000px;
-    max-height: 85vh;
-    margin-top: 20px;
+    max-height: 80vh;
+    margin-top: var(--header-height);
     overflow-y: auto;
     position: relative;
     transform: translateY(50px);
@@ -297,11 +297,11 @@
 }
 
 .modal-close {
-    position: absolute;
-    top: 20px;
+    position: fixed;
+    top: calc(var(--header-height) + 20px);
     right: 20px;
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     background: var(--primary-color);
     border-radius: 50%;
     display: flex;
@@ -335,7 +335,8 @@
 
 /* Project Details */
 .project-details {
-    padding: 30px;
+    padding: 40px;
+    padding-top: 30px;
     background: var(--bg-color);
     position: relative;
 }
@@ -879,10 +880,11 @@
     
     .project-details {
         padding: 20px;
+        padding-top: 30px;
     }
     
     .project-details-header {
-        margin-top: 0;
+        margin-top: 10px;
     }
     
     .project-details-header h2 {
@@ -927,14 +929,14 @@
     
     /* Ensure modal close button is always visible and accessible */
     .modal-close {
-        top: 15px;
+        top: calc(var(--header-height) + 15px);
         right: 15px;
-        width: 35px;
-        height: 35px;
+        width: 50px;
+        height: 50px;
     }
     
     .modal-close i {
-        font-size: 1.2rem;
+        font-size: 1.5rem;
     }
     
     /* Ensure modal content starts below the fixed header */
