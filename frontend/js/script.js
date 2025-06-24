@@ -849,20 +849,34 @@ class PortfolioApp {
         // Check if mobile device
         const isMobile = window.innerWidth <= 768;
         
-        // Show notification after appropriate delay if not dismissed
+        // Don't show notification if it was previously dismissed
+        if (localStorage.getItem('feature-notification-dismissed')) {
+            return;
+        }
+        
+        // Show notification after appropriate delay
         const delay = isMobile ? 4000 : 3000; // Longer delay on mobile to let page settle
         
         setTimeout(() => {
             const notification = document.getElementById('feature-notification');
-            if (notification && !localStorage.getItem('feature-notification-dismissed')) {
-                // Ensure proper spacing before showing
+            if (notification) {
+                // Make sure notification doesn't have hidden class initially
+                notification.classList.remove('hidden');
+                
+                // Ensure proper positioning based on device
                 if (isMobile) {
                     this.adjustNotificationForMobile(notification);
                 } else {
-                    // For desktop, ensure it doesn't overlap with scroll indicator
                     this.adjustNotificationForDesktop(notification);
                 }
+                
+                // Show the notification
                 notification.style.display = 'block';
+                
+                // Auto-hide after 8 seconds
+                setTimeout(() => {
+                    hideFeatureNotification();
+                }, 8000);
             }
         }, delay);
     }
@@ -884,18 +898,18 @@ class PortfolioApp {
     
     // Adjust notification positioning for desktop devices
     adjustNotificationForDesktop(notification) {
+        // For desktop, we're using fixed positioning via CSS
+        // No need to adjust margins as it's now positioned at the bottom of the viewport
+        
+        // Make sure the scroll indicator is above the notification in z-index
         const heroScroll = document.querySelector('.hero-scroll');
-        if (heroScroll && notification) {
-            // Ensure notification doesn't overlap with scroll indicator
-            const scrollRect = heroScroll.getBoundingClientRect();
-            const notificationRect = notification.getBoundingClientRect();
-            
-            // For desktop, we need more space to ensure no overlap
-            // Add extra margin to ensure scroll indicator is visible
-            notification.style.marginBottom = '120px';
-            
-            // Make sure the scroll indicator is above the notification in z-index
+        if (heroScroll) {
             heroScroll.style.zIndex = '10';
+        }
+        
+        // Ensure the notification has the hidden class for proper animations
+        if (!notification.classList.contains('hidden')) {
+            notification.classList.remove('hidden');
         }
     }
     
@@ -1031,7 +1045,15 @@ window.forceRemoveLock = function() {
 function hideFeatureNotification() {
     const notification = document.getElementById('feature-notification');
     if (notification) {
-        notification.style.display = 'none';
+        // Add hidden class for animation
+        notification.classList.add('hidden');
+        
+        // Remove from DOM after animation completes
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 300);
+        
+        // Store in localStorage
         localStorage.setItem('feature-notification-dismissed', 'true');
     }
 }
