@@ -890,7 +890,7 @@ class PortfolioApp {
         notification.style.position = 'fixed';
         notification.style.left = '50%';
         notification.style.transform = 'translateX(-50%)';
-        notification.style.bottom = '20px';
+        notification.style.bottom = '15px';
         notification.style.zIndex = '999998';
         
         // Move the notification to be a direct child of the body to ensure proper positioning
@@ -917,7 +917,7 @@ class PortfolioApp {
         notification.style.position = 'fixed';
         notification.style.left = '50%';
         notification.style.transform = 'translateX(-50%)';
-        notification.style.bottom = '25px';
+        notification.style.bottom = '15px';
         notification.style.zIndex = '999998';
         
         // Ensure the notification has the glass blur effect
