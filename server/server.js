@@ -120,9 +120,18 @@ app.use((err, req, res, next) => {
     }
     
     if (err.code === 11000) {
+        const field = Object.keys(err.keyPattern)[0];
+        let message = 'Duplicate entry detected';
+        
+        if (field === 'email') {
+            message = 'Email already exists';
+        } else if (field === 'googleId') {
+            message = 'Google account already linked to another user';
+        }
+        
         return res.status(400).json({
             success: false,
-            message: 'Email already exists'
+            message: message
         });
     }
     

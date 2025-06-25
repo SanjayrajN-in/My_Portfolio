@@ -124,6 +124,7 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
                     email: email.toLowerCase(),
                     name: 'Temporary', // Will be updated on verification
                     password: 'TempPass123!' // Will be updated on verification - meets validation requirements
+                    // Don't set googleId - let it be undefined rather than null
                 });
                 otpCode = tempUser.setEmailVerificationOTP();
                 await tempUser.save();

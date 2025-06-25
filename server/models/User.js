@@ -35,7 +35,8 @@ const userSchema = new mongoose.Schema({
     },
     googleId: {
         type: String,
-        default: null
+        unique: true,
+        sparse: true // Only creates index for non-null values
     },
     isEmailVerified: {
         type: Boolean,
