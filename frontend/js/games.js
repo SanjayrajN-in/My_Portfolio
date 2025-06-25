@@ -28,6 +28,44 @@ class GameTracker {
 // Global game tracker instance
 const gameTracker = new GameTracker();
 
+// Global function to update all high scores
+async function updateAllHighScores() {
+    const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+    
+    if (!isLoggedIn) {
+        console.log('User not logged in, using local high scores');
+        return;
+    }
+    
+    console.log('Updating all high scores from server...');
+    
+    // Update Snake high score
+    const snakeHighScoreElement = document.getElementById('snake-high-score');
+    if (snakeHighScoreElement && window.gameScores) {
+        try {
+            const userRank = await window.gameScores.getUserRank('snake');
+            const serverHighScore = userRank.score || 0;
+            snakeHighScoreElement.textContent = serverHighScore;
+            console.log(`Updated Snake high score: ${serverHighScore}`);
+        } catch (error) {
+            console.warn('Failed to update Snake high score:', error);
+        }
+    }
+    
+    // Update Brick Breaker high score  
+    const brickHighScoreElement = document.getElementById('brick-high-score');
+    if (brickHighScoreElement && window.gameScores) {
+        try {
+            const userRank = await window.gameScores.getUserRank('brickBreaker');
+            const serverHighScore = userRank.score || 0;
+            brickHighScoreElement.textContent = serverHighScore;
+            console.log(`Updated Brick Breaker high score: ${serverHighScore}`);
+        } catch (error) {
+            console.warn('Failed to update Brick Breaker high score:', error);
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Prevent space bar from scrolling the page
     window.addEventListener('keydown', function(e) {
@@ -57,6 +95,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // initNumberPuzzle();
     // initWordScramble();
     // initPatternMemory();
+    
+    // Update all high scores after games are initialized
+    setTimeout(() => {
+        updateAllHighScores();
+    }, 1000);
+    
+    // Also check periodically if gameScores service is loaded
+    let initAttempts = 0;
+    const maxAttempts = 10;
+    
+    const ensureGameScoresInitialized = () => {
+        initAttempts++;
+        
+        if (window.gameScores && typeof window.gameScores.initializeGameScores === 'function') {
+            console.log('Game scores service found, initializing...');
+            window.gameScores.initializeGameScores();
+        } else if (initAttempts < maxAttempts) {
+            console.log(`Game scores service not ready, attempt ${initAttempts}/${maxAttempts}`);
+            setTimeout(ensureGameScoresInitialized, 500);
+        } else {
+            console.warn('Game scores service failed to load after maximum attempts');
+        }
+    };
+    
+    setTimeout(ensureGameScoresInitialized, 100);
+    
+    // Cleanup when leaving the page
+    window.addEventListener('beforeunload', function() {
+        if (window.gameScores && typeof window.gameScores.stopAllPeriodicRefresh === 'function') {
+            window.gameScores.stopAllPeriodicRefresh();
+        }
+    });
+    
+    // Also cleanup when navigating away (for SPAs)
+    window.addEventListener('pagehide', function() {
+        if (window.gameScores && typeof window.gameScores.stopAllPeriodicRefresh === 'function') {
+            window.gameScores.stopAllPeriodicRefresh();
+        }
+    });
 });
 
 // Game Tabs Functionality
@@ -102,14 +179,26 @@ function initGameTabs() {
                 if (gameId === 'memory-match-game-container') {
                     setTimeout(() => {
                         initMemoryGame();
+                        // Refresh rankings when switching to this game
+                        if (window.gameScores && window.gameScores.updateRankingsUI) {
+                            window.gameScores.updateRankingsUI('memoryMatch', 'memoryMatch-rankings-container', false);
+                        }
                     }, 200);
                 } else if (gameId === 'snake-game-container') {
                     setTimeout(() => {
                         initSnakeGame();
+                        // Refresh rankings when switching to this game
+                        if (window.gameScores && window.gameScores.updateRankingsUI) {
+                            window.gameScores.updateRankingsUI('snake', 'snake-rankings-container', false);
+                        }
                     }, 200);
                 } else if (gameId === 'tetris-game-container') {
                     setTimeout(() => {
                         initTetris();
+                        // Refresh rankings when switching to this game
+                        if (window.gameScores && window.gameScores.updateRankingsUI) {
+                            window.gameScores.updateRankingsUI('brickBreaker', 'brickBreaker-rankings-container', false);
+                        }
                     }, 200);
                 }
             });
@@ -129,6 +218,12 @@ function initMemoryGame() {
     // Initialize rankings display if available
     if (window.gameScores && typeof window.gameScores.createRankingsUI === 'function') {
         window.gameScores.createRankingsUI('memoryMatch', 'memoryMatch-rankings-container');
+        // Start periodic refresh for rankings
+        setTimeout(() => {
+            if (window.gameScores.updateRankingsUI) {
+                window.gameScores.updateRankingsUI('memoryMatch', 'memoryMatch-rankings-container', true);
+            }
+        }, 1000);
     }
     
     const gameBoard = document.getElementById('memory-game-board');
@@ -757,9 +852,9 @@ function initMemoryGame() {
             window.gameScores.submitScore('memoryMatch', gameState.score, gameState.level, gameState.gameTime)
                 .then(response => {
                     
-                    // Update rankings display
+                    // Update rankings display immediately after score submission
                     if (window.gameScores.updateRankingsUI) {
-                        window.gameScores.updateRankingsUI('memoryMatch', 'memoryMatch-rankings-container');
+                        window.gameScores.updateRankingsUI('memoryMatch', 'memoryMatch-rankings-container', false);
                     }
                 })
                 .catch(error => {
@@ -804,6 +899,12 @@ function initSnakeGame() {
     // Initialize rankings display if available
     if (window.gameScores && typeof window.gameScores.createRankingsUI === 'function') {
         window.gameScores.createRankingsUI('snake', 'snake-rankings-container');
+        // Start periodic refresh for rankings
+        setTimeout(() => {
+            if (window.gameScores.updateRankingsUI) {
+                window.gameScores.updateRankingsUI('snake', 'snake-rankings-container', true);
+            }
+        }, 1000);
     }
     
     // Set fixed dimensions for consistent rendering
@@ -1157,12 +1258,18 @@ function initSnakeGame() {
                     // Update high score display after successful submission
                     const highScoreElement = document.getElementById('snake-high-score');
                     if (highScoreElement) {
+                        // Force immediate update with current score if it's higher
+                        const currentDisplayScore = parseInt(highScoreElement.textContent) || 0;
+                        if (score > currentDisplayScore) {
+                            highScoreElement.textContent = score;
+                        }
+                        // Then update from server
                         updateServerHighScore(highScoreElement, true);
                     }
                     
-                    // Update rankings display
+                    // Update rankings display immediately after score submission
                     if (window.gameScores.updateRankingsUI) {
-                        window.gameScores.updateRankingsUI('snake', 'snake-rankings-container');
+                        window.gameScores.updateRankingsUI('snake', 'snake-rankings-container', false);
                     }
                 })
                 .catch(error => {
@@ -1178,6 +1285,10 @@ function initSnakeGame() {
                 const userRank = await window.gameScores.getUserRank('snake');
                 const serverHighScore = userRank.score || 0;
                 highScoreElement.textContent = serverHighScore;
+                
+                // Cache the high score for immediate display next time
+                localStorage.setItem('snakeServerHighScore', serverHighScore.toString());
+                localStorage.setItem('snakeServerHighScoreTimestamp', Date.now().toString());
             } else {
                 // Fallback to local storage if gameScores not available
                 const localHighScore = localStorage.getItem('snakeHighScore') || 0;
@@ -1185,10 +1296,36 @@ function initSnakeGame() {
             }
         } catch (error) {
             console.error('Error updating high score:', error);
-            // Fallback to local storage on error
-            const localHighScore = localStorage.getItem('snakeHighScore') || 0;
-            highScoreElement.textContent = localHighScore;
+            // Try to use cached server high score first, then fallback to local
+            const cachedServerHighScore = localStorage.getItem('snakeServerHighScore');
+            if (cachedServerHighScore) {
+                highScoreElement.textContent = cachedServerHighScore;
+            } else {
+                const localHighScore = localStorage.getItem('snakeHighScore') || 0;
+                highScoreElement.textContent = localHighScore;
+            }
         }
+    }
+    
+    // Function to get cached high score for immediate display
+    function getCachedHighScore() {
+        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+        
+        if (isLoggedIn) {
+            // Check if we have a cached server high score that's not too old (less than 5 minutes)
+            const cachedScore = localStorage.getItem('snakeServerHighScore');
+            const timestamp = localStorage.getItem('snakeServerHighScoreTimestamp');
+            
+            if (cachedScore && timestamp) {
+                const age = Date.now() - parseInt(timestamp);
+                if (age < 5 * 60 * 1000) { // 5 minutes
+                    return parseInt(cachedScore);
+                }
+            }
+        }
+        
+        // Fallback to local high score
+        return parseInt(localStorage.getItem('snakeHighScore') || '0');
     }
     
     function updateScoreboard() {
@@ -1215,7 +1352,11 @@ function initSnakeGame() {
             const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
             
             if (isLoggedIn) {
-                // When logged in, fetch and show user's best server-side score
+                // Show cached high score immediately, then update from server
+                const cachedHighScore = getCachedHighScore();
+                highScoreElement.textContent = Math.max(cachedHighScore, score);
+                
+                // Update from server in background (don't await to avoid blocking UI)
                 updateServerHighScore(highScoreElement);
             } else {
                 // When not logged in, use local storage high score
@@ -1645,6 +1786,23 @@ function initSnakeGame() {
     // Initialize pause button icon
     updatePauseButtonIcon();
     
+    // Initialize high score display on page load
+    const highScoreElement = document.getElementById('snake-high-score');
+    if (highScoreElement) {
+        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+        if (isLoggedIn) {
+            // Show cached high score immediately
+            const cachedHighScore = getCachedHighScore();
+            highScoreElement.textContent = cachedHighScore;
+            
+            // Update from server in background
+            updateServerHighScore(highScoreElement);
+        } else {
+            const localHighScore = localStorage.getItem('snakeHighScore') || 0;
+            highScoreElement.textContent = localHighScore;
+        }
+    }
+    
     // Log successful initialization
     
 }
@@ -1965,6 +2123,12 @@ function initTetris() {
     // Initialize rankings display if available
     if (window.gameScores && typeof window.gameScores.createRankingsUI === 'function') {
         window.gameScores.createRankingsUI('brickBreaker', 'brickBreaker-rankings-container');
+        // Start periodic refresh for rankings
+        setTimeout(() => {
+            if (window.gameScores.updateRankingsUI) {
+                window.gameScores.updateRankingsUI('brickBreaker', 'brickBreaker-rankings-container', true);
+            }
+        }, 1000);
     }
     
     const ctx = canvas.getContext('2d');
@@ -4060,6 +4224,10 @@ function initTetris() {
                 const userRank = await window.gameScores.getUserRank('brickBreaker');
                 const serverHighScore = userRank.score || 0;
                 highScoreElement.textContent = serverHighScore;
+                
+                // Cache the high score for immediate display next time
+                localStorage.setItem('brickBreakerServerHighScore', serverHighScore.toString());
+                localStorage.setItem('brickBreakerServerHighScoreTimestamp', Date.now().toString());
             } else {
                 // Fallback to local storage if gameScores not available
                 const localHighScore = localStorage.getItem('brickBreakerHighScore') || 0;
@@ -4067,10 +4235,36 @@ function initTetris() {
             }
         } catch (error) {
             console.error('Error updating brick breaker high score:', error);
-            // Fallback to local storage on error
-            const localHighScore = localStorage.getItem('brickBreakerHighScore') || 0;
-            highScoreElement.textContent = localHighScore;
+            // Try to use cached server high score first, then fallback to local
+            const cachedServerHighScore = localStorage.getItem('brickBreakerServerHighScore');
+            if (cachedServerHighScore) {
+                highScoreElement.textContent = cachedServerHighScore;
+            } else {
+                const localHighScore = localStorage.getItem('brickBreakerHighScore') || 0;
+                highScoreElement.textContent = localHighScore;
+            }
         }
+    }
+    
+    // Function to get cached high score for immediate display
+    function getBrickBreakerCachedHighScore() {
+        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+        
+        if (isLoggedIn) {
+            // Check if we have a cached server high score that's not too old (less than 5 minutes)
+            const cachedScore = localStorage.getItem('brickBreakerServerHighScore');
+            const timestamp = localStorage.getItem('brickBreakerServerHighScoreTimestamp');
+            
+            if (cachedScore && timestamp) {
+                const age = Date.now() - parseInt(timestamp);
+                if (age < 5 * 60 * 1000) { // 5 minutes
+                    return parseInt(cachedScore);
+                }
+            }
+        }
+        
+        // Fallback to local high score
+        return parseInt(localStorage.getItem('brickBreakerHighScore') || '0');
     }
     
     function drawUI() {
@@ -4088,7 +4282,11 @@ function initTetris() {
             const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
             
             if (isLoggedIn) {
-                // When logged in, fetch and show user's best server-side score
+                // Show cached high score immediately, then update from server
+                const cachedHighScore = getBrickBreakerCachedHighScore();
+                highScoreElement.textContent = Math.max(cachedHighScore, score);
+                
+                // Update from server in background (don't await to avoid blocking UI)
                 updateBrickBreakerServerHighScore(highScoreElement);
             } else {
                 // When not logged in, use local storage high score
@@ -4169,12 +4367,18 @@ function initTetris() {
                         // Update high score display after successful submission
                         const highScoreElement = document.getElementById('brick-high-score');
                         if (highScoreElement) {
+                            // Force immediate update with current score if it's higher
+                            const currentDisplayScore = parseInt(highScoreElement.textContent) || 0;
+                            if (score > currentDisplayScore) {
+                                highScoreElement.textContent = score;
+                            }
+                            // Then update from server
                             updateBrickBreakerServerHighScore(highScoreElement);
                         }
                         
-                        // Update rankings display
+                        // Update rankings display immediately after score submission
                         if (window.gameScores.updateRankingsUI) {
-                            window.gameScores.updateRankingsUI('brickBreaker', 'brickBreaker-rankings-container');
+                            window.gameScores.updateRankingsUI('brickBreaker', 'brickBreaker-rankings-container', false);
                         }
                     })
                     .catch(error => {
@@ -4256,8 +4460,18 @@ function initTetris() {
     // Initialize high score display
     const highScoreElement = document.getElementById('brick-high-score');
     if (highScoreElement) {
-        const savedHighScore = localStorage.getItem('brickBreakerHighScore') || '0';
-        highScoreElement.textContent = savedHighScore;
+        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+        if (isLoggedIn) {
+            // Show cached high score immediately
+            const cachedHighScore = getBrickBreakerCachedHighScore();
+            highScoreElement.textContent = cachedHighScore;
+            
+            // Update from server in background
+            updateBrickBreakerServerHighScore(highScoreElement);
+        } else {
+            const savedHighScore = localStorage.getItem('brickBreakerHighScore') || '0';
+            highScoreElement.textContent = savedHighScore;
+        }
     }
     
     render();

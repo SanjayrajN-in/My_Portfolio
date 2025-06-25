@@ -175,6 +175,11 @@ class LoginPageManager {
                     sessionStorage.setItem('currentUser', JSON.stringify(data.user));
                 }
                 
+                // Dispatch auth state change event
+                window.dispatchEvent(new CustomEvent('authStateChanged', { 
+                    detail: { isLoggedIn: true, user: data.user } 
+                }));
+                
                 // Update auth system
                 if (window.authSystem) {
                     window.authSystem.currentUser = data.user;
@@ -260,6 +265,11 @@ class LoginPageManager {
                 if (data.user) {
                     sessionStorage.setItem('currentUser', JSON.stringify(data.user));
                 }
+                
+                // Dispatch auth state change event
+                window.dispatchEvent(new CustomEvent('authStateChanged', { 
+                    detail: { isLoggedIn: true, user: data.user } 
+                }));
 
                 // Update auth system
                 if (window.authSystem) {
@@ -445,6 +455,11 @@ class LoginPageManager {
                 } else {
                     sessionStorage.setItem('token', data.token);
                 }
+                
+                // Dispatch auth state change event
+                window.dispatchEvent(new CustomEvent('authStateChanged', { 
+                    detail: { isLoggedIn: true, user: data.user } 
+                }));
 
                 // Update auth system with user data
                 if (window.authSystem) {
@@ -596,6 +611,12 @@ class LoginPageManager {
 
         if (data.token) {
             localStorage.setItem('token', data.token);
+            
+            // Dispatch auth state change event
+            window.dispatchEvent(new CustomEvent('authStateChanged', { 
+                detail: { isLoggedIn: true, user: data.user } 
+            }));
+            
             this.showNotification('Account created successfully! Welcome!', 'success');
             
             setTimeout(() => {
@@ -620,6 +641,12 @@ class LoginPageManager {
 
         if (data.token) {
             localStorage.setItem('token', data.token);
+            
+            // Dispatch auth state change event
+            window.dispatchEvent(new CustomEvent('authStateChanged', { 
+                detail: { isLoggedIn: true, user: data.user } 
+            }));
+            
             this.showNotification('Login successful! Welcome back.', 'success');
             
             setTimeout(() => {

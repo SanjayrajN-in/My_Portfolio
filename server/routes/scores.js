@@ -111,6 +111,16 @@ router.get('/rankings/:gameName', async (req, res) => {
         
         console.log(`Fetching rankings for ${gameName}`);
         
+        // Validate game name
+        const allowedGames = ['snake', 'brickBreaker', 'memoryMatch', 'tictactoe'];
+        if (!allowedGames.includes(gameName)) {
+            console.log('Invalid game name for rankings:', gameName);
+            return res.status(400).json({ 
+                success: false,
+                message: `Invalid game name. Allowed values: ${allowedGames.join(', ')}` 
+            });
+        }
+        
         // Use aggregation to get the highest score for each user with correct associated data
         const topScores = await GameScore.aggregate([
             // Match documents for the specified game
@@ -150,9 +160,10 @@ router.get('/rankings/:gameName', async (req, res) => {
             }
         ]);
         
-        console.log(`Found ${topScores.length} top scores for ${gameName}`);
+        console.log(`Found ${topScores.length} top scores for ${gameName}:`, topScores.slice(0, 3));
         
-        res.json(topScores);
+        // Ensure we always return an array
+        res.json(Array.isArray(topScores) ? topScores : []);
     } catch (error) {
         console.error('Error fetching rankings:', error);
         res.status(500).json({ 
@@ -168,6 +179,8 @@ router.get('/user-rank/:gameName', auth, async (req, res) => {
     try {
         const { gameName } = req.params;
         
+        console.log(`Fetching user rank for user ${req.user.id} in game ${gameName}`);
+        
         // Get user's highest score
         const userScore = await GameScore.findOne({
             userId: req.user.id,
@@ -175,8 +188,11 @@ router.get('/user-rank/:gameName', auth, async (req, res) => {
         }).sort({ score: -1 });
         
         if (!userScore) {
-            return res.json({ rank: null, score: null });
+            console.log(`No score found for user ${req.user.id} in game ${gameName}`);
+            return res.json({ rank: null, score: 0 });
         }
+        
+        console.log(`Found user score: ${userScore.score} for user ${req.user.id} in game ${gameName}`);
         
         // Use aggregation to get the highest score for each user, then count how many are higher
         const higherScoreUsers = await GameScore.aggregate([
