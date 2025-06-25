@@ -1729,7 +1729,7 @@ body.menu-open {
 /* Global Notification System */
 .notification-container {
     position: fixed !important;
-    top: calc(80px + 1rem) !important; /* Nav bar height + margin */
+    top: calc(var(--header-height) + 1rem) !important; /* Nav bar height + margin */
     left: 50% !important;
     transform: translateX(-50%) !important;
     z-index: 9999999 !important;
@@ -1784,7 +1784,7 @@ body.menu-open {
 
 @media (max-width: 768px) {
     .notification-container {
-        top: calc(80px + 1rem) !important; /* Nav bar height + margin */
+        top: calc(var(--header-height) + 1rem) !important; /* Nav bar height + margin */
         max-width: calc(100vw - 1rem) !important;
     }
     
@@ -1798,7 +1798,7 @@ body.menu-open {
 
 @media (max-width: 480px) {
     .notification-container {
-        top: 0.5rem !important;
+        top: calc(var(--header-height) + 0.5rem) !important; /* Nav bar height + smaller margin for mobile */
     }
     
     .notification {

@@ -1514,7 +1514,7 @@
 /* ===== NOTIFICATION SYSTEM ===== */
 .notification-container {
     position: fixed !important;
-    top: 100px !important; /* Override nav-fix.css - ensure clear separation from nav bar */
+    top: calc(var(--header-height) + 1.5rem) !important; /* Nav bar height + margin */
     right: 20px !important;
     left: auto !important; /* Override nav-fix.css centering */
     transform: none !important; /* Override nav-fix.css transform */
@@ -1668,7 +1668,7 @@
 /* Mobile responsiveness for notifications */
 @media (max-width: 768px) {
     .notification-container {
-        top: 100px !important; /* Override nav-fix.css and ensure consistent positioning */
+        top: calc(var(--header-height) + 1.5rem) !important; /* Nav bar height + margin */
         right: 10px !important;
         left: 10px !important;
         max-width: none !important;
