@@ -10,14 +10,12 @@ class GameTracker {
         // Check if auth system is available and user is logged in
         if (typeof authSystem !== 'undefined' && authSystem.currentUser) {
             this.currentSession = authSystem.startGameSession(gameName);
-            
         }
     }
     
     endGame(score = null) {
         if (typeof authSystem !== 'undefined' && authSystem.currentUser && this.currentSession) {
             authSystem.endGameSession(score);
-            
             this.currentSession = null;
         }
     }
@@ -31,8 +29,6 @@ class GameTracker {
 const gameTracker = new GameTracker();
 
 document.addEventListener('DOMContentLoaded', function() {
-    
-    
     // Prevent space bar from scrolling the page
     window.addEventListener('keydown', function(e) {
         // Prevent space bar scrolling
@@ -48,7 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Snake Game - initialize since it's the default active tab
     setTimeout(() => {
-        
         initSnakeGame();
     }, 300);
     
@@ -126,11 +121,8 @@ function initGameTabs() {
 let memoryGameInstance = null;
 
 function initMemoryGame() {
-    
-    
     // Prevent multiple initializations
     if (memoryGameInstance) {
-        
         return memoryGameInstance;
     }
     
@@ -153,11 +145,7 @@ function initMemoryGame() {
     const progressFill = document.getElementById('memory-progress-fill');
     const progressText = document.getElementById('memory-progress-text');
     
-    
-    
-    
     if (!gameBoard) {
-        
         return;
     }
     
@@ -1341,9 +1329,6 @@ function initSnakeGame() {
         lastLevelUpTime = gameTime;
         timeForNextLevel = Math.min(60, 30 + (level - 1) * 5);
         baseSpeed = Math.max(minSpeed, 150 - (level - 1) * speedDecrement);
-        
-        // Log speed change for debugging (can be removed later)
-        } moves/sec)`);
         
         // Show level up message
         const levelUpMsg = document.createElement('div');
