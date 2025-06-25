@@ -1165,14 +1165,18 @@ function initSnakeGame() {
     }
     
     // Function to update server-side high score display
-    async function updateServerHighScore(highScoreElement, currentScore) {
+    async function updateServerHighScore(highScoreElement, currentScore, gameJustEnded = false) {
         try {
             if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
                 const userRank = await window.gameScores.getUserRank('snake');
                 const serverHighScore = userRank.score || 0;
                 
-                // Show the higher of server high score or current score
-                highScoreElement.textContent = Math.max(serverHighScore, currentScore);
+                // During gameplay, show the server high score unless current score is higher and game just ended
+                if (gameJustEnded && currentScore > serverHighScore) {
+                    highScoreElement.textContent = currentScore;
+                } else {
+                    highScoreElement.textContent = serverHighScore;
+                }
             } else {
                 // Fallback to current score if gameScores not available
                 highScoreElement.textContent = currentScore;
@@ -1209,7 +1213,8 @@ function initSnakeGame() {
             
             if (isLoggedIn) {
                 // When logged in, fetch and show user's best server-side score
-                updateServerHighScore(highScoreElement, score);
+                // Only show current score as high score when game just ended and it's higher
+                updateServerHighScore(highScoreElement, score, false);
             } else {
                 // When not logged in, use local storage high score
                 const localHighScore = localStorage.getItem('snakeHighScore') || 0;
@@ -1415,6 +1420,13 @@ function initSnakeGame() {
                                 localStorage.setItem('snakeHighScore', score);
                             }
                             
+                            // Update server-side high score display with game ended flag
+                            const highScoreElement = document.getElementById('snake-high-score');
+                            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+                            if (highScoreElement && isLoggedIn) {
+                                updateServerHighScore(highScoreElement, score, true);
+                            }
+                            
                             // Update pause button to show restart icon
                             updatePauseButtonIcon();
                             
@@ -1439,6 +1451,13 @@ function initSnakeGame() {
                         const highScore = localStorage.getItem('snakeHighScore') || 0;
                         if (score > highScore) {
                             localStorage.setItem('snakeHighScore', score);
+                        }
+                        
+                        // Update server-side high score display with game ended flag
+                        const highScoreElement = document.getElementById('snake-high-score');
+                        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+                        if (highScoreElement && isLoggedIn) {
+                            updateServerHighScore(highScoreElement, score, true);
                         }
                         
                         // Update pause button to show restart icon
@@ -2871,6 +2890,13 @@ function initTetris() {
                             gameState = 'gameOver';
                             // Play game over sound
                             playSound('gameOver');
+                            
+                            // Update server-side high score display with game ended flag
+                            const highScoreElement = document.getElementById('brick-high-score');
+                            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+                            if (highScoreElement && isLoggedIn) {
+                                updateBrickBreakerServerHighScore(highScoreElement, score, true);
+                            }
                         } else {
                             resetBallPosition();
                         }
@@ -2990,6 +3016,13 @@ function initTetris() {
                         gameState = 'gameOver';
                         // Play game over sound
                         playSound('gameOver');
+                        
+                        // Update server-side high score display with game ended flag
+                        const highScoreElement = document.getElementById('brick-high-score');
+                        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+                        if (highScoreElement && isLoggedIn) {
+                            updateBrickBreakerServerHighScore(highScoreElement, score, true);
+                        }
                     } else {
                         resetBallPosition();
                     }
@@ -4047,14 +4080,18 @@ function initTetris() {
     }
     
     // Function to update server-side high score display for Brick Breaker
-    async function updateBrickBreakerServerHighScore(highScoreElement, currentScore) {
+    async function updateBrickBreakerServerHighScore(highScoreElement, currentScore, gameJustEnded = false) {
         try {
             if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
                 const userRank = await window.gameScores.getUserRank('brickBreaker');
                 const serverHighScore = userRank.score || 0;
                 
-                // Show the higher of server high score or current score
-                highScoreElement.textContent = Math.max(serverHighScore, currentScore);
+                // During gameplay, show the server high score unless current score is higher and game just ended
+                if (gameJustEnded && currentScore > serverHighScore) {
+                    highScoreElement.textContent = currentScore;
+                } else {
+                    highScoreElement.textContent = serverHighScore;
+                }
             } else {
                 // Fallback to current score if gameScores not available
                 highScoreElement.textContent = currentScore;
@@ -4081,8 +4118,8 @@ function initTetris() {
             const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
             
             if (isLoggedIn) {
-                // When logged in, fetch and show user's best server-side score
-                updateBrickBreakerServerHighScore(highScoreElement, score);
+                // When logged in, fetch and show user's best server-side score (not game ended)
+                updateBrickBreakerServerHighScore(highScoreElement, score, false);
             } else {
                 // When not logged in, use local storage high score
                 const currentHighScore = parseInt(localStorage.getItem('brickBreakerHighScore') || '0');

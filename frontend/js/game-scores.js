@@ -211,7 +211,7 @@
                 }
 
                 // Update user rank
-                if (userRank && userRank.rank) {
+                if (userRank && userRank.rank && userRank.score) {
                     userRankElement.innerHTML = `
                         <div class="user-rank-title">Your Rank</div>
                         <div class="user-rank-info">
@@ -220,10 +220,14 @@
                         </div>
                     `;
                 } else {
+                    // Show appropriate message based on whether there are rankings or not
+                    const hasRankings = Array.isArray(rankings) && rankings.length > 0;
+                    const message = hasRankings ? "Not ranked yet - play to get ranked!" : "No rankings yet - be the first!";
+                    
                     userRankElement.innerHTML = `
                         <div class="user-rank-title">Your Rank</div>
                         <div class="user-rank-info">
-                            <span class="user-not-ranked">Not ranked yet</span>
+                            <span class="user-not-ranked">${message}</span>
                         </div>
                     `;
                 }
