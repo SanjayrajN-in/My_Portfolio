@@ -9,7 +9,7 @@
     
     // Initialize the service when the DOM is fully loaded
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Game Scores Service initialized with API URL:', API_URL);
+        
     });
 
     // Main service object
@@ -27,11 +27,11 @@
                 // Check if user is logged in
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    console.log('User not logged in, score not submitted');
+                    
                     return { success: false, message: 'User not logged in' };
                 }
 
-                console.log(`Submitting score for ${gameName}:`, { score, level, timeElapsed });
+                
                 
                 const response = await fetch(`${API_URL}/api/scores/submit`, {
                     method: 'POST',
@@ -48,16 +48,16 @@
                 });
 
                 // Log response status
-                console.log(`Score submission response status: ${response.status}`);
+                
                 
                 // If response is not ok, log more details
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('Server error response:', errorText);
+                    
                     try {
                         // Try to parse as JSON if possible
                         const errorJson = JSON.parse(errorText);
-                        console.error('Server error details:', errorJson);
+                        
                         return { success: false, message: errorJson.message || 'Server error' };
                     } catch (e) {
                         // If not JSON, return the text
@@ -66,10 +66,10 @@
                 }
 
                 const data = await response.json();
-                console.log('Score submission successful:', data);
+                
                 return data;
             } catch (error) {
-                console.error('Error submitting score:', error);
+                
                 return { success: false, message: `Error submitting score: ${error.message}` };
             }
         },
@@ -85,7 +85,7 @@
                 
                 // Check if the response is ok (status in the range 200-299)
                 if (!response.ok) {
-                    console.warn(`Rankings API returned status ${response.status} for game ${gameName}`);
+                    
                     return [];
                 }
                 
@@ -93,13 +93,13 @@
                 
                 // Ensure the data is an array
                 if (!Array.isArray(data)) {
-                    console.warn('Rankings API did not return an array:', data);
+                    
                     return [];
                 }
                 
                 return data;
             } catch (error) {
-                console.error('Error fetching rankings:', error);
+                
                 return [];
             }
         },
@@ -125,7 +125,7 @@
                 
                 // Check if the response is ok (status in the range 200-299)
                 if (!response.ok) {
-                    console.warn(`User rank API returned status ${response.status} for game ${gameName}`);
+                    
                     return { rank: null, score: null };
                 }
                 
@@ -133,13 +133,13 @@
                 
                 // Validate the data structure
                 if (!data || (data.rank === undefined && data.score === undefined)) {
-                    console.warn('User rank API returned invalid data:', data);
+                    
                     return { rank: null, score: null };
                 }
                 
                 return data;
             } catch (error) {
-                console.error('Error fetching user rank:', error);
+                
                 return { rank: null, score: null };
             }
         },
@@ -152,7 +152,7 @@
         createRankingsUI: async function(gameName, containerId) {
             const container = document.getElementById(containerId);
             if (!container) {
-                console.error(`Container with ID ${containerId} not found`);
+                
                 return;
             }
 
@@ -181,7 +181,7 @@
             const userRankElement = document.getElementById(`${gameName}-user-rank`);
             
             if (!rankingsList || !userRankElement) {
-                console.error(`Rankings elements for ${gameName} not found`);
+                
                 return;
             }
 
@@ -201,17 +201,17 @@
                     if (results[0].status === 'fulfilled' && Array.isArray(results[0].value)) {
                         rankings = results[0].value;
                     } else {
-                        console.log('Rankings request failed or returned invalid data');
+                        
                     }
                     
                     // Check if user rank request succeeded
                     if (results[1].status === 'fulfilled' && results[1].value) {
                         userRank = results[1].value;
                     } else {
-                        console.log('User rank request failed or returned invalid data');
+                        
                     }
                 } catch (fetchError) {
-                    console.error('Error fetching game data:', fetchError);
+                    
                 }
 
                 // Update rankings list
@@ -249,7 +249,7 @@
                     `;
                 }
             } catch (error) {
-                console.error('Error updating rankings:', error);
+                
                 rankingsList.innerHTML = '<div class="rankings-error">Error loading rankings</div>';
             }
         }

@@ -256,7 +256,7 @@ ToolsManager.prototype.protectPDFFile = async function(file, password, options, 
         }, 500);
 
     } catch (error) {
-        console.error('PDF protection failed:', error);
+
         
         // Hide processing area
         if (processingArea) processingArea.style.display = 'none';

@@ -268,7 +268,7 @@ class ToolsManager {
 
             img.src = URL.createObjectURL(this.currentImageFile);
         } catch (error) {
-            console.error('Error compressing image:', error);
+            
             this.showError('Error compressing image. Please try again.');
         }
     }
@@ -405,7 +405,7 @@ class ToolsManager {
     }
 
     handlePDFFile(file, controls, resultArea) {
-        console.log('PDF file selected:', file.name, file.size, file.type);
+        
         this.currentPDFFile = file;
         if (controls) controls.style.display = 'block';
         if (resultArea) resultArea.style.display = 'none';
@@ -441,7 +441,7 @@ class ToolsManager {
             const arrayBuffer = await this.currentPDFFile.arrayBuffer();
             const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
 
-            console.log(`Starting PDF compression with ${Math.round(quality * 100)}% quality...`);
+            }% quality...`);
 
             // Get compression settings
             const compressionSettings = this.getSimpleCompressionSettings(quality);
@@ -472,7 +472,7 @@ class ToolsManager {
             let finalSize = compressedSize;
 
             if (compressedSize >= originalSize) {
-                console.log('Initial compression increased size, trying minimal approach...');
+                
                 
                 // Try minimal compression
                 const minimalBytes = await pdfDoc.save({
@@ -494,7 +494,7 @@ class ToolsManager {
 
             const actualReduction = Math.round(((originalSize - finalSize) / originalSize) * 100);
 
-            console.log(`Compression result: ${this.formatFileSize(originalSize)} → ${this.formatFileSize(finalSize)} (${actualReduction}%)`);
+            } → ${this.formatFileSize(finalSize)} (${actualReduction}%)`);
 
             // Update UI
             if (originalSizeEl) originalSizeEl.textContent = this.formatFileSize(originalSize);
@@ -539,7 +539,7 @@ class ToolsManager {
             }
 
         } catch (error) {
-            console.error('Error compressing PDF:', error);
+            
             
             // Hide processing indicator
             if (processingArea) processingArea.style.display = 'none';

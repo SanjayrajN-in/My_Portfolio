@@ -415,8 +415,8 @@
                 `;
                 
                 // DEBUG: Show all cookies first
-                console.log('🔍 ALL COOKIES:', document.cookie);
-                console.log('🔍 Current URL:', window.location.href);
+                
+                
                 
                 // Get auth data from cookies (set by backend)
                 function getCookie(name) {
@@ -429,34 +429,30 @@
                 const authToken = getCookie('auth_token');
                 const userDataCookie = getCookie('user_data');
                 
-                console.log('🍪 Cookies search results:', { 
-                    authToken: authToken, 
-                    userData: userDataCookie,
-                    allCookies: document.cookie
-                });
+                
                 
                 // Check URL params for token (primary method now)
                 const urlParams = new URLSearchParams(window.location.search);
                 const urlToken = urlParams.get('token');
                 const urlUser = urlParams.get('user');
                 
-                console.log('🔗 URL params:', { urlToken: !!urlToken, urlUser: !!urlUser });
-                console.log('🔗 Raw URL token:', urlToken);
-                console.log('🔗 Raw URL user:', urlUser);
+                
+                
+                
                 
                 if (urlToken && urlUser) {
                     // PRIMARY METHOD: Use URL params (most reliable)
-                    console.log('✅ Using URL params for auth');
+                    
                     
                     try {
                         // Store token
                         localStorage.setItem('token', urlToken);
-                        console.log('🔑 Token stored:', urlToken.substring(0, 20) + '...');
+                         + '...');
                         
                         // Parse and store user data
                         const userData = JSON.parse(decodeURIComponent(urlUser));
                         localStorage.setItem('userInfo', JSON.stringify(userData));
-                        console.log('👤 User data stored:', userData);
+                        
                         
                         // Update UI with user name
                         document.querySelector('div div').innerHTML = `
@@ -470,12 +466,12 @@
                         setTimeout(() => window.location.href = '../index.html', 1500);
                         
                     } catch (error) {
-                        console.error('❌ Error processing URL auth data:', error);
+                        
                         setTimeout(() => window.location.href = '../index.html', 1500);
                     }
                 } else if (authToken && userDataCookie) {
                     // FALLBACK: Try cookies
-                    console.log('🍪 Using cookies for auth');
+                    
                     try {
                         const userData = JSON.parse(decodeURIComponent(userDataCookie));
                         localStorage.setItem('token', authToken);
@@ -488,12 +484,12 @@
                         
                         setTimeout(() => window.location.href = '../index.html', 1500);
                     } catch (error) {
-                        console.error('❌ Error parsing cookie data:', error);
+                        
                         setTimeout(() => window.location.href = '../index.html', 1500);
                     }
                 } else {
                     // Last resort: try to fetch auth from backend directly
-                    console.log('🔄 Trying direct backend auth check...');
+                    
                     fetch(BASE_URL + '/api/auth/profile', {
                         method: 'GET',
                         credentials: 'include',
@@ -514,7 +510,7 @@
                         setTimeout(() => window.location.href = '../index.html', 1500);
                     })
                     .catch(error => {
-                        console.error('❌ All auth methods failed:', error);
+                        
                         document.querySelector('div div').innerHTML = `
                             <h1>⚠️ Login Issue</h1>
                             <p>Please try logging in again</p>

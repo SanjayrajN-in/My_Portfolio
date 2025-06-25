@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle direct links with hash in URL (e.g., projects.html#keithley)
     if (window.location.hash) {
         const projectId = window.location.hash.substring(1); // Remove the # character
-        console.log(`Direct link detected to project: ${projectId}`);
+        
         
         // Special handling for keithley project (Data Logger)
         if (projectId === 'keithley') {
-            console.log('Special handling for Data Logger project');
+            
             
             // Wait for page to fully load
             setTimeout(() => {
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         else {
             const projectItem = document.getElementById(projectId);
             if (projectItem) {
-                console.log(`Scrolling to project: ${projectId}`);
+                
                 
                 // Wait for page to fully load
                 setTimeout(() => {
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                 }, 300);
             } else {
-                console.warn(`No project found with ID: ${projectId}`);
+                
             }
         }
     }
@@ -86,21 +86,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Check if modal elements exist
     if (!modal || !modalContent) {
-        console.warn('Modal elements not found. Modal functionality will not work.');
+        
         return;
     }
     
     // Debug: Log all project buttons
-    console.log('Project buttons found:', viewButtons.length);
+    
     viewButtons.forEach((button, index) => {
-        console.log(`Button ${index}: data-project="${button.getAttribute('data-project')}"`);
+        }"`);
     });
     
     // Debug: Log all project templates
     const projectTemplates = document.querySelectorAll('.project-details-template');
-    console.log('Project templates found:', projectTemplates.length);
+    
     projectTemplates.forEach(template => {
-        console.log(`Template: ${template.id}`);
+        
     });
     
     // Close modal function
@@ -165,22 +165,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Get the project ID directly from the button
             const projectId = this.getAttribute('data-project');
-            console.log(`Button clicked for project: ${projectId}`);
+            
             
             // Find the template for this project
             const templateId = `${projectId}-details`;
             const template = document.getElementById(templateId);
             
             if (!template) {
-                console.error(`Template not found: ${templateId}`);
-                console.log('Available templates:');
+                
+                
                 document.querySelectorAll('.project-details-template').forEach(t => {
-                    console.log(`- ${t.id}`);
+                    
                 });
                 return;
             }
             
-            console.log(`Loading template: ${templateId}`);
+            
             
             // Load the template content
             modalContent.innerHTML = template.innerHTML;

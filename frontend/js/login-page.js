@@ -57,7 +57,7 @@ class LoginPageManager {
         // Fetch Google Client ID from server
         this.fetchGoogleClientId().then(clientId => {
             if (!clientId) {
-                console.error('Failed to get Google Client ID');
+                
                 return;
             }
             
@@ -114,7 +114,7 @@ class LoginPageManager {
                 });
             }
         }).catch(error => {
-            console.error('Error setting up Google auth:', error);
+            
         });
         
         // Check URL parameters for auth success or error
@@ -138,7 +138,7 @@ class LoginPageManager {
             const response = await window.API.getGoogleClientId();
             return response.clientId;
         } catch (error) {
-            console.error('Error fetching Google Client ID:', error);
+            
             return null;
         }
     }
@@ -191,7 +191,7 @@ class LoginPageManager {
                 this.showNotification(data.message || 'Login failed', 'error');
             }
         } catch (error) {
-            console.error('Google login error:', error);
+            
             
             // Check if the error is due to account not found (404 status)
             if (error.status === 404 || (error.message && error.message.includes('No account found'))) {
@@ -280,7 +280,7 @@ class LoginPageManager {
                 this.showNotification(data.message || 'Registration failed', 'error');
             }
         } catch (error) {
-            console.error('Google registration error:', error);
+            
             
             // Handle specific error cases
             if (error.message && error.message.includes('already exists')) {
@@ -464,7 +464,7 @@ class LoginPageManager {
                         window.authSystem.forceRefreshNavigation();
                     }, 1000);
                 } else {
-                    console.warn('Auth system not available during login');
+                    
                 }
 
                 this.showNotification('Login successful! Welcome back.', 'success');
@@ -486,7 +486,7 @@ class LoginPageManager {
                 this.showNotification(data.message || 'Login failed', 'error');
             }
         } catch (error) {
-            console.error('Login error:', error);
+            
             // Handle API errors that contain a message
             if (error.message && error.message !== 'API request failed') {
                 this.showNotification(error.message, 'error');
@@ -518,7 +518,7 @@ class LoginPageManager {
             await this.sendOTP(email, 'register', { name, password });
             
         } catch (error) {
-            console.error('Registration error:', error);
+            
             this.showNotification('Network error. Please try again.', 'error');
         } finally {
             this.setLoading(submitBtn, false);
@@ -540,7 +540,7 @@ class LoginPageManager {
             this.showOTPForm(email);
             this.startOTPCountdown();
         } catch (error) {
-            console.error('Send OTP error:', error);
+            
             this.showNotification('Failed to send verification code. Please try again.', 'error');
         }
     }
@@ -578,7 +578,7 @@ class LoginPageManager {
                 this.showResetPasswordForm(otp);
             }
         } catch (error) {
-            console.error('OTP verification error:', error);
+            
             this.showNotification('Network error. Please try again.', 'error');
         } finally {
             this.setLoading(submitBtn, false);
@@ -656,7 +656,7 @@ class LoginPageManager {
         try {
             await this.sendOTP(email, 'forgot-password');
         } catch (error) {
-            console.error('Forgot password error:', error);
+            
             this.showNotification('Network error. Please try again.', 'error');
         } finally {
             this.setLoading(submitBtn, false);
@@ -693,7 +693,7 @@ class LoginPageManager {
                 this.showNotification(data.message || 'Password reset failed', 'error');
             }
         } catch (error) {
-            console.error('Reset password error:', error);
+            
             this.showNotification('Network error. Please try again.', 'error');
         } finally {
             this.setLoading(submitBtn, false);
@@ -706,7 +706,7 @@ class LoginPageManager {
         try {
             await this.sendOTP(this.pendingData.email, this.pendingData.type, this.pendingData);
         } catch (error) {
-            console.error('Resend OTP error:', error);
+            
             this.showNotification('Failed to resend code. Please try again.', 'error');
         }
     }
@@ -921,7 +921,7 @@ class LoginPageManager {
     // Google authentication is now handled by direct links to the backend
     async initializeGoogleAuth() {
         // No client-side Google authentication code needed
-        console.log('Google auth is now handled by direct links to the backend');
+        
     }
     
     // Google authentication is now handled by direct links to the backend
@@ -1109,42 +1109,42 @@ class LoginPageManager {
     }
 
     async checkAuthState() {
-        console.log('🔍 Login page: Checking auth state...');
+        
         
         // Check if API is available
         if (!window.API) {
-            console.log('⚠️ Login page: API not available yet, skipping auth check');
+            
             return;
         }
         
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         
         if (token) {
-            console.log('🔍 Login page: Token found, validating...');
+            
             try {
                 // Validate token with server
                 const userData = await window.API.getProfile(token);
                 if (userData && userData.user) {
                     // Token is valid, user is logged in, redirect to home
-                    console.log('✅ Login page: User already logged in, redirecting to home');
-                    console.log('✅ Login page: User data:', userData.user);
+                    
+                    
                     sessionStorage.setItem('forceNavUpdate', 'true');
                     window.location.href = '../index.html';
                     return;
                 } else {
-                    console.log('❌ Login page: Invalid user data received');
+                    
                     throw new Error('Invalid user data received');
                 }
             } catch (error) {
-                console.log('❌ Login page: Token validation failed, clearing invalid token');
-                console.error('❌ Login page: Error details:', error);
+                
+                
                 // Token is invalid, clear it
                 localStorage.removeItem('token');
                 sessionStorage.removeItem('token');
                 sessionStorage.removeItem('currentUser');
             }
         } else {
-            console.log('ℹ️ Login page: No token found, showing login form');
+            
         }
     }
 
@@ -1159,7 +1159,7 @@ class LoginPageManager {
         );
         
         const baseURL = isProduction ? 'https://sanjayraj-n.onrender.com' : 'http://localhost:3000';
-        console.log('LoginPageManager API Base URL:', baseURL);
+        
         return baseURL;
     }
 

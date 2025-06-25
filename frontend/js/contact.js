@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Here you would typically send the data to a server
             // For now, we'll just log it and show a success message
-            console.log('Form submitted:', { name, email, subject, message });
+    
             
             // Show success message
             const formMessage = document.createElement('div');

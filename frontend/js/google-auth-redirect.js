@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.innerHTML = '<div style="text-align:center; padding:30px; font-family:sans-serif;"><h2>Authentication Error</h2><p>No authentication token received. Please try again.</p></div>';
             }
         } catch (error) {
-            console.error('Error processing authentication response:', error);
+    
             document.body.innerHTML = '<div style="text-align:center; padding:30px; font-family:sans-serif;"><h2>Authentication Error</h2><p>An error occurred during authentication. Please try again.</p></div>';
         }
     }

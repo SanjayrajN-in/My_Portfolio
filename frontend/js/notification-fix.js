@@ -13,60 +13,55 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initNotificationSystem() {
-    console.log('🔔 Initializing enhanced notification system...');
+
     
     // Prevent multiple initializations
     if (window.notificationSystemInitialized) {
-        console.log('⚠️ Notification system already initialized - skipping');
+
         return;
     }
     window.notificationSystemInitialized = true;
     
     // Check if notification was already dismissed in this session
     const dismissed = sessionStorage.getItem('feature-notification-dismissed');
-    console.log('📊 Session check - dismissed:', dismissed);
+
     
     if (dismissed === 'true') {
-        console.log('✅ Notification already dismissed this session');
+
         return;
     }
 
     // Find all feature notifications and clean up any duplicates
     let notifications = document.querySelectorAll('.feature-notification');
-    console.log(`📋 Found ${notifications.length} notification(s)`);
+
     
     if (notifications.length === 0) {
-        console.log('❌ No notifications found in DOM!');
+
         return;
     }
     
     // Debug: Log each notification found
     notifications.forEach((notification, index) => {
-        console.log(`📍 Notification ${index + 1}:`, {
-            id: notification.id,
-            classes: notification.className,
-            display: window.getComputedStyle(notification).display,
-            position: window.getComputedStyle(notification).position
-        });
+        // Silent check for notification properties
     });
     
     // If multiple notifications exist, remove duplicates
     if (notifications.length > 1) {
-        console.log('🚨 Multiple notifications detected - cleaning up duplicates...');
+
         
         // Keep only the first one and remove others
         for (let i = 1; i < notifications.length; i++) {
-            console.log(`🗑️ Removing duplicate notification ${i + 1}`);
+
             notifications[i].remove();
         }
         
         // Re-query after cleanup
         notifications = document.querySelectorAll('.feature-notification');
-        console.log(`✅ After cleanup: ${notifications.length} notification(s) remain`);
+
     }
     
     notifications.forEach((notification, index) => {
-        console.log(`🔧 Setting up notification ${index + 1}...`);
+
         
         // Add unique identifier to prevent conflicts
         notification.setAttribute('data-notification-system', 'enhanced');
@@ -79,7 +74,7 @@ function initNotificationSystem() {
         
         // Show notification with a slight delay
         setTimeout(() => {
-            console.log(`🎯 Showing notification ${index + 1} with timer`);
+
             showNotificationWithTimer(notification);
         }, 1500);
     });
@@ -103,7 +98,7 @@ function showNotificationWithTimer(notification) {
     // Auto-dismiss after 5 seconds
     const autoDismissTimer = setTimeout(() => {
         if (notification && !notification.classList.contains('hidden')) {
-            console.log('Auto-dismissing notification after 5 seconds');
+    
             hideNotification(notification, 'auto-dismiss');
         }
     }, 5000);
@@ -236,7 +231,7 @@ function ensureCloseButton(notification) {
 }
 
 function hideNotification(notification, reason = 'unknown') {
-    console.log(`Hiding notification (reason: ${reason})`);
+
     
     // Cancel auto-dismiss timer if it exists
     if (notification.autoDismissTimer) {
@@ -268,14 +263,14 @@ function hideNotification(notification, reason = 'unknown') {
 
 // Add global function to manually trigger notification (for testing)
 window.showFeatureNotification = function() {
-    console.log('🧪 Manual notification trigger called');
+
     
     sessionStorage.removeItem('feature-notification-dismissed');
     sessionStorage.removeItem('feature-notification-dismiss-reason');
     sessionStorage.removeItem('feature-notification-dismiss-time');
     
     const notification = document.getElementById('feature-notification');
-    console.log('🔍 Found notification element:', !!notification);
+
     
     if (notification) {
         notification.classList.remove('hidden');
@@ -283,48 +278,46 @@ window.showFeatureNotification = function() {
         setupNotificationZIndex(notification);
         ensureCloseButton(notification);
         showNotificationWithTimer(notification);
-        console.log('✅ Feature notification manually triggered');
+
     } else {
-        console.log('❌ No notification element found with ID: feature-notification');
+
     }
 };
 
 // Add global function to reset and debug
 window.debugNotificationSystem = function() {
-    console.log('🔧 Notification System Debug:', {
+    const notification = document.getElementById('feature-notification');
+    
+    return {
         systemInitialized: window.notificationSystemInitialized,
         sessionDismissed: sessionStorage.getItem('feature-notification-dismissed'),
         notificationsInDOM: document.querySelectorAll('.feature-notification').length,
-        notificationElement: !!document.getElementById('feature-notification')
-    });
-    
-    const notification = document.getElementById('feature-notification');
-    if (notification) {
-        console.log('📊 Notification Element Info:', {
+        notificationElement: !!notification,
+        notificationInfo: notification ? {
             id: notification.id,
             classes: notification.className,
             display: window.getComputedStyle(notification).display,
             visibility: window.getComputedStyle(notification).visibility,
             opacity: window.getComputedStyle(notification).opacity,
             dataSystem: notification.getAttribute('data-notification-system')
-        });
-    }
+        } : null
+    };
 };
 
 // Disable any conflicting notification systems
 window.disableConflictingNotificationSystems = function() {
-    console.log('🚫 Disabling all conflicting notification systems...');
+
     
     // Disable PortfolioApp methods
     if (window.portfolioApp) {
-        window.portfolioApp.initFeatureNotifications = () => console.log('🚫 PortfolioApp.initFeatureNotifications disabled');
-        window.portfolioApp.adjustNotificationForMobile = () => console.log('🚫 PortfolioApp.adjustNotificationForMobile disabled');
-        window.portfolioApp.adjustNotificationForDesktop = () => console.log('🚫 PortfolioApp.adjustNotificationForDesktop disabled');
+        window.portfolioApp.initFeatureNotifications = () => {};
+        window.portfolioApp.adjustNotificationForMobile = () => {};
+        window.portfolioApp.adjustNotificationForDesktop = () => {};
     }
     
     // Remove any unauthorized notifications
     document.querySelectorAll('.feature-notification:not([data-notification-system="enhanced"])').forEach(notification => {
-        console.log('🗑️ Removing unauthorized notification');
+
         notification.remove();
     });
 };
@@ -337,11 +330,11 @@ const observeForConflictingNotifications = () => {
                 if (node.nodeType === 1 && node.classList && node.classList.contains('feature-notification')) {
                     // Check if it's not our enhanced notification
                     if (!node.getAttribute('data-notification-system')) {
-                        console.log('🚨 Unauthorized notification detected:', node);
+
                         // Give it a delay to allow legitimate notifications to be processed
                         setTimeout(() => {
                             if (!node.getAttribute('data-notification-system')) {
-                                console.log('🗑️ Removing unauthorized notification');
+                
                                 node.remove();
                             }
                         }, 100);
@@ -356,7 +349,7 @@ const observeForConflictingNotifications = () => {
         subtree: true
     });
     
-    console.log('👁️ Notification conflict observer active');
+
 };
 
 // Temporarily disable conflict prevention for debugging
@@ -367,14 +360,7 @@ setTimeout(() => {
     observeForConflictingNotifications();
 }, 2000);
 
-// Add session info to console for debugging
-console.log('Enhanced Notification System Loaded:', {
-    dismissed: sessionStorage.getItem('feature-notification-dismissed'),
-    dismissReason: sessionStorage.getItem('feature-notification-dismiss-reason'),
-    dismissTime: sessionStorage.getItem('feature-notification-dismiss-time'),
-    currentSession: new Date().toISOString(),
-    systemInitialized: window.notificationSystemInitialized || false
-});
+// Session info available via debugNotificationSystem() function
 
 // Add global functions for easy debugging
 window.resetNotificationSession = function() {
@@ -382,7 +368,7 @@ window.resetNotificationSession = function() {
     sessionStorage.removeItem('feature-notification-dismiss-reason');
     sessionStorage.removeItem('feature-notification-dismiss-time');
     window.notificationSystemInitialized = false;
-    console.log('🔄 Notification session reset. Reload page to see notification.');
+
 };
 
 window.forceShowNotification = function() {

@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+?<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -257,7 +257,7 @@
                                 value.includes('gsi.googleapis.com') ||
                                 (value.includes('google.com') && !value.includes('fonts.googleapis.com'))
                             ) {
-                                console.warn('?? Blocked unwanted Google script:', value);
+
                                 return;
                             }
                         }
@@ -276,14 +276,14 @@
         (function() {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (token) {
-                console.log('🔓 IMMEDIATE: User is authenticated, will remove lock');
+
                 // Wait for DOM to be ready
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', function() {
                         const resumeBtn = document.getElementById('resume-download');
                         if (resumeBtn && resumeBtn.classList.contains('locked')) {
                             resumeBtn.classList.remove('locked');
-                            console.log('🔓 IMMEDIATE: Lock removed from resume button');
+
                         }
                     });
                 } else {
@@ -291,7 +291,7 @@
                     const resumeBtn = document.getElementById('resume-download');
                     if (resumeBtn && resumeBtn.classList.contains('locked')) {
                         resumeBtn.classList.remove('locked');
-                        console.log('🔓 IMMEDIATE: Lock removed from resume button');
+
                     }
                 }
             }
@@ -491,7 +491,7 @@
         <div class="feature-notification" id="feature-notification">
             <div class="notification-content">
                 <i class="fas fa-star notification-icon"></i>
-                <span class="notification-text">Play Fun Games • Try Amazing Tools • Make Music!</span>
+                <span class="notification-text">Play Fun Games � Try Amazing Tools � Make Music!</span>
                 <button class="notification-close">
                     <i class="fas fa-times"></i>
                 </button>
@@ -810,7 +810,7 @@
                     elements.forEach(el => {
                         if (el && el.parentNode) {
                             el.parentNode.removeChild(el);
-                            console.log('??? Removed Google auth element:', selector);
+
                         }
                     });
                 } catch (e) {
@@ -831,7 +831,7 @@
                 const textNode = textNodes.snapshotItem(i);
                 if (textNode && textNode.parentNode) {
                     textNode.parentNode.removeChild(textNode);
-                    console.log('??? Removed text node with "continue with email"');
+
                 }
             }
             
@@ -844,7 +844,7 @@
                      el.textContent.includes('or sign in with email') ||
                      el.textContent.includes('Or sign in with email'))) {
                     el.style.display = 'none';
-                    console.log('??? Hidden element containing "continue with email" text');
+
                 }
             });
             
@@ -948,7 +948,7 @@
                             <i class="fas fa-lock"></i>
                             <span>Please login to download the resume</span>
                             <button onclick="window.location.href='pages/login.html'" class="login-btn">Login</button>
-                            <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
+                            <button onclick="this.parentElement.parentElement.remove()" class="close-btn">�</button>
                         </div>
                     `;
                     

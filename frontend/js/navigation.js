@@ -94,27 +94,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Expose function globally for auth system to call
     window.refreshMobileMenu = function() {
         if (window.innerWidth <= 992) {
-            console.log('🔄 Refreshing mobile menu...');
+
             setupMobileMenu();
-            console.log('✅ Mobile menu refreshed');
+
         }
     };
     
     // Debug helper for mobile menu
     window.debugMobileMenu = function() {
-        console.log('📱 Mobile Menu Debug Info:');
-        console.log('Window width:', window.innerWidth);
-        console.log('Is mobile:', window.innerWidth <= 992);
-        console.log('More dropdown items:', document.querySelectorAll('.dropdown-menu li').length);
-        console.log('Mobile more items:', document.querySelectorAll('.mobile-more-items li').length);
-        console.log('Auth buttons in dropdown:', {
-            profile: !!document.querySelector('.dropdown-menu .nav-profile-btn'),
-            logout: !!document.querySelector('.dropdown-menu .nav-logout-btn')
-        });
-        console.log('Auth buttons in mobile:', {
-            profile: !!document.querySelector('.mobile-more-items .nav-profile-btn'),
-            logout: !!document.querySelector('.mobile-more-items .nav-logout-btn')
-        });
+        return {
+            windowWidth: window.innerWidth,
+            isMobile: window.innerWidth <= 992,
+            dropdownItems: document.querySelectorAll('.dropdown-menu li').length,
+            mobileItems: document.querySelectorAll('.mobile-more-items li').length,
+            authButtonsInDropdown: {
+                profile: !!document.querySelector('.dropdown-menu .nav-profile-btn'),
+                logout: !!document.querySelector('.dropdown-menu .nav-logout-btn')
+            },
+            authButtonsInMobile: {
+                profile: !!document.querySelector('.mobile-more-items .nav-profile-btn'),
+                logout: !!document.querySelector('.mobile-more-items .nav-logout-btn')
+            }
+        };
     };
     // Fix for logo-circle animation
     const logoCircle = document.querySelector('.logo-circle');
@@ -304,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (newLayout === 'desktop') {
                 // Switching to desktop mode
-                console.log('Switching to desktop layout');
+
                 closeMobileMenu();
                 cleanupMobileElements();
                 enableDesktopDropdowns();
@@ -318,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
             } else if (newLayout === 'mobile') {
                 // Switching to mobile mode
-                console.log('Switching to mobile layout');
+
                 disableDesktopDropdowns();
                 cleanupMobileElements(); // Clean first
                 setTimeout(() => {
@@ -544,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         } catch (error) {
-            console.warn('Invalid selector for smooth scroll:', target);
+
         }
     }
     

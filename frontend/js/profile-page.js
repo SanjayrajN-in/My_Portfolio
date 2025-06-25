@@ -6,7 +6,7 @@ class ProfilePageManager {
     }
 
     async init() {
-        console.log('🔄 Profile page initializing...');
+        
         
         // Wait for auth system to be ready
         await this.waitForAuthSystem();
@@ -15,12 +15,12 @@ class ProfilePageManager {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         const cachedUser = sessionStorage.getItem('currentUser');
         
-        console.log('🔍 Profile init - Token found:', !!token);
-        console.log('🔍 Profile init - Cached user found:', !!cachedUser);
-        console.log('🔍 Profile init - Auth system user:', !!window.authSystem?.currentUser);
+        
+        
+        
         
         if (!token) {
-            console.log('❌ No token found, redirecting to login');
+            
             this.redirectToLogin();
             return;
         }
@@ -29,11 +29,11 @@ class ProfilePageManager {
         if (cachedUser && window.authSystem?.currentUser) {
             try {
                 this.currentUser = JSON.parse(cachedUser);
-                console.log('✅ Using cached user data:', this.currentUser.name);
+                
                 this.updateProfileElements();
                 this.showProfileContent();
             } catch (error) {
-                console.warn('⚠️ Failed to parse cached user data');
+                
             }
         }
 
@@ -45,7 +45,7 @@ class ProfilePageManager {
             this.showProfileContent();
             
         } catch (error) {
-            console.error('❌ Profile initialization failed:', error);
+            
             // Clear invalid token and redirect
             this.clearAuthDataAndRedirect();
         }
@@ -93,7 +93,7 @@ class ProfilePageManager {
                 // Either user is set (logged in) or no token exists (not logged in)
                 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
                 if (!token || window.authSystem.currentUser !== null) {
-                    console.log('✅ Auth system initialization complete');
+                    
                     break;
                 }
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -101,10 +101,10 @@ class ProfilePageManager {
             }
             
             if (authAttempts >= 50) {
-                console.warn('⚠️ Auth system initialization timeout');
+                
             }
         } else {
-            console.warn('⚠️ Auth system not available after waiting');
+            
         }
     }
 
@@ -189,7 +189,7 @@ class ProfilePageManager {
             }
             
         } catch (error) {
-            console.error('Load profile data error:', error);
+            
             throw error; // Re-throw to be handled by init()
         }
     }
@@ -381,7 +381,7 @@ class ProfilePageManager {
                 this.showNotification(data.message || 'Failed to change password', 'error');
             }
         } catch (error) {
-            console.error('Change password error:', error);
+            
             this.showNotification('Network error. Please try again.', 'error');
         }
     }

@@ -57,7 +57,7 @@ class PortfolioApp {
         // Set initial states
         this.setInitialStates();
         
-        console.log('✅ Portfolio App Initialized Successfully');
+
     }
     
     // Prevent white flash on load
@@ -355,7 +355,7 @@ class PortfolioApp {
         // Reset form
         form.reset();
         
-        console.log('Form submitted:', data);
+
     }
     
     // Show form message
@@ -490,7 +490,7 @@ class PortfolioApp {
                 });
             }
         } catch (error) {
-            console.warn('Invalid selector for smooth scroll:', target);
+
         }
     }
     
@@ -676,7 +676,7 @@ class PortfolioApp {
                 resumeBtn._protectedClickHandler = (e) => {
                     // Always prevent default for locked buttons
                     if (resumeBtn.classList.contains('locked')) {
-                        console.log('🔒 Preventing download for locked resume button');
+
                         e.preventDefault();
                         e.stopPropagation();
                         this.showLoginPrompt();
@@ -718,7 +718,7 @@ class PortfolioApp {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         const isLoggedIn = !!token;
         
-        console.log('🔍 Checking auth for element:', element.id, 'Token exists:', !!token);
+
         
         if (!isLoggedIn) {
             element.classList.add('auth-protected', 'locked');
@@ -727,7 +727,7 @@ class PortfolioApp {
                 element._protectedClickHandler = this.handleProtectedClick.bind(this);
             }
             element.addEventListener('click', element._protectedClickHandler);
-            console.log('🔒 Lock added to:', element.id);
+
         } else {
             // Remove locked state and hide lock overlay
             element.classList.remove('locked');
@@ -748,7 +748,6 @@ class PortfolioApp {
                 element.target = '_blank';
             }
             
-            console.log('🔓 Lock removed from:', element.id, 'Classes now:', element.className);
         }
     }
     
@@ -757,7 +756,7 @@ class PortfolioApp {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         const isLoggedIn = !!token;
         
-        console.log('🔍 Checking auth for element (no handler):', element.id, 'Token exists:', !!token);
+
         
         if (!isLoggedIn) {
             element.classList.add('auth-protected', 'locked');
@@ -768,7 +767,7 @@ class PortfolioApp {
                 element.href = 'javascript:void(0)';
             }
             
-            console.log('🔒 Lock added to:', element.id, '(no handler)');
+
         } else {
             // Remove locked state and hide lock overlay
             element.classList.remove('locked');
@@ -788,7 +787,6 @@ class PortfolioApp {
                 element.target = '_blank';
             }
             
-            console.log('🔓 Lock removed from:', element.id, 'Classes now:', element.className);
         }
     }
     
@@ -850,19 +848,19 @@ class PortfolioApp {
     // Initialize feature notifications - DISABLED
     // Now handled by notification-fix.js to prevent conflicts
     initFeatureNotifications() {
-        console.log('🚫 PortfolioApp notification system disabled - using notification-fix.js');
+
         return;
     }
     
     // Adjust notification positioning - DISABLED
     adjustNotificationForMobile(notification) {
-        console.log('🚫 PortfolioApp mobile notification adjustment disabled');
+
         return;
     }
     
     // Adjust notification positioning - DISABLED
     adjustNotificationForDesktop(notification) {
-        console.log('🚫 PortfolioApp desktop notification adjustment disabled');
+
         return;
     }
     
@@ -909,16 +907,11 @@ class PortfolioApp {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         const resumeBtn = document.getElementById('resume-download');
         
-        console.log('🔍 Auth Debug:');
-        console.log('- Token exists:', !!token);
-        console.log('- Resume button classes:', resumeBtn?.className);
-        console.log('- Lock overlay visible:', resumeBtn?.querySelector('.lock-overlay')?.style.opacity || 'default');
+
         
         // Manual fix for testing
         if (token && resumeBtn) {
-            console.log('🔧 Manually fixing lock icon...');
             resumeBtn.classList.remove('locked');
-            console.log('- Classes after manual fix:', resumeBtn.className);
         }
     }
     
@@ -927,7 +920,7 @@ class PortfolioApp {
         const resumeBtn = document.getElementById('resume-download');
         if (resumeBtn) {
             resumeBtn.classList.remove('locked');
-            console.log('🔓 Manual lock removal - Classes:', resumeBtn.className);
+
         }
     }
     
@@ -940,7 +933,7 @@ class PortfolioApp {
                 // Remove locked class
                 if (resumeBtn.classList.contains('locked')) {
                     resumeBtn.classList.remove('locked');
-                    console.log('🔓 Force removed lock - user is authenticated');
+
                 }
                 
                 // Restore original href if it was saved, otherwise set it based on the page
@@ -959,7 +952,7 @@ class PortfolioApp {
                 const newResumeBtn = resumeBtn.cloneNode(true);
                 resumeBtn.parentNode.replaceChild(newResumeBtn, resumeBtn);
                 
-                console.log('🔄 Resume button reset to ensure download works');
+
             }
         }
     }
@@ -970,18 +963,14 @@ const portfolioApp = new PortfolioApp();
 
 // Global functions for testing
 window.testLockRemoval = function() {
-    console.log('🧪 Testing lock removal...');
     const resumeBtn = document.getElementById('resume-download');
     if (resumeBtn) {
-        console.log('Before:', resumeBtn.className);
         resumeBtn.classList.remove('locked');
-        console.log('After:', resumeBtn.className);
         
         // Also try direct style manipulation
         const lockOverlay = resumeBtn.querySelector('.lock-overlay');
         if (lockOverlay) {
             lockOverlay.style.opacity = '0';
-            console.log('Lock overlay opacity set to 0');
         }
     }
 };
@@ -997,7 +986,7 @@ window.forceRemoveLock = function() {
 // Legacy notification function - DEPRECATED
 // Now handled by notification-fix.js
 function hideFeatureNotification() {
-    console.log('🚫 Legacy hideFeatureNotification called - using notification-fix.js system instead');
+
     
     // Fallback to new system
     const notification = document.getElementById('feature-notification');

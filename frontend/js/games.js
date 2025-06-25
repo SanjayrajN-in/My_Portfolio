@@ -10,14 +10,14 @@ class GameTracker {
         // Check if auth system is available and user is logged in
         if (typeof authSystem !== 'undefined' && authSystem.currentUser) {
             this.currentSession = authSystem.startGameSession(gameName);
-            console.log(`Started tracking game: ${gameName}`);
+            
         }
     }
     
     endGame(score = null) {
         if (typeof authSystem !== 'undefined' && authSystem.currentUser && this.currentSession) {
             authSystem.endGameSession(score);
-            console.log(`Ended game session with score: ${score}`);
+            
             this.currentSession = null;
         }
     }
@@ -31,7 +31,7 @@ class GameTracker {
 const gameTracker = new GameTracker();
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Games page loaded');
+    
     
     // Prevent space bar from scrolling the page
     window.addEventListener('keydown', function(e) {
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Snake Game - initialize since it's the default active tab
     setTimeout(() => {
-        console.log('Initializing default Snake Game...');
+        
         initSnakeGame();
     }, 300);
     
@@ -126,11 +126,11 @@ function initGameTabs() {
 let memoryGameInstance = null;
 
 function initMemoryGame() {
-    console.log('Initializing Memory Game...');
+    
     
     // Prevent multiple initializations
     if (memoryGameInstance) {
-        console.log('Memory game already initialized');
+        
         return memoryGameInstance;
     }
     
@@ -153,11 +153,11 @@ function initMemoryGame() {
     const progressFill = document.getElementById('memory-progress-fill');
     const progressText = document.getElementById('memory-progress-text');
     
-    console.log('Game board found:', !!gameBoard);
-    console.log('New game button found:', !!newGameBtn);
+    
+    
     
     if (!gameBoard) {
-        console.error('Memory game board not found!');
+        
         return;
     }
     
@@ -458,7 +458,7 @@ function initMemoryGame() {
     function handleMatch() {
         // Add match animation
         if (!gameState.firstCard || !gameState.secondCard) {
-            console.warn('Card reference is null in handleMatch');
+            
             return;
         }
         
@@ -768,14 +768,14 @@ function initMemoryGame() {
             gameState.scoreSubmitted = true;
             window.gameScores.submitScore('memoryMatch', gameState.score, gameState.level, gameState.gameTime)
                 .then(response => {
-                    console.log('Memory Match score submitted:', response);
+                    
                     // Update rankings display
                     if (window.gameScores.updateRankingsUI) {
                         window.gameScores.updateRankingsUI('memoryMatch', 'memoryMatch-rankings-container');
                     }
                 })
                 .catch(error => {
-                    console.error('Error submitting Memory Match score:', error);
+                    
                 });
         }
         
@@ -806,10 +806,10 @@ function initMemoryGame() {
 
 // Snake Game - Clean and Bug-Free Implementation
 function initSnakeGame() {
-    console.log('Initializing Snake Game...');
+    
     const canvas = document.querySelector('.snake-game canvas');
     if (!canvas) {
-        console.error('Snake game canvas not found!');
+        
         return;
     }
     
@@ -1164,14 +1164,14 @@ function initSnakeGame() {
             scoreSubmitted = true;
             window.gameScores.submitScore('snake', score, level, 0)
                 .then(response => {
-                    console.log('Snake score submitted:', response);
+                    
                     // Update rankings display
                     if (window.gameScores.updateRankingsUI) {
                         window.gameScores.updateRankingsUI('snake', 'snake-rankings-container');
                     }
                 })
                 .catch(error => {
-                    console.error('Error submitting Snake score:', error);
+                    
                 });
         }
     }
@@ -1190,7 +1190,7 @@ function initSnakeGame() {
                 highScoreElement.textContent = currentScore;
             }
         } catch (error) {
-            console.error('Error fetching server high score:', error);
+            
             // Fallback to current score on error
             highScoreElement.textContent = currentScore;
         }
@@ -1343,7 +1343,7 @@ function initSnakeGame() {
         baseSpeed = Math.max(minSpeed, 150 - (level - 1) * speedDecrement);
         
         // Log speed change for debugging (can be removed later)
-        console.log(`Level ${level}: Speed = ${baseSpeed}ms (${Math.round(1000/baseSpeed)} moves/sec)`);
+        } moves/sec)`);
         
         // Show level up message
         const levelUpMsg = document.createElement('div');
@@ -1654,7 +1654,7 @@ function initSnakeGame() {
     updatePauseButtonIcon();
     
     // Log successful initialization
-    console.log('Snake game initialized successfully!');
+    
 }
 
 // Tic Tac Toe Game - Complete Implementation with AI
@@ -2423,7 +2423,7 @@ function initTetris() {
         
         // Only log when game is actually being played
         if (gameState === 'playing' || gameState === 'waiting') {
-            console.log(`Level ${level}: Using ${randomPattern} pattern with ${rowsForLevel} rows`);
+            
         }
         
         // Create bricks based on pattern
@@ -3257,7 +3257,7 @@ function initTetris() {
                 
                 // Add to active power-ups
                 activePowerUps.push({ type: type, timeLeft: type.duration });
-                console.log('Paddle expanded to width:', paddle.width);
+                
                 break;
                 
             case 'multiBall':
@@ -3350,7 +3350,7 @@ function initTetris() {
             case 'expandPaddle':
                 // Restore original paddle width
                 paddle.width = paddle.originalWidth || PADDLE_WIDTH;
-                console.log('Paddle width restored to:', paddle.width);
+                
                 break;
                 
             case 'slowBall':
@@ -4075,7 +4075,7 @@ function initTetris() {
                 highScoreElement.textContent = currentScore;
             }
         } catch (error) {
-            console.error('Error fetching Brick Breaker server high score:', error);
+            
             // Fallback to current score on error
             highScoreElement.textContent = currentScore;
         }
@@ -4172,14 +4172,14 @@ function initTetris() {
                 scoreSubmitted = true;
                 window.gameScores.submitScore('brickBreaker', score, level, 0)
                     .then(response => {
-                        console.log('Brick Breaker score submitted:', response);
+                        
                         // Update rankings display
                         if (window.gameScores.updateRankingsUI) {
                             window.gameScores.updateRankingsUI('brickBreaker', 'brickBreaker-rankings-container');
                         }
                     })
                     .catch(error => {
-                        console.error('Error submitting Brick Breaker score:', error);
+                        
                     });
             }
         } else if (gameState === 'won') {
@@ -4217,7 +4217,7 @@ function initTetris() {
     const mobileSpeedFactor = isMobileDevice ? 0.7 : 1.0;
     
     // Debug log
-    console.log('Brick Breaker - Mobile detected:', isMobileDevice, 'Speed factor:', mobileSpeedFactor);
+    
     
     function gameLoop(currentTime = 0) {
         // Initialize lastTime on first frame
@@ -4277,20 +4277,20 @@ function initTetris() {
 
 function initNumberPuzzle() {
     // Number puzzle implementation would go here
-    console.log('Number Puzzle initialized');
+    
 }
 
 function initWordScramble() {
     // Word scramble implementation would go here
-    console.log('Word Scramble initialized');
+    
 }
 
 function initPatternMemory() {
     // Pattern memory implementation would go here
-    console.log('Pattern Memory initialized');
+    
 }
 
 function initMinesweeper() {
     // Chess game was removed - function kept as stub to prevent errors
-    console.log('Chess game has been removed from the portfolio');
+    
 }

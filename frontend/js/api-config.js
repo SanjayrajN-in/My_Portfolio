@@ -16,7 +16,7 @@ class APIConfig {
         
         this.baseURL = this.isProduction ? 'https://sanjayraj-n.onrender.com' : 'http://localhost:3000';
         this.apiVersion = '/api';
-        console.log('APIConfig Base URL set to:', this.baseURL);
+
     }
 
     get apiURL() {
@@ -49,7 +49,7 @@ class APIConfig {
             
             return data;
         } catch (error) {
-            console.error('API Request Error:', error);
+
             // If it's a network error or JSON parsing error, preserve the original error
             if (!error.status && error.name !== 'SyntaxError') {
                 // For network errors, we don't have status info
@@ -183,13 +183,13 @@ class APIConfig {
                         // Refresh auth state
                         window.authSystem.refreshAuthState();
                         
-                        console.log('Auth state updated from stored data');
+
                     } catch (e) {
-                        console.error('Error parsing user data:', e);
+
                     }
                 }
                 
-                console.log('Google auth configuration updated');
+
             }, 100);
         });
     }

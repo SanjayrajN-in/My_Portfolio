@@ -83,7 +83,7 @@ const getAPIBaseURL = () => {
     );
     
     const baseURL = isProduction ? 'https://sanjayraj-n.onrender.com' : 'http://localhost:3000';
-    console.log('API Base URL set to:', baseURL);
+
     return baseURL;
 };
 
@@ -110,7 +110,7 @@ class AuthSystem {
     async init() {
         // Ensure API is available
         if (!window.API) {
-            console.warn('API not available, retrying auth init...');
+
             // Increase delay to avoid rate limiting
             setTimeout(() => this.init(), 2000);
             return;
@@ -118,18 +118,17 @@ class AuthSystem {
 
         // Check if user is logged in via token validation
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        console.log('🔍 Auth init - Token found:', !!token);
+
         
         if (token) {
             try {
                 // Validate token with server using API config
-                console.log('🔍 Validating token with server...');
+
                 const userData = await window.API.getProfile(token);
                 
                 if (userData && userData.user) {
                     this.currentUser = userData.user;
-                    console.log('✅ User authenticated:', this.currentUser?.name || this.currentUser?.email);
-                    console.log('✅ Current user object:', this.currentUser);
+
                     
                     // Store user data in sessionStorage for quick access
                     sessionStorage.setItem('currentUser', JSON.stringify(this.currentUser));
@@ -137,12 +136,12 @@ class AuthSystem {
                     throw new Error('Invalid user data received');
                 }
             } catch (error) {
-                console.error('❌ Token validation error:', error);
+
                 // Token is invalid, clear all auth data
                 this.clearAuthData();
             }
         } else {
-            console.log('ℹ️ No token found, user not logged in');
+
             this.clearAuthData();
         }
 
@@ -183,35 +182,16 @@ class AuthSystem {
     
     // Force clear all auth data and refresh (for debugging)
     forceLogout() {
-        console.log('🔄 Force logout initiated');
+
         this.clearAuthData();
         this.initialized = false;
         this.updateNavigation();
-        console.log('✅ Force logout completed');
+
     }
     
     // Debug method to check auth state
     debugAuthState() {
-        console.log('🔍 Auth Debug Information:');
-        console.log('- Initialized:', this.initialized);
-        console.log('- Current User:', this.currentUser);
-        console.log('- LocalStorage Token:', localStorage.getItem('token'));
-        console.log('- SessionStorage Token:', sessionStorage.getItem('token'));
-        console.log('- SessionStorage User:', sessionStorage.getItem('currentUser'));
-        
         const loginLinks = document.querySelectorAll('a[href*="login.html"]');
-        console.log('- Login Links Found:', loginLinks.length);
-        loginLinks.forEach((link, index) => {
-            const li = link.closest('li');
-            console.log(`  Login Link ${index + 1}:`, {
-                display: li?.style.display || 'default',
-                visibility: li?.style.visibility || 'default',
-                visible: li?.style.display !== 'none'
-            });
-        });
-        
-        console.log('- Profile Buttons:', document.querySelectorAll('.nav-profile-btn').length);
-        console.log('- Logout Buttons:', document.querySelectorAll('.nav-logout-btn').length);
         
         return {
             initialized: this.initialized,
@@ -233,9 +213,9 @@ class AuthSystem {
     
     // Force refresh navigation (for debugging)
     forceRefreshNavigation() {
-        console.log('🔄 Force refreshing navigation');
+
         this.updateNavigation();
-        console.log('✅ Navigation refresh completed');
+
     }
     
     // Navigation watchdog - less aggressive, more reliable
@@ -272,10 +252,10 @@ class AuthSystem {
             
             // Less aggressive checking - only fix major inconsistencies
             if (isLoggedIn && loginVisible) {
-                console.log('🔧 Navigation inconsistency detected: User logged in but login button visible');
+
                 this.updateNavigation();
             } else if (!isLoggedIn && hasProfileButtons) {
-                console.log('🔧 Navigation inconsistency detected: User not logged in but profile buttons visible');
+
                 this.updateNavigation();
             }
         }, 30000); // 30 seconds instead of 5 to avoid rate limiting
@@ -332,21 +312,21 @@ class AuthSystem {
                 return;
             }
             
-            console.log('🔍 Profile page init - Current user:', this.currentUser);
+
             
             const authLoading = document.getElementById('authLoading');
             const profileContainer = document.getElementById('profileContainer');
             
             // If user is not logged in, redirect to login page
             if (!this.currentUser) {
-                console.log('❌ No user found, redirecting to login');
+
                 const isInPagesFolder = window.location.pathname.includes('pages/');
                 const loginPath = isInPagesFolder ? 'login.html' : 'pages/login.html';
                 window.location.href = loginPath;
                 return;
             }
 
-            console.log('✅ User authenticated, loading profile data');
+
             
             // Hide loading state and show profile content
             if (authLoading) {
@@ -369,10 +349,10 @@ class AuthSystem {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (token) {
                 const data = await window.API.logout(token);
-                console.log('Logout response:', data);
+
             }
         } catch (error) {
-            console.error('Logout API error:', error);
+
         }
 
         // Clear all client-side data regardless of API response
@@ -415,7 +395,7 @@ class AuthSystem {
 
     // Optimized navigation update - clean and functional
     updateNavigation() {
-        console.log('🔄 Updating navigation, user:', this.currentUser ? 'logged in' : 'not logged in');
+
         
         // Check page type and skip if not a main navigation page
         const currentPath = window.location.pathname;
@@ -424,7 +404,7 @@ class AuthSystem {
                              currentPath.includes('auth-debug.html');
         
         if (isSpecialPage) {
-            console.log('ℹ️ Special page detected, skipping navigation update');
+
             return;
         }
         
@@ -484,7 +464,7 @@ class AuthSystem {
         if (profileLi) profileLi.style.display = 'none';
         if (logoutLi) logoutLi.style.display = 'none';
         
-        console.log('✅ Auth buttons hidden in dropdown');
+
         
         // Refresh mobile menu to remove auth buttons
         if (window.refreshMobileMenu) {
@@ -505,7 +485,7 @@ class AuthSystem {
     setupAuthenticatedNavigation(isInPagesFolder, navLinks) {
         // Hide ALL login links aggressively
         const loginLinks = document.querySelectorAll('a[href*="login.html"]');
-        console.log('🔍 Found', loginLinks.length, 'login links to hide');
+
         
         loginLinks.forEach((loginLink, index) => {
             const li = loginLink.closest('li');
@@ -515,7 +495,7 @@ class AuthSystem {
                 li.style.opacity = '0';
                 li.style.height = '0';
                 li.style.overflow = 'hidden';
-                console.log(`✅ Login link ${index + 1} hidden completely`);
+
             }
         });
         
@@ -529,7 +509,7 @@ class AuthSystem {
     setupUnauthenticatedNavigation() {
         // Show ALL login links
         const loginLinks = document.querySelectorAll('a[href*="login.html"]');
-        console.log('🔍 Found', loginLinks.length, 'login links to show');
+
         
         loginLinks.forEach((loginLink, index) => {
             const li = loginLink.closest('li');
@@ -539,7 +519,7 @@ class AuthSystem {
                 li.style.opacity = '1';
                 li.style.height = 'auto';
                 li.style.overflow = 'visible';
-                console.log(`✅ Login link ${index + 1} restored`);
+
             }
         });
         
@@ -591,7 +571,7 @@ class AuthSystem {
     addAuthButtonsToDropdown(isInPagesFolder) {
         const moreDropdown = document.querySelector('.dropdown-menu');
         if (!moreDropdown) {
-            console.warn('❌ More dropdown not found');
+
             return;
         }
         
@@ -644,7 +624,7 @@ class AuthSystem {
         profileLi.style.display = 'block';
         logoutLi.style.display = 'block';
         
-        console.log('✅ Auth buttons shown in More dropdown');
+
         
         // Refresh mobile menu to include auth buttons
         if (window.refreshMobileMenu) {
@@ -656,7 +636,7 @@ class AuthSystem {
 
     // Legacy method - keeping for compatibility but redirecting to dropdown method
     addAuthButtons(isInPagesFolder, navLinks, retryCount = 0) {
-        console.log('⚠️ Legacy addAuthButtons called, redirecting to dropdown method');
+
         this.addAuthButtonsToDropdown(isInPagesFolder);
     }
 
@@ -697,7 +677,7 @@ class AuthSystem {
                 this.updateProfileElements();
             }
         } catch (error) {
-            console.error('Load profile data error:', error);
+
         }
     }
 
@@ -790,7 +770,7 @@ class AuthSystem {
 (function initializeAuthSystem() {
     // Prevent multiple initializations
     if (window.authSystemInitialized) {
-        console.log('🔄 Auth system already initialized, skipping...');
+
         return;
     }
     
@@ -803,7 +783,7 @@ class AuthSystem {
             window.authSystem = authSystem;
             window.authSystemInitialized = true;
             
-            console.log('🚀 Auth system initialized (singleton)');
+        
         }
     };
     
@@ -820,7 +800,7 @@ if (!window.authEventListenersAdded) {
     // Handle page visibility changes (when user comes back from another page)
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden && window.authSystem) {
-            console.log('🔄 Page became visible, refreshing auth state');
+    
             // Small delay to ensure page is fully loaded
             setTimeout(() => {
                 window.authSystem.forceRefreshNavigation();
@@ -831,7 +811,7 @@ if (!window.authEventListenersAdded) {
     // Handle page focus (when user switches back to tab)
     window.addEventListener('focus', function() {
         if (window.authSystem) {
-            console.log('🔄 Window focused, refreshing auth state');
+    
             setTimeout(() => {
                 window.authSystem.forceRefreshNavigation();
             }, 100);

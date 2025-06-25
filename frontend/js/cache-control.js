@@ -19,7 +19,7 @@
             
             // Only reload if this isn't the first visit and we're not already in a reload loop
             if (storedVersion && !sessionStorage.getItem('reloading')) {
-                console.log('Site version changed from', storedVersion, 'to', SITE_VERSION);
+
                 // Set a flag to prevent reload loops
                 sessionStorage.setItem('reloading', 'true');
                 // Force reload from server
@@ -62,7 +62,7 @@
                     resource.href = urlObj.toString();
                 }
             } catch (e) {
-                console.warn('Error updating resource:', url, e);
+
             }
         });
         
