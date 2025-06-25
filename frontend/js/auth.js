@@ -111,7 +111,8 @@ class AuthSystem {
         // Ensure API is available
         if (!window.API) {
             console.warn('API not available, retrying auth init...');
-            setTimeout(() => this.init(), 200);
+            // Increase delay to avoid rate limiting
+            setTimeout(() => this.init(), 2000);
             return;
         }
 
@@ -239,7 +240,7 @@ class AuthSystem {
             clearInterval(this.watchdogInterval);
         }
         
-        // Check navigation state every 5 seconds (less aggressive)
+        // Check navigation state every 30 seconds (much less aggressive to avoid rate limiting)
         this.watchdogInterval = setInterval(() => {
             if (!this.initialized || !this.authStateLoaded) return;
             
@@ -272,7 +273,7 @@ class AuthSystem {
                 console.log('🔧 Navigation inconsistency detected: User not logged in but profile buttons visible');
                 this.updateNavigation();
             }
-        }, 5000);
+        }, 30000); // 30 seconds instead of 5 to avoid rate limiting
     }
 
     // Method to refresh auth state (useful after login)
