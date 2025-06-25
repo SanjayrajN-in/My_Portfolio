@@ -153,10 +153,7 @@ class AuthSystem {
         this.authStateLoaded = true;
         this.updateNavigation();
 
-        // Sync local game scores with server when user logs in
-        if (this.currentUser) {
-            this.syncLocalScoresOnLogin();
-        }
+
 
         // Initialize profile page if on profile page (after auth check is complete)
         if (window.location.pathname.includes('profile.html')) {
@@ -180,88 +177,9 @@ class AuthSystem {
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('currentUser');
         
-        // Also clear local game scores to maintain consistency
-        // When logged out, user can build up local scores again
-        console.log('🎮 Clearing local game scores on logout');
-        const gameLocalStorageKeys = [
-            'snakeHighScore',
-            'brickBreakerHighScore', 
-            'memoryMatchHighScore',
-            'tictactoe-scores'
-        ];
-        
-        gameLocalStorageKeys.forEach(key => {
-            if (localStorage.getItem(key)) {
-                localStorage.removeItem(key);
-                console.log(`🗑️ Cleared ${key} on logout`);
-            }
-        });
+
     }
-    
-    // Sync local game scores when user logs in - Clear local scores to avoid confusion
-    syncLocalScoresOnLogin() {
-        console.log('🎮 Syncing local game scores on login...');
-        
-        // List of games that store local high scores
-        const gameLocalStorageKeys = [
-            'snakeHighScore',
-            'brickBreakerHighScore',
-            'memoryMatchHighScore',
-            'tictactoe-scores'
-        ];
-        
-        // Log current local scores before clearing
-        gameLocalStorageKeys.forEach(key => {
-            const localScore = localStorage.getItem(key);
-            if (localScore) {
-                console.log(`📊 Found local ${key}: ${localScore}`);
-            }
-        });
-        
-        // Clear all local game scores to prevent confusion between local and server scores
-        gameLocalStorageKeys.forEach(key => {
-            const localScore = localStorage.getItem(key);
-            if (localScore) {
-                console.log(`🗑️ Clearing local ${key}: ${localScore}`);
-                localStorage.removeItem(key);
-            }
-        });
-        
-        // Update game displays to reflect server-side scores only
-        this.updateGameScoreDisplays();
-        
-        console.log('✅ Local game scores cleared - now using server-side scores only');
-    }
-    
-    // Update game score displays after clearing local scores
-    updateGameScoreDisplays() {
-        // Update Snake game high score display
-        const snakeHighScoreElement = document.getElementById('snake-high-score');
-        if (snakeHighScoreElement) {
-            snakeHighScoreElement.textContent = '0';
-            console.log('🐍 Reset Snake high score display');
-        }
-        
-        // Update other game displays if they exist
-        const brickBreakerHighScoreElement = document.getElementById('brick-breaker-high-score');
-        if (brickBreakerHighScoreElement) {
-            brickBreakerHighScoreElement.textContent = '0';
-            console.log('🧱 Reset Brick Breaker high score display');
-        }
-        
-        // Trigger rankings update if gameScores is available
-        if (window.gameScores && typeof window.gameScores.updateRankingsUI === 'function') {
-            // Update rankings for all games
-            const games = ['snake', 'brickBreaker', 'memoryMatch'];
-            games.forEach(game => {
-                const containerId = `${game}-rankings-container`;
-                if (document.getElementById(containerId)) {
-                    window.gameScores.updateRankingsUI(game, containerId);
-                    console.log(`📊 Updated ${game} rankings display`);
-                }
-            });
-        }
-    }
+
     
     // Force clear all auth data and refresh (for debugging)
     forceLogout() {
