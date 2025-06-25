@@ -30,11 +30,8 @@
                 // Check if user is logged in
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    console.warn('Score submission failed: User not logged in');
                     return { success: false, message: 'User not logged in' };
                 }
-
-                console.log(`Submitting score for ${gameName}: ${score} points`);
 
                 const response = await fetch(`${API_URL}/api/scores/submit`, {
                     method: 'POST',
@@ -50,10 +47,9 @@
                     })
                 });
 
-                // If response is not ok, log more details
+                // If response is not ok, handle error
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error(`Score submission failed with status ${response.status}:`, errorText);
                     
                     try {
                         // Try to parse as JSON if possible
@@ -66,7 +62,6 @@
                 }
 
                 const data = await response.json();
-                console.log(`Score submission result for ${gameName}:`, data);
                 
                 // Clear cached data to force refresh
                 localStorage.removeItem(`${gameName}_user_rank_cache`);
@@ -80,7 +75,6 @@
                 
                 return data;
             } catch (error) {
-                console.error('Error submitting score:', error);
                 return { success: false, message: `Error submitting score: ${error.message}` };
             }
         },
@@ -91,68 +85,43 @@
          * @returns {Promise} - Promise that resolves with the rankings
          */
         getRankings: async function(gameName) {
-            console.log(`[RANKINGS API] Fetching rankings for ${gameName}...`);
-            
             try {
-                const url = `${API_URL}/api/scores/rankings/${gameName}`;
-                console.log(`[RANKINGS API] Making request to: ${url}`);
-                
-                const response = await fetch(url, {
+                const response = await fetch(`${API_URL}/api/scores/rankings/${gameName}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 });
                 
-                console.log(`[RANKINGS API] Response status: ${response.status} ${response.statusText}`);
-                
                 // Check if the response is ok (status in the range 200-299)
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.warn(`[RANKINGS API] Rankings request failed with status: ${response.status}`, errorText);
-                    
                     // Try to get cached rankings
                     const cachedRankings = localStorage.getItem(`${gameName}_rankings_cache`);
                     if (cachedRankings) {
                         try {
                             const parsed = JSON.parse(cachedRankings);
-                            console.log(`[RANKINGS API] Using cached rankings for ${gameName}:`, parsed.data?.length || 0, 'items');
                             return parsed.data || [];
                         } catch (parseError) {
-                            console.warn('[RANKINGS API] Error parsing cached rankings:', parseError);
+                            // Silent fallback
                         }
                     }
                     return [];
                 }
                 
                 const data = await response.json();
-                console.log(`[RANKINGS API] Received data for ${gameName}:`, {
-                    isArray: Array.isArray(data),
-                    length: data?.length,
-                    firstItem: data?.[0],
-                    dataType: typeof data
-                });
                 
                 // Ensure the data is an array
                 if (!Array.isArray(data)) {
-                    console.warn('[RANKINGS API] Rankings data is not an array:', data);
                     return [];
                 }
                 
                 // Validate the data structure
                 const validRankings = data.filter(item => {
-                    const isValid = item && 
-                                   typeof item.username === 'string' && 
-                                   typeof item.score === 'number' && 
-                                   item.username.trim() !== '';
-                    
-                    if (!isValid) {
-                        console.warn('[RANKINGS API] Invalid ranking item:', item);
-                    }
-                    return isValid;
+                    return item && 
+                           typeof item.username === 'string' && 
+                           typeof item.score === 'number' && 
+                           item.username.trim() !== '';
                 });
-                
-                console.log(`[RANKINGS API] Valid rankings for ${gameName}: ${validRankings.length}/${data.length}`);
                 
                 // Cache the rankings for offline use
                 localStorage.setItem(`${gameName}_rankings_cache`, JSON.stringify({
@@ -162,18 +131,14 @@
                 
                 return validRankings;
             } catch (error) {
-                console.error(`[RANKINGS API] Error fetching rankings for ${gameName}:`, error);
-                
                 // Try to get cached rankings
                 const cachedRankings = localStorage.getItem(`${gameName}_rankings_cache`);
                 if (cachedRankings) {
                     try {
                         const parsed = JSON.parse(cachedRankings);
-                        const cacheAge = Date.now() - (parsed.timestamp || 0);
-                        console.log(`[RANKINGS API] Using cached rankings for ${gameName} (age: ${Math.round(cacheAge/1000)}s):`, parsed.data?.length || 0, 'items');
                         return parsed.data || [];
                     } catch (parseError) {
-                        console.warn('[RANKINGS API] Error parsing cached rankings:', parseError);
+                        // Silent fallback
                     }
                 }
                 return [];
@@ -181,11 +146,35 @@
         },
 
         /**
-         * Get user's rank for a game
+         * Get user's rank for a game with rate limiting
          * @param {string} gameName - Name of the game
          * @returns {Promise} - Promise that resolves with the user's rank
          */
         getUserRank: async function(gameName) {
+            // Rate limiting: Don't call more than once every 30 seconds per game
+            const rateLimitKey = `getUserRank_${gameName}_lastCall`;
+            const lastCall = parseInt(localStorage.getItem(rateLimitKey) || '0');
+            const now = Date.now();
+            
+            if (now - lastCall < 30000) { // 30 seconds cooldown to prevent spam
+                // Return cached data if available
+                const cachedRank = localStorage.getItem(`${gameName}_user_rank_cache`);
+                if (cachedRank) {
+                    try {
+                        const parsed = JSON.parse(cachedRank);
+                        const cacheAge = now - (parsed.timestamp || 0);
+                        if (cacheAge < 300000) { // Use cache if less than 5 minutes old
+                            return parsed.data || { rank: null, score: null };
+                        }
+                    } catch (e) {
+                        // Silent fallback
+                    }
+                }
+                return { rank: null, score: null };
+            }
+            
+            localStorage.setItem(rateLimitKey, now.toString());
+            
             try {
                 // Check if user is logged in
                 const token = localStorage.getItem('token');
@@ -203,12 +192,15 @@
                 
                 // Check if the response is ok (status in the range 200-299)
                 if (!response.ok) {
-                    console.warn(`User rank request failed with status: ${response.status}`);
                     // Try to get cached user rank
                     const cachedRank = localStorage.getItem(`${gameName}_user_rank_cache`);
                     if (cachedRank) {
-                        const parsed = JSON.parse(cachedRank);
-                        return parsed.data || { rank: null, score: null };
+                        try {
+                            const parsed = JSON.parse(cachedRank);
+                            return parsed.data || { rank: null, score: null };
+                        } catch (e) {
+                            // Silent fallback
+                        }
                     }
                     return { rank: null, score: null };
                 }
@@ -217,7 +209,6 @@
                 
                 // Validate the data structure
                 if (!data || (data.rank === undefined && data.score === undefined)) {
-                    console.warn('Invalid user rank data:', data);
                     return { rank: null, score: null };
                 }
                 
@@ -229,7 +220,6 @@
                 
                 return data;
             } catch (error) {
-                console.warn('Error fetching user rank:', error);
                 // Try to get cached user rank
                 const cachedRank = localStorage.getItem(`${gameName}_user_rank_cache`);
                 if (cachedRank) {
@@ -237,7 +227,7 @@
                         const parsed = JSON.parse(cachedRank);
                         return parsed.data || { rank: null, score: null };
                     } catch (parseError) {
-                        console.warn('Error parsing cached user rank:', parseError);
+                        // Silent fallback
                     }
                 }
                 return { rank: null, score: null };
@@ -277,8 +267,6 @@
          * @param {boolean} startPeriodicRefresh - Whether to start periodic refresh
          */
         updateRankingsUI: async function(gameName, containerId, startPeriodicRefresh = false) {
-            console.log(`[RANKINGS DEBUG] Starting updateRankingsUI for ${gameName}`);
-            
             // Wait for DOM elements to exist with retry mechanism
             let retryCount = 0;
             const maxRetries = 10;
@@ -292,15 +280,11 @@
                     break;
                 }
                 
-                console.log(`[RANKINGS DEBUG] Waiting for DOM elements... retry ${retryCount + 1}/${maxRetries}`);
                 await new Promise(resolve => setTimeout(resolve, 200));
                 retryCount++;
             }
             
             if (!rankingsList || !userRankElement) {
-                console.error(`[RANKINGS DEBUG] Failed to find DOM elements for ${gameName} after ${maxRetries} retries`);
-                console.error(`[RANKINGS DEBUG] rankingsList:`, rankingsList);
-                console.error(`[RANKINGS DEBUG] userRankElement:`, userRankElement);
                 return;
             }
 
@@ -309,16 +293,9 @@
             userRankElement.innerHTML = '<div class="loading-rankings">Loading your rank...</div>';
 
             try {
-                // Clear any stale cache first if this is a fresh request
-                if (!startPeriodicRefresh) {
-                    localStorage.removeItem(`${gameName}_rankings_cache_temp`);
-                }
-                
-                // Fetch rankings and user rank in parallel with longer timeout
+                // Fetch rankings and user rank in parallel with timeout
                 let rankings = [];
                 let userRank = { rank: null, score: null };
-                
-                console.log(`[RANKINGS DEBUG] Fetching data for ${gameName}...`);
                 
                 // Create fetch promises with timeout
                 const createTimeoutPromise = (promise, timeout = 10000) => {
@@ -342,12 +319,7 @@
                         const rankingsData = results[0].value;
                         if (Array.isArray(rankingsData)) {
                             rankings = rankingsData;
-                            console.log(`[RANKINGS DEBUG] Successfully fetched ${rankings.length} rankings for ${gameName}`);
-                        } else {
-                            console.warn(`[RANKINGS DEBUG] Rankings data is not an array:`, rankingsData);
                         }
-                    } else {
-                        console.warn(`[RANKINGS DEBUG] Failed to fetch rankings for ${gameName}:`, results[0].reason);
                     }
                     
                     // Process user rank result
@@ -355,23 +327,16 @@
                         const userRankData = results[1].value;
                         if (userRankData && (userRankData.rank !== undefined || userRankData.score !== undefined)) {
                             userRank = userRankData;
-                            console.log(`[RANKINGS DEBUG] Successfully fetched user rank for ${gameName}:`, userRank);
-                        } else {
-                            console.warn(`[RANKINGS DEBUG] Invalid user rank data:`, userRankData);
                         }
-                    } else {
-                        console.warn(`[RANKINGS DEBUG] Failed to fetch user rank for ${gameName}:`, results[1].reason);
                     }
                 } catch (fetchError) {
-                    console.error(`[RANKINGS DEBUG] Error fetching data for ${gameName}:`, fetchError);
+                    // Silent error handling
                 }
 
                 // Handle rankings display with improved fallback logic
                 let finalRankings = rankings;
                 
                 if (!Array.isArray(finalRankings) || finalRankings.length === 0) {
-                    console.log(`[RANKINGS DEBUG] No rankings found for ${gameName}, checking cache...`);
-                    
                     // Try to get cached rankings as fallback
                     const cachedRankings = localStorage.getItem(`${gameName}_rankings_cache`);
                     if (cachedRankings) {
@@ -381,11 +346,10 @@
                             
                             // Use cache if it's less than 10 minutes old and has data
                             if (cacheAge < 600000 && parsed.data && Array.isArray(parsed.data) && parsed.data.length > 0) {
-                                console.log(`[RANKINGS DEBUG] Using cached rankings for ${gameName} (age: ${Math.round(cacheAge/1000)}s)`);
                                 finalRankings = parsed.data;
                             }
                         } catch (e) {
-                            console.warn('[RANKINGS DEBUG] Error parsing cached rankings:', e);
+                            // Silent fallback
                         }
                     }
                 }
@@ -397,7 +361,6 @@
                 this.renderUserRank(userRankElement, userRank, finalRankings);
                 
             } catch (error) {
-                console.error(`[RANKINGS DEBUG] Critical error in updateRankingsUI for ${gameName}:`, error);
                 rankingsList.innerHTML = '<div class="rankings-error">Error loading rankings. Please try refreshing.</div>';
                 userRankElement.innerHTML = '<div class="rankings-error">Error loading rank</div>';
             }
@@ -408,16 +371,14 @@
             }
             
             if (startPeriodicRefresh && !this._refreshIntervals[gameName]) {
-                console.log(`[RANKINGS DEBUG] Starting periodic refresh for ${gameName}`);
                 this._refreshIntervals[gameName] = setInterval(() => {
                     // Only refresh if the game container is visible
                     const container = document.getElementById(containerId);
                     const gameContainer = container?.closest('.game-container');
                     if (gameContainer?.classList.contains('active')) {
-                        console.log(`[RANKINGS DEBUG] Periodic refresh for ${gameName}`);
                         this.updateRankingsUI(gameName, containerId, false); // Don't restart the interval
                     }
-                }, 30000); // Refresh every 30 seconds
+                }, 60000); // Refresh every 60 seconds (reduced frequency)
             }
         },
 
@@ -426,12 +387,10 @@
          */
         renderRankingsList: function(rankingsList, rankings, gameName) {
             if (!Array.isArray(rankings) || rankings.length === 0) {
-                console.log(`[RANKINGS DEBUG] Showing 'no rankings' message for ${gameName}`);
                 rankingsList.innerHTML = '<div class="no-rankings">No rankings yet. Be the first!</div>';
                 return;
             }
 
-            console.log(`[RANKINGS DEBUG] Rendering ${rankings.length} rankings for ${gameName}`);
             let rankingsHTML = '';
             rankings.forEach((rank, index) => {
                 if (rank && rank.username && rank.score !== undefined) {
@@ -508,8 +467,6 @@
         forceRefreshAllGames: async function() {
             const games = ['snake', 'memoryMatch', 'brickBreaker'];
             
-            console.log('Force refreshing all game data...');
-            
             // Clear all cached data first
             games.forEach(gameName => {
                 localStorage.removeItem(`${gameName}_user_rank_cache`);
@@ -526,9 +483,8 @@
                 if (container) {
                     try {
                         await this.updateRankingsUI(gameName, containerId, false);
-                        console.log(`Updated rankings for ${gameName}`);
                     } catch (error) {
-                        console.warn(`Failed to update rankings for ${gameName}:`, error);
+                        // Silent error handling
                     }
                 }
             }
@@ -538,16 +494,12 @@
          * Initialize game scores when page loads
          */
         initializeGameScores: async function() {
-            console.log('[INIT DEBUG] Initializing game scores...');
-            
             // Always initialize high score displays, whether logged in or not
             this.initializeHighScoreDisplays();
             
             // Check if user is logged in for server data
             const token = localStorage.getItem('token');
             if (token) {
-                console.log('[INIT DEBUG] User is logged in, fetching server data...');
-                
                 // Wait for DOM to be fully ready with longer delay
                 await this.waitForDOM();
                 
@@ -559,7 +511,6 @@
                     this.forceRefreshAllGames();
                 }, 1000);
             } else {
-                console.log('[INIT DEBUG] User not logged in, using local high scores');
                 this.initializeLocalHighScores();
                 
                 // Still initialize ranking containers for logged-out display
@@ -574,7 +525,6 @@
         waitForDOM: function() {
             return new Promise((resolve) => {
                 if (document.readyState === 'complete') {
-                    console.log('[INIT DEBUG] DOM already complete');
                     resolve();
                     return;
                 }
@@ -584,10 +534,8 @@
                 
                 const checkDOM = () => {
                     attempts++;
-                    console.log(`[INIT DEBUG] Checking DOM readiness... attempt ${attempts}/${maxAttempts}`);
                     
                     if (document.readyState === 'complete' || attempts >= maxAttempts) {
-                        console.log('[INIT DEBUG] DOM ready or max attempts reached');
                         resolve();
                     } else {
                         setTimeout(checkDOM, 250);
@@ -602,8 +550,6 @@
          * Initialize all ranking containers proactively
          */
         initializeRankingsContainers: async function() {
-            console.log('[INIT DEBUG] Initializing ranking containers...');
-            
             const games = [
                 { name: 'snake', containerId: 'snake-rankings-container' },
                 { name: 'memoryMatch', containerId: 'memoryMatch-rankings-container' },
@@ -613,8 +559,6 @@
             for (const game of games) {
                 const container = document.getElementById(game.containerId);
                 if (container && !container.querySelector('.game-rankings')) {
-                    console.log(`[INIT DEBUG] Creating rankings UI for ${game.name}`);
-                    
                     // Create the basic structure immediately
                     container.innerHTML = `
                         <div class="game-rankings">
@@ -630,8 +574,6 @@
                     
                     // Small delay to let the DOM settle
                     await new Promise(resolve => setTimeout(resolve, 100));
-                } else {
-                    console.log(`[INIT DEBUG] Container ${game.containerId} ${!container ? 'not found' : 'already initialized'}`);
                 }
             }
         },
@@ -680,56 +622,11 @@
                     } else {
                         element.textContent = initialScore;
                     }
-                    console.log(`Initialized ${game.name} high score display: ${initialScore}`);
                 }
             });
         },
 
-        /**
-         * Debug function to check rankings status
-         */
-        debugRankings: function(gameName) {
-            console.log(`=== RANKINGS DEBUG for ${gameName} ===`);
-            
-            // Check DOM elements
-            const container = document.getElementById(`${gameName}-rankings-container`);
-            const rankingsList = document.getElementById(`${gameName}-rankings-list`);
-            const userRank = document.getElementById(`${gameName}-user-rank`);
-            
-            console.log('DOM Elements:', {
-                container: !!container,
-                rankingsList: !!rankingsList,
-                userRank: !!userRank,
-                containerHTML: container?.innerHTML?.substring(0, 100) + '...',
-                rankingsListHTML: rankingsList?.innerHTML?.substring(0, 100) + '...'
-            });
-            
-            // Check cache
-            const rankingsCache = localStorage.getItem(`${gameName}_rankings_cache`);
-            const userRankCache = localStorage.getItem(`${gameName}_user_rank_cache`);
-            
-            console.log('Cache Status:', {
-                hasRankingsCache: !!rankingsCache,
-                hasUserRankCache: !!userRankCache,
-                rankingsCacheAge: rankingsCache ? Math.round((Date.now() - JSON.parse(rankingsCache).timestamp) / 1000) : 'N/A',
-                userRankCacheAge: userRankCache ? Math.round((Date.now() - JSON.parse(userRankCache).timestamp) / 1000) : 'N/A'
-            });
-            
-            // Check auth status
-            const token = localStorage.getItem('token');
-            console.log('Auth Status:', {
-                hasToken: !!token,
-                tokenLength: token?.length || 0
-            });
-            
-            // Check refresh intervals
-            console.log('Refresh Intervals:', {
-                hasRefreshIntervals: !!this._refreshIntervals,
-                activeIntervals: this._refreshIntervals ? Object.keys(this._refreshIntervals) : []
-            });
-            
-            console.log('=== END DEBUG ===');
-        },
+
 
         /**
          * Initialize local high scores for non-logged-in users
@@ -753,7 +650,6 @@
 
     // Listen for auth state changes
     window.addEventListener('authStateChanged', function(event) {
-        console.log('Auth state changed, refreshing game scores...');
         if (gameScores && typeof gameScores.forceRefreshAllGames === 'function') {
             gameScores.forceRefreshAllGames();
         }
@@ -762,7 +658,6 @@
     // Also listen for storage changes (when user logs in/out in another tab)
     window.addEventListener('storage', function(event) {
         if (event.key === 'token') {
-            console.log('Token changed in storage, refreshing game scores...');
             if (gameScores && typeof gameScores.forceRefreshAllGames === 'function') {
                 setTimeout(() => {
                     gameScores.forceRefreshAllGames();
@@ -774,30 +669,9 @@
     // Make the service available globally
     window.gameScores = gameScores;
     
-    // Debug helper functions for console use
-    window.debugRankings = function(gameName = 'snake') {
-        gameScores.debugRankings(gameName);
-    };
-    
+    // Helper function for manual refresh if needed
     window.refreshRankings = async function(gameName = 'snake') {
-        console.log(`Manually refreshing rankings for ${gameName}...`);
         const containerId = `${gameName}-rankings-container`;
         await gameScores.updateRankingsUI(gameName, containerId, false);
-        console.log(`Refresh complete for ${gameName}`);
-    };
-    
-    window.clearRankingsCache = function(gameName = null) {
-        if (gameName) {
-            localStorage.removeItem(`${gameName}_rankings_cache`);
-            localStorage.removeItem(`${gameName}_user_rank_cache`);
-            console.log(`Cleared cache for ${gameName}`);
-        } else {
-            const games = ['snake', 'memoryMatch', 'brickBreaker'];
-            games.forEach(game => {
-                localStorage.removeItem(`${game}_rankings_cache`);
-                localStorage.removeItem(`${game}_user_rank_cache`);
-            });
-            console.log('Cleared all rankings cache');
-        }
     };
 })();

@@ -47,14 +47,14 @@ const corsOptions = {
             'http://localhost:5500',
             'http://127.0.0.1:5501',
             'http://localhost:5501',
-            'https://sanjayrajn.vercel.app',
-            'https://sanjayraj-n.vercel.app'
+            'https://sanjayrajn.vercel.app'
         ];
         
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        // Also allow any vercel deployment
+        if (origin && (origin.includes('vercel.app') || allowedOrigins.includes(origin))) {
             callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'));
+            callback(null, true); // Temporarily allow all origins to debug CORS
         }
     },
     credentials: true,

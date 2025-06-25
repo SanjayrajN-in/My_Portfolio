@@ -1310,7 +1310,6 @@ function initSnakeGame() {
                         // This prevents overriding a new high score with old server data
                         if (response.isNewHighScore) {
                             // New high score confirmed by server, no need to fetch again
-                            console.log('New high score confirmed by server, keeping display as is');
                         } else {
                             // Not a new high score, update from server after delay
                             setTimeout(() => {
@@ -1327,13 +1326,21 @@ function initSnakeGame() {
                     }
                 })
                 .catch(error => {
-                    console.error('Error submitting score:', error);
+                    // Silent error handling
                 });
         }
     }
     
-    // Function to update server-side high score display
+    // Function to update server-side high score display with throttling
+    let lastServerHighScoreUpdate = 0;
     async function updateServerHighScore(highScoreElement, forceRefresh = false) {
+        // Throttle server calls - only update every 10 seconds unless forced
+        const now = Date.now();
+        if (!forceRefresh && (now - lastServerHighScoreUpdate) < 10000) {
+            return;
+        }
+        lastServerHighScoreUpdate = now;
+        
         try {
             if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
                 const userRank = await window.gameScores.getUserRank('snake');
@@ -1414,8 +1421,7 @@ function initSnakeGame() {
                 const cachedHighScore = getCachedHighScore();
                 highScoreElement.textContent = Math.max(cachedHighScore, score);
                 
-                // Update from server in background (don't await to avoid blocking UI)
-                updateServerHighScore(highScoreElement);
+                // Server high score is updated only on game start/end, NOT in game loop
             } else {
                 // When not logged in, use local storage high score
                 const localHighScore = localStorage.getItem('snakeHighScore') || 0;
@@ -1854,7 +1860,7 @@ function initSnakeGame() {
             highScoreElement.textContent = cachedHighScore;
             
             // Update from server in background
-            updateServerHighScore(highScoreElement);
+            updateServerHighScore(highScoreElement, true);
         } else {
             const localHighScore = localStorage.getItem('snakeHighScore') || 0;
             highScoreElement.textContent = localHighScore;
@@ -4275,8 +4281,16 @@ function initTetris() {
         return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
     }
     
-    // Function to update server-side high score display for Brick Breaker
-    async function updateBrickBreakerServerHighScore(highScoreElement) {
+    // Function to update server-side high score display for Brick Breaker with throttling
+    let lastBrickBreakerServerUpdate = 0;
+    async function updateBrickBreakerServerHighScore(highScoreElement, forceRefresh = false) {
+        // Throttle server calls - only update every 10 seconds unless forced
+        const now = Date.now();
+        if (!forceRefresh && (now - lastBrickBreakerServerUpdate) < 10000) {
+            return;
+        }
+        lastBrickBreakerServerUpdate = now;
+        
         try {
             if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
                 const userRank = await window.gameScores.getUserRank('brickBreaker');
@@ -4348,8 +4362,7 @@ function initTetris() {
                 const cachedHighScore = getBrickBreakerCachedHighScore();
                 highScoreElement.textContent = Math.max(cachedHighScore, score);
                 
-                // Update from server in background (don't await to avoid blocking UI)
-                updateBrickBreakerServerHighScore(highScoreElement);
+                // Server high score is updated only on game start/end, NOT in game loop
             } else {
                 // When not logged in, use local storage high score
                 const currentHighScore = parseInt(localStorage.getItem('brickBreakerHighScore') || '0');
@@ -4442,11 +4455,10 @@ function initTetris() {
                             // This prevents overriding a new high score with old server data
                             if (response.isNewHighScore) {
                                 // New high score confirmed by server, no need to fetch again
-                                console.log('New Brick Breaker high score confirmed by server, keeping display as is');
                             } else {
                                 // Not a new high score, update from server after delay
                                 setTimeout(() => {
-                                    updateBrickBreakerServerHighScore(highScoreElement);
+                                    updateBrickBreakerServerHighScore(highScoreElement, true);
                                 }, 1000);
                             }
                         }
@@ -4544,7 +4556,7 @@ function initTetris() {
             highScoreElement.textContent = cachedHighScore;
             
             // Update from server in background
-            updateBrickBreakerServerHighScore(highScoreElement);
+            updateBrickBreakerServerHighScore(highScoreElement, true);
         } else {
             const savedHighScore = localStorage.getItem('brickBreakerHighScore') || '0';
             highScoreElement.textContent = savedHighScore;
