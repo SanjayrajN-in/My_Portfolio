@@ -254,7 +254,7 @@
                         <div class="upload-area" id="pdfCompressUpload">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>Drop PDF here or click to upload</p>
-                            <small class="file-size-limit">Max file size: 100MB</small>
+                            <small class="file-size-limit">Max file size: 50MB | Large files may take longer to process</small>
                         </div>
                         <input type="file" accept=".pdf" id="pdfCompressInput" style="display: none;">
                         
@@ -303,7 +303,7 @@
                                 </div>
                             </div>
                             <div class="processing-info">
-                                <p><i class="fas fa-info-circle"></i> Large files are processed using Web Workers to prevent browser freezing.</p>
+                                <p><i class="fas fa-info-circle"></i> Files over 10MB are optimized before processing. This may take additional time but ensures better results.</p>
                                 <button class="btn clear-btn" id="cancelCompression" style="margin-top: 10px;">
                                     <i class="fas fa-stop"></i> Cancel
                                 </button>
