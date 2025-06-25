@@ -66,6 +66,7 @@
                 }
 
                 const data = await response.json();
+                console.log('Score submission response:', data);
                 
                 return data;
             } catch (error) {
@@ -130,10 +131,11 @@
                 }
                 
                 const data = await response.json();
+                console.log(`User rank response for ${gameName}:`, data);
                 
                 // Validate the data structure
                 if (!data || (data.rank === undefined && data.score === undefined)) {
-                    
+                    console.log('Invalid user rank data structure');
                     return { rank: null, score: null };
                 }
                 

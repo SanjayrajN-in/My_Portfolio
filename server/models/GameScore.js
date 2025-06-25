@@ -35,7 +35,7 @@ const gameScoreSchema = new mongoose.Schema({
 
 // Create indexes for efficient querying
 gameScoreSchema.index({ gameName: 1, score: -1 });
-gameScoreSchema.index({ userId: 1, gameName: 1 });
+gameScoreSchema.index({ userId: 1, gameName: 1 }, { unique: true }); // Ensure one record per user per game
 
 const GameScore = mongoose.model('GameScore', gameScoreSchema);
 

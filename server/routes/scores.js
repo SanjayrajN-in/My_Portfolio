@@ -30,73 +30,62 @@ router.post('/submit', auth, async (req, res) => {
         }
         
         try {
-            // Check if this is a higher score than the user's previous best
-            const existingScore = await GameScore.findOne({
+            // Check if username exists, if not use email or a default value
+            const username = req.user.username || req.user.name || req.user.email?.split('@')[0] || 'Player' + req.user.id.substring(0, 6);
+            console.log('Using username:', username);
+            
+            // Convert score values to numbers
+            const numericScore = Number(score);
+            const numericLevel = Number(level || 1);
+            const numericTimeElapsed = Number(timeElapsed || 0);
+            
+            // First, check if user has an existing record for this game
+            const existingRecord = await GameScore.findOne({
                 userId: req.user.id,
-                gameName
-            }).sort({ score: -1 });
+                gameName: gameName
+            });
             
-            console.log('Existing score:', existingScore);
+            let result;
+            let isNewHighScore = false;
             
-            // Only save if it's a higher score or no previous score exists
-            if (!existingScore || score > existingScore.score) {
-                // Log the user object to see what fields are available
-                console.log('User object from auth middleware:', req.user);
-                
-                // Check if username exists, if not use email or a default value
-                const username = req.user.username || req.user.name || req.user.email?.split('@')[0] || 'Player' + req.user.id.substring(0, 6);
-                console.log('Using username:', username);
-                
-                // Convert score values to numbers
-                const numericScore = Number(score);
-                const numericLevel = Number(level || 1);
-                const numericTimeElapsed = Number(timeElapsed || 0);
-                
-                if (existingScore) {
-                    // Update existing record instead of creating a new one
-                    console.log('Updating existing score record');
-                    
-                    existingScore.score = numericScore;
-                    existingScore.level = numericLevel;
-                    existingScore.timeElapsed = numericTimeElapsed;
-                    existingScore.username = username; // Update username in case it changed
-                    
-                    await existingScore.save();
-                    
-                    return res.status(200).json({ 
-                        success: true,
-                        message: 'Score updated successfully', 
-                        score: existingScore 
-                    });
-                } else {
-                    // Create a new score record
-                    console.log('Creating new score record');
-                    
-                    const newScore = new GameScore({
-                        userId: req.user.id,
-                        username: username, // This is required by the GameScore model
-                        gameName,
-                        score: numericScore,
-                        level: numericLevel,
-                        timeElapsed: numericTimeElapsed
-                    });
-                    
-                    console.log('Saving new score:', newScore);
-                    
-                    await newScore.save();
-                    return res.status(201).json({ 
-                        success: true,
-                        message: 'Score saved successfully', 
-                        score: newScore 
-                    });
-                }
+            if (!existingRecord) {
+                // No existing record, create new one
+                console.log('Creating new score record');
+                result = new GameScore({
+                    userId: req.user.id,
+                    username: username,
+                    gameName: gameName,
+                    score: numericScore,
+                    level: numericLevel,
+                    timeElapsed: numericTimeElapsed
+                });
+                await result.save();
+                isNewHighScore = true;
+            } else if (numericScore > existingRecord.score) {
+                // New score is higher, update the existing record
+                console.log('Updating existing score record with higher score');
+                existingRecord.score = numericScore;
+                existingRecord.level = numericLevel;
+                existingRecord.timeElapsed = numericTimeElapsed;
+                existingRecord.username = username; // Update username in case it changed
+                result = await existingRecord.save();
+                isNewHighScore = true;
+            } else {
+                // Score is not higher, don't update
+                console.log('Score not higher than existing, no update needed');
+                result = existingRecord;
+                isNewHighScore = false;
             }
+            
+            console.log(`Score processing complete for user ${req.user.id}, game ${gameName}, score ${numericScore}, isNewHighScore: ${isNewHighScore}`);
             
             return res.status(200).json({ 
                 success: true,
-                message: 'Score not saved - previous high score is higher',
-                existingScore
+                message: isNewHighScore ? 'New high score saved successfully!' : 'Score submitted but not higher than existing record',
+                score: result,
+                isNewHighScore: isNewHighScore
             });
+            
         } catch (dbError) {
             console.error('Database error when saving score:', dbError);
             return res.status(500).json({ 
@@ -122,28 +111,31 @@ router.get('/rankings/:gameName', async (req, res) => {
         
         console.log(`Fetching rankings for ${gameName}`);
         
-        // Use aggregation to get the highest score for each user
+        // Use aggregation to get the highest score for each user with correct associated data
         const topScores = await GameScore.aggregate([
             // Match documents for the specified game
             { $match: { gameName: gameName } },
             
-            // Group by userId and get the highest score for each user
+            // Sort by score descending to get highest scores first
+            { $sort: { score: -1, createdAt: -1 } },
+            
+            // Group by userId and get the document with the highest score for each user
             { 
                 $group: {
                     _id: "$userId",
                     username: { $first: "$username" },
-                    score: { $max: "$score" },
+                    score: { $first: "$score" },
                     level: { $first: "$level" },
                     timeElapsed: { $first: "$timeElapsed" },
                     createdAt: { $first: "$createdAt" }
                 }
             },
             
-            // Sort by score in descending order
+            // Sort by score in descending order again
             { $sort: { score: -1 } },
             
-            // Limit to top 3 scores
-            { $limit: 3 },
+            // Limit to top 10 scores (increased from 3 for better rankings)
+            { $limit: 10 },
             
             // Project the fields we want to return
             {
@@ -186,14 +178,33 @@ router.get('/user-rank/:gameName', auth, async (req, res) => {
             return res.json({ rank: null, score: null });
         }
         
-        // Count how many scores are higher than the user's score
-        const higherScores = await GameScore.countDocuments({
-            gameName,
-            score: { $gt: userScore.score }
-        });
+        // Use aggregation to get the highest score for each user, then count how many are higher
+        const higherScoreUsers = await GameScore.aggregate([
+            // Match documents for the specified game
+            { $match: { gameName: gameName } },
+            
+            // Group by userId and get the highest score for each user
+            { 
+                $group: {
+                    _id: "$userId",
+                    maxScore: { $max: "$score" }
+                }
+            },
+            
+            // Match only users with scores higher than current user's score
+            { $match: { maxScore: { $gt: userScore.score } } },
+            
+            // Count the results
+            { $count: "higherScoreCount" }
+        ]);
         
-        // User's rank is the number of higher scores + 1
-        const rank = higherScores + 1;
+        // Get the count of users with higher scores
+        const higherCount = higherScoreUsers.length > 0 ? higherScoreUsers[0].higherScoreCount : 0;
+        
+        // User's rank is the number of users with higher scores + 1
+        const rank = higherCount + 1;
+        
+        console.log(`User ${req.user.id} rank for ${gameName}: ${rank} (score: ${userScore.score}, higher users: ${higherCount})`);
         
         res.json({
             rank,
