@@ -464,11 +464,38 @@ class ToolsManager {
 
         let currentImage = null;
         let measurements = [];
+        let referenceLine = null; // Store reference line for redrawing
         let referencePixelLength = null;
         let referenceRealLength = null;
         let currentMode = 'none';
         let isDrawing = false;
         let startPoint = null;
+
+        // Helper function to get correct canvas coordinates
+        const getCanvasCoordinates = (e, canvas) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let clientX, clientY;
+            
+            // Handle both mouse and touch events
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else if (e.changedTouches && e.changedTouches.length > 0) {
+                clientX = e.changedTouches[0].clientX;
+                clientY = e.changedTouches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        };
 
         // Upload area click
         uploadArea.addEventListener('click', () => {
@@ -490,6 +517,13 @@ class ToolsManager {
             uploadArea.style.borderColor = 'rgba(0, 255, 255, 0.3)';
             const files = e.dataTransfer.files;
             if (files.length > 0 && files[0].type.startsWith('image/')) {
+                // Reset all measurements when new image is loaded
+                measurements.length = 0;
+                referenceLine = null;
+                referencePixelLength = null;
+                referenceRealLength = null;
+                currentMode = 'none';
+                if (referenceLength) referenceLength.value = '';
                 currentImage = this.loadImageForScale(files[0], workspace, canvas, ctx, fileInfo, measurements);
             }
         });
@@ -497,43 +531,43 @@ class ToolsManager {
         // File input change
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
+                // Reset all measurements when new image is loaded
+                measurements.length = 0;
+                referenceLine = null;
+                referencePixelLength = null;
+                referenceRealLength = null;
+                currentMode = 'none';
+                if (referenceLength) referenceLength.value = '';
                 currentImage = this.loadImageForScale(e.target.files[0], workspace, canvas, ctx, fileInfo, measurements);
             }
         });
 
-        // Canvas mouse events
-        canvas.addEventListener('mousedown', (e) => {
+        // Unified start event handler (mouse and touch)
+        const handleStart = (e) => {
             if (currentMode === 'none' || !currentImage) return;
             
+            e.preventDefault(); // Prevent default touch behavior
             isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            startPoint = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
-        });
+            startPoint = getCanvasCoordinates(e, canvas);
+        };
 
-        canvas.addEventListener('mousemove', (e) => {
+        // Unified move event handler (mouse and touch)
+        const handleMove = (e) => {
             if (!isDrawing || !startPoint) return;
             
-            const rect = canvas.getBoundingClientRect();
-            const currentPoint = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
+            e.preventDefault(); // Prevent scrolling on touch
+            const currentPoint = getCanvasCoordinates(e, canvas);
 
-            this.redrawCanvas(canvas, ctx, currentImage, measurements);
+            this.redrawCanvas(canvas, ctx, currentImage, measurements, referenceLine);
             this.drawTempLine(ctx, startPoint, currentPoint);
-        });
+        };
 
-        canvas.addEventListener('mouseup', (e) => {
+        // Unified end event handler (mouse and touch)
+        const handleEnd = (e) => {
             if (!isDrawing || !startPoint) return;
             
-            const rect = canvas.getBoundingClientRect();
-            const endPoint = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
+            e.preventDefault();
+            const endPoint = getCanvasCoordinates(e, canvas);
 
             const pixelLength = Math.sqrt(
                 Math.pow(endPoint.x - startPoint.x, 2) + 
@@ -545,6 +579,14 @@ class ToolsManager {
                 const refLength = parseFloat(referenceLength.value);
                 if (refLength > 0) {
                     referenceRealLength = refLength;
+                    // Store reference line for redrawing
+                    referenceLine = {
+                        start: startPoint,
+                        end: endPoint,
+                        pixelLength: pixelLength,
+                        realLength: refLength,
+                        unit: referenceUnit.value
+                    };
                     alert(`Reference scale set: ${pixelLength.toFixed(2)} pixels = ${refLength} ${referenceUnit.value}`);
                 } else {
                     alert('Please enter a reference length first!');
@@ -562,9 +604,60 @@ class ToolsManager {
                 this.updateMeasurementsDisplay(measurementsDisplay, measurements);
             }
 
-            this.redrawCanvas(canvas, ctx, currentImage, measurements);
+            this.redrawCanvas(canvas, ctx, currentImage, measurements, referenceLine);
             isDrawing = false;
             startPoint = null;
+            currentMode = 'none'; // Reset mode after drawing
+            canvas.style.cursor = 'default';
+            canvas.classList.remove('drawing-mode', 'measuring-mode');
+            
+            // Reset button visual feedback
+            if (setReferenceBtn) setReferenceBtn.style.background = '';
+            if (measureBtn) measureBtn.style.background = '';
+        };
+
+        // Mouse events
+        canvas.addEventListener('mousedown', handleStart);
+        canvas.addEventListener('mousemove', handleMove);
+        canvas.addEventListener('mouseup', handleEnd);
+
+        // Touch events for mobile support
+        canvas.addEventListener('touchstart', handleStart, { passive: false });
+        canvas.addEventListener('touchmove', handleMove, { passive: false });
+        canvas.addEventListener('touchend', handleEnd, { passive: false });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Only work when canvas is focused or workspace is visible
+            if (!workspace || workspace.style.display === 'none') return;
+            
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key.toLowerCase()) {
+                    case 'r':
+                        e.preventDefault();
+                        if (setReferenceBtn) setReferenceBtn.click();
+                        break;
+                    case 'm':
+                        e.preventDefault();
+                        if (measureBtn) measureBtn.click();
+                        break;
+                    case 'c':
+                        e.preventDefault();
+                        if (clearBtn) clearBtn.click();
+                        break;
+                }
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                currentMode = 'none';
+                canvas.style.cursor = 'default';
+                canvas.classList.remove('drawing-mode', 'measuring-mode');
+                isDrawing = false;
+                startPoint = null;
+                
+                // Reset button visual feedback
+                if (setReferenceBtn) setReferenceBtn.style.background = '';
+                if (measureBtn) measureBtn.style.background = '';
+            }
         });
 
         // Button events
@@ -576,6 +669,12 @@ class ToolsManager {
                 }
                 currentMode = 'reference';
                 canvas.style.cursor = 'crosshair';
+                canvas.classList.add('drawing-mode');
+                canvas.classList.remove('measuring-mode');
+                
+                // Visual feedback
+                setReferenceBtn.style.background = 'rgba(255, 149, 0, 0.3)';
+                if (measureBtn) measureBtn.style.background = '';
             });
         }
 
@@ -591,18 +690,31 @@ class ToolsManager {
                 }
                 currentMode = 'measure';
                 canvas.style.cursor = 'crosshair';
+                canvas.classList.add('measuring-mode');
+                canvas.classList.remove('drawing-mode');
+                
+                // Visual feedback
+                if (measureBtn) measureBtn.style.background = 'rgba(0, 255, 255, 0.3)';
+                if (setReferenceBtn) setReferenceBtn.style.background = '';
             });
         }
 
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
                 measurements.length = 0;
+                referenceLine = null; // Clear reference line
                 referencePixelLength = null;
                 referenceRealLength = null;
                 currentMode = 'none';
                 canvas.style.cursor = 'default';
+                canvas.classList.remove('drawing-mode', 'measuring-mode');
                 if (referenceLength) referenceLength.value = '';
-                this.redrawCanvas(canvas, ctx, currentImage, measurements);
+                
+                // Reset button visual feedback
+                if (setReferenceBtn) setReferenceBtn.style.background = '';
+                if (measureBtn) measureBtn.style.background = '';
+                
+                this.redrawCanvas(canvas, ctx, currentImage, measurements, referenceLine);
                 this.updateMeasurementsDisplay(measurementsDisplay, measurements);
             });
         }
@@ -614,9 +726,11 @@ class ToolsManager {
                 if (fileInfo) fileInfo.innerHTML = '';
                 currentImage = null;
                 measurements.length = 0;
+                referenceLine = null; // Clear reference line
                 referencePixelLength = null;
                 referenceRealLength = null;
                 currentMode = 'none';
+                canvas.style.cursor = 'default';
             });
         }
     }
@@ -642,11 +756,30 @@ class ToolsManager {
         return img;
     }
 
-    redrawCanvas(canvas, ctx, image, measurements) {
+    redrawCanvas(canvas, ctx, image, measurements, referenceLine = null) {
         if (!image) return;
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(image, 0, 0);
+        
+        // Draw reference line first (in red/orange to distinguish from measurements)
+        if (referenceLine) {
+            ctx.strokeStyle = '#ff9500'; // Orange color for reference
+            ctx.lineWidth = 3; // Slightly thicker
+            ctx.setLineDash([10, 5]); // Dashed line to distinguish
+            ctx.beginPath();
+            ctx.moveTo(referenceLine.start.x, referenceLine.start.y);
+            ctx.lineTo(referenceLine.end.x, referenceLine.end.y);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset dash
+            
+            // Draw reference label
+            const midX = (referenceLine.start.x + referenceLine.end.x) / 2;
+            const midY = (referenceLine.start.y + referenceLine.end.y) / 2;
+            ctx.fillStyle = '#ff9500';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText(`REF: ${referenceLine.realLength} ${referenceLine.unit}`, midX + 5, midY - 10);
+        }
         
         // Draw measurements
         measurements.forEach((measurement, index) => {

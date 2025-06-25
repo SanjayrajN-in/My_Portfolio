@@ -604,9 +604,16 @@
 }
 
 /* Canvas cursor improvements for mobile */
-#scaleCanvas.drawing-mode,
+#scaleCanvas.drawing-mode {
+    cursor: crosshair;
+    border-color: rgba(255, 149, 0, 0.7) !important;
+    box-shadow: 0 0 10px rgba(255, 149, 0, 0.3);
+}
+
 #scaleCanvas.measuring-mode {
     cursor: crosshair;
+    border-color: rgba(0, 255, 255, 0.7) !important;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 }
 
 /* On mobile, use default cursor since crosshair may not be visible */
@@ -614,6 +621,39 @@
     #scaleCanvas.drawing-mode,
     #scaleCanvas.measuring-mode {
         cursor: default;
+    }
+    
+    /* Add visual indicator for active mode on mobile */
+    #scaleCanvas.drawing-mode::before {
+        content: "TAP TO SET REFERENCE";
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 149, 0, 0.9);
+        color: #000;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    #scaleCanvas.measuring-mode::before {
+        content: "TAP TO MEASURE";
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 255, 255, 0.9);
+        color: #000;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 10;
+        pointer-events: none;
     }
 }
 
