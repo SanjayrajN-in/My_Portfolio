@@ -115,16 +115,7 @@ class LoginPageManager {
                 
                 // Update auth system
                 if (window.authSystem) {
-                    // Clear current user first to ensure proper transition detection
-                    const wasLoggedIn = !!window.authSystem.currentUser;
                     window.authSystem.currentUser = data.user;
-                    
-                    // If transitioning from not logged in to logged in, clear game data
-                    if (!wasLoggedIn) {
-                        window.authSystem.clearLocalGameData();
-                        window.authSystem.refreshGameScores();
-                    }
-                    
                     window.authSystem.refreshAuthState();
                 }
                 
@@ -294,18 +285,9 @@ class LoginPageManager {
                 // Update auth system with user data
                 if (window.authSystem) {
                     if (data.user) {
-                        // Check if user was previously logged in
-                        const wasLoggedIn = !!window.authSystem.currentUser;
-                        
                         window.authSystem.currentUser = data.user;
                         // Store user data in sessionStorage for quick access
                         sessionStorage.setItem('currentUser', JSON.stringify(data.user));
-                        
-                        // If transitioning from not logged in to logged in, clear game data
-                        if (!wasLoggedIn) {
-                            window.authSystem.clearLocalGameData();
-                            window.authSystem.refreshGameScores();
-                        }
                     }
                     // Refresh auth state to update navigation
                     await window.authSystem.refreshAuthState();
