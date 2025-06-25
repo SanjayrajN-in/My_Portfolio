@@ -1196,8 +1196,17 @@ function initSnakeGame() {
             }
         }
         if (highScoreElement) {
-            const highScore = localStorage.getItem('snakeHighScore') || 0;
-            highScoreElement.textContent = Math.max(highScore, score);
+            // Check if user is logged in - if so, prioritize server-side scores
+            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+            
+            if (isLoggedIn) {
+                // When logged in, show current score or 0 (server scores shown in rankings)
+                highScoreElement.textContent = score;
+            } else {
+                // When not logged in, use local storage high score
+                const localHighScore = localStorage.getItem('snakeHighScore') || 0;
+                highScoreElement.textContent = Math.max(localHighScore, score);
+            }
         }
     }
     
@@ -1395,10 +1404,13 @@ function initSnakeGame() {
                         if (!(powerUpActive && powerUp === POWER_UPS.INVINCIBLE)) {
                             gameOver = true;
                             
-                            // Save high score
-                            const highScore = localStorage.getItem('snakeHighScore') || 0;
-                            if (score > highScore) {
-                                localStorage.setItem('snakeHighScore', score);
+                            // Save high score only if user is not logged in
+                            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+                            if (!isLoggedIn) {
+                                const highScore = localStorage.getItem('snakeHighScore') || 0;
+                                if (score > highScore) {
+                                    localStorage.setItem('snakeHighScore', score);
+                                }
                             }
                             
                             // Update pause button to show restart icon
@@ -1421,10 +1433,13 @@ function initSnakeGame() {
                     if (collision(newHead, snake) && !(powerUpActive && powerUp === POWER_UPS.INVINCIBLE)) {
                         gameOver = true;
                         
-                        // Save high score
-                        const highScore = localStorage.getItem('snakeHighScore') || 0;
-                        if (score > highScore) {
-                            localStorage.setItem('snakeHighScore', score);
+                        // Save high score only if user is not logged in
+                        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+                        if (!isLoggedIn) {
+                            const highScore = localStorage.getItem('snakeHighScore') || 0;
+                            if (score > highScore) {
+                                localStorage.setItem('snakeHighScore', score);
+                            }
                         }
                         
                         // Update pause button to show restart icon
@@ -1871,13 +1886,25 @@ function initTicTacToe() {
     }
     
     function saveScores() {
-        localStorage.setItem('tictactoe-scores', JSON.stringify(scores));
+        // Only save to localStorage if user is not logged in
+        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+        if (!isLoggedIn) {
+            localStorage.setItem('tictactoe-scores', JSON.stringify(scores));
+        }
     }
     
     function loadScores() {
-        const savedScores = localStorage.getItem('tictactoe-scores');
-        if (savedScores) {
-            scores = JSON.parse(savedScores);
+        // Check if user is logged in - if so, don't load local scores
+        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+        
+        if (!isLoggedIn) {
+            const savedScores = localStorage.getItem('tictactoe-scores');
+            if (savedScores) {
+                scores = JSON.parse(savedScores);
+            }
+        } else {
+            // When logged in, start with fresh scores (server handles persistence)
+            scores = { xWins: 0, oWins: 0, draws: 0 };
         }
     }
     
@@ -4043,12 +4070,21 @@ function initTetris() {
         if (levelElement) levelElement.textContent = level;
         if (livesElement) livesElement.textContent = lives;
         if (highScoreElement) {
-            const currentHighScore = parseInt(localStorage.getItem('brickBreakerHighScore') || '0');
-            if (score > currentHighScore) {
-                localStorage.setItem('brickBreakerHighScore', score.toString());
+            // Check if user is logged in - if so, prioritize server-side scores
+            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+            
+            if (isLoggedIn) {
+                // When logged in, show current score (server scores shown in rankings)
                 highScoreElement.textContent = score;
             } else {
-                highScoreElement.textContent = currentHighScore;
+                // When not logged in, use local storage high score
+                const currentHighScore = parseInt(localStorage.getItem('brickBreakerHighScore') || '0');
+                if (score > currentHighScore) {
+                    localStorage.setItem('brickBreakerHighScore', score.toString());
+                    highScoreElement.textContent = score;
+                } else {
+                    highScoreElement.textContent = currentHighScore;
+                }
             }
         }
         
