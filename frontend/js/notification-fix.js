@@ -86,8 +86,8 @@ function initNotificationSystem() {
 }
 
 function setupNotificationZIndex(notification) {
-    // Set z-index higher than navigation (which uses 999999, 1000001, 9999999)
-    notification.style.zIndex = '10000000'; // Higher than all navigation elements
+    // Set z-index lower than navigation to prevent overlap with hamburger menu
+    notification.style.zIndex = '999997'; // Lower than navigation elements (999999, 1000001)
     
     // Also update CSS to ensure proper layering
     notification.style.position = 'fixed';

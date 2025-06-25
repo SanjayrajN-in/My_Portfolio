@@ -9,7 +9,7 @@
 }
 
 .feature-notification.hidden {
-    transform: translateY(150%) translateX(-50%) !important;
+    transform: translateY(150%) !important;
     opacity: 0 !important;
     pointer-events: none !important;
 }
@@ -205,13 +205,15 @@
         width: 90% !important;
         max-width: 400px !important;
         border-radius: 12px !important;
-        bottom: 5px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        /* Position notification to avoid navigation conflicts */
+        bottom: 80px !important; /* Move up from bottom to avoid mobile nav */
+        left: 5% !important;
+        right: 5% !important;
+        transform: none !important; /* Remove centering transform */
         position: fixed !important;
-        margin-left: 0 !important; /* Reset any margin that might be causing offset */
-        right: auto !important; /* Ensure right property doesn't interfere */
-        z-index: 10000000 !important; /* Higher than navigation (999999, 1000001, 9999999) */
+        margin: 0 !important;
+        /* Lower z-index to ensure navigation takes priority */
+        z-index: 999997 !important;
     }
     
     .hero-scroll {
@@ -291,15 +293,17 @@
 /* Additional mobile portrait fix for feature notification */
 @media (max-width: 480px) and (orientation: portrait) {
     .feature-notification {
-        bottom: 5px !important;
+        /* Position notification to avoid navigation conflicts */
+        bottom: 80px !important; /* Move up from bottom to avoid mobile nav */
         width: 92% !important;
         padding: 12px 15px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        left: 4% !important;
+        right: 4% !important;
+        transform: none !important; /* Remove centering transform */
         position: fixed !important;
-        margin-left: 0 !important;
-        right: auto !important;
-        z-index: 10000000 !important; /* Consistent higher z-index */
+        margin: 0 !important;
+        /* Lower z-index to ensure navigation takes priority */
+        z-index: 999997 !important;
     }
     
     /* Add close button for notification */
@@ -312,16 +316,18 @@
 /* Additional mobile landscape fix for feature notification */
 @media (max-width: 896px) and (orientation: landscape) and (max-height: 500px) {
     .feature-notification {
-        bottom: 5px !important;
+        /* Position notification to avoid navigation conflicts */
+        bottom: 60px !important; /* Move up from bottom to avoid mobile nav */
         padding: 8px 12px !important;
         width: 85% !important;
         max-width: 450px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        left: 7.5% !important;
+        right: 7.5% !important;
+        transform: none !important; /* Remove centering transform */
         position: fixed !important;
-        margin-left: 0 !important;
-        right: auto !important;
-        z-index: 10000000 !important; /* Consistent higher z-index */
+        margin: 0 !important;
+        /* Lower z-index to ensure navigation takes priority */
+        z-index: 999997 !important;
     }
     
     .notification-text {

@@ -571,8 +571,8 @@ header.scrolled {
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     
-    /* Enhanced z-index for all cases */
-    z-index: 10000000 !important;
+    /* Proper z-index - below navigation but above content */
+    z-index: 999998 !important;
     
     /* Animation */
     animation: notificationPulse 3s ease-in-out infinite;
@@ -580,8 +580,7 @@ header.scrolled {
     
     /* Fixed positioning for all screen sizes */
     position: fixed !important;
-    z-index: 9999999 !important; /* Higher than everything else */
-    bottom: 5px !important;
+    bottom: 20px !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
@@ -651,7 +650,7 @@ header.scrolled {
 }
 
 .feature-notification.hidden {
-    transform: translateY(150%) translateX(-50%);
+    transform: translateY(150%);
     opacity: 0;
     pointer-events: none;
 }
@@ -1290,8 +1289,16 @@ header.scrolled {
     
     /* Mobile adjustments for special effects */
     .feature-notification {
-        margin: 20px 15px 80px; /* Added bottom margin to avoid overlap with scroll indicator */
+        /* Position notification to avoid navigation conflicts */
+        bottom: 80px !important; /* Move up from bottom to avoid mobile nav */
+        left: 15px !important;
+        right: 15px !important;
+        transform: none !important; /* Remove centering transform */
+        max-width: calc(100vw - 30px) !important;
+        margin: 0 !important;
         padding: 12px 15px;
+        /* Lower z-index on mobile to ensure nav takes priority */
+        z-index: 999997 !important;
     }
     
     .notification-text {
