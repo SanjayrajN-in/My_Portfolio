@@ -208,6 +208,8 @@ class LoginPageManager {
         } else {
             title.textContent = 'Create Account';
             subtitle.textContent = 'Join our community today';
+            // Show terms and conditions notification when switching to register
+            this.showNotification('By registering, you agree to our Terms and Conditions', 'info');
         }
 
         this.currentForm = tab;
@@ -240,6 +242,8 @@ class LoginPageManager {
             case 'register':
                 title.textContent = 'Create Account';
                 subtitle.textContent = 'Join our community today';
+                // Show terms and conditions notification when showing register form
+                this.showNotification('By registering, you agree to our Terms and Conditions', 'info');
                 break;
             case 'otp':
                 title.textContent = 'Verify Email';
