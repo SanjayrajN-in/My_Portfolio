@@ -857,7 +857,7 @@ function initMemoryGame() {
                     const highScoreElement = document.getElementById('memory-high-score');
                     if (highScoreElement) {
                         // Always update with the current score if it's higher or if it's a new high score
-                        const currentDisplayScore = parseInt(highScoreElement.textContent) || 0;
+                        const currentDisplayScore = parseInt(highScoreElement.textContent.replace('--', '0')) || 0;
                         const newHighScore = Math.max(gameState.score, currentDisplayScore);
                         highScoreElement.textContent = newHighScore;
                         
@@ -865,28 +865,35 @@ function initMemoryGame() {
                         localStorage.setItem('memoryMatchServerHighScore', newHighScore.toString());
                         localStorage.setItem('memoryMatchServerHighScoreTimestamp', Date.now().toString());
                         
-                        // Update from server after a delay to ensure database has been updated
-                        setTimeout(() => {
-                            if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
-                                window.gameScores.getUserRank('memoryMatch').then(userRank => {
-                                    const serverHighScore = userRank.score || newHighScore;
-                                    highScoreElement.textContent = Math.max(serverHighScore, newHighScore);
-                                    // Update cache
-                                    localStorage.setItem('memoryMatchServerHighScore', Math.max(serverHighScore, newHighScore).toString());
-                                    localStorage.setItem('memoryMatchServerHighScoreTimestamp', Date.now().toString());
-                                }).catch(err => {
-                                    console.warn('Could not fetch updated Memory Match high score:', err);
-                                });
-                            }
-                        }, 1000); // 1 second delay
+                        // Only update from server if the response indicates it wasn't a new high score
+                        // This prevents overriding a new high score with old server data
+                        if (response.isNewHighScore) {
+                            // New high score confirmed by server, no need to fetch again
+                            console.log('New Memory Match high score confirmed by server, keeping display as is');
+                        } else {
+                            // Not a new high score, update from server after delay
+                            setTimeout(() => {
+                                if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
+                                    window.gameScores.getUserRank('memoryMatch').then(userRank => {
+                                        const serverHighScore = userRank.score || newHighScore;
+                                        const finalScore = Math.max(serverHighScore, newHighScore);
+                                        highScoreElement.textContent = finalScore;
+                                        // Update cache
+                                        localStorage.setItem('memoryMatchServerHighScore', finalScore.toString());
+                                        localStorage.setItem('memoryMatchServerHighScoreTimestamp', Date.now().toString());
+                                    }).catch(err => {
+                                        console.warn('Could not fetch updated Memory Match high score:', err);
+                                    });
+                                }
+                            }, 1000);
+                        }
                     }
                     
-                    // Update rankings display immediately after score submission
+                    // Update rankings display - delay for all to ensure fresh data
                     if (window.gameScores.updateRankingsUI) {
-                        // Also delay rankings update to ensure fresh data
                         setTimeout(() => {
                             window.gameScores.updateRankingsUI('memoryMatch', 'memoryMatch-rankings-container', false);
-                        }, 1000);
+                        }, 1500); // Slightly longer delay for rankings
                     }
                 })
                 .catch(error => {
@@ -1291,7 +1298,7 @@ function initSnakeGame() {
                     const highScoreElement = document.getElementById('snake-high-score');
                     if (highScoreElement) {
                         // Always update with the current score if it's higher or if it's a new high score
-                        const currentDisplayScore = parseInt(highScoreElement.textContent) || 0;
+                        const currentDisplayScore = parseInt(highScoreElement.textContent.replace('--', '0')) || 0;
                         const newHighScore = Math.max(score, currentDisplayScore);
                         highScoreElement.textContent = newHighScore;
                         
@@ -1299,18 +1306,24 @@ function initSnakeGame() {
                         localStorage.setItem('snakeServerHighScore', newHighScore.toString());
                         localStorage.setItem('snakeServerHighScoreTimestamp', Date.now().toString());
                         
-                        // Update from server after a delay to ensure database has been updated
-                        setTimeout(() => {
-                            updateServerHighScore(highScoreElement, true);
-                        }, 1000); // 1 second delay
+                        // Only update from server if the response indicates it wasn't a new high score
+                        // This prevents overriding a new high score with old server data
+                        if (response.isNewHighScore) {
+                            // New high score confirmed by server, no need to fetch again
+                            console.log('New high score confirmed by server, keeping display as is');
+                        } else {
+                            // Not a new high score, update from server after delay
+                            setTimeout(() => {
+                                updateServerHighScore(highScoreElement, true);
+                            }, 1000);
+                        }
                     }
                     
-                    // Update rankings display immediately after score submission
+                    // Update rankings display - delay for all to ensure fresh data
                     if (window.gameScores.updateRankingsUI) {
-                        // Also delay rankings update to ensure fresh data
                         setTimeout(() => {
                             window.gameScores.updateRankingsUI('snake', 'snake-rankings-container', false);
-                        }, 1000);
+                        }, 1500); // Slightly longer delay for rankings
                     }
                 })
                 .catch(error => {
@@ -1325,10 +1338,14 @@ function initSnakeGame() {
             if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
                 const userRank = await window.gameScores.getUserRank('snake');
                 const serverHighScore = userRank.score || 0;
-                highScoreElement.textContent = serverHighScore;
+                
+                // Only update display if server score is higher than current display
+                const currentDisplayScore = parseInt(highScoreElement.textContent.replace('--', '0')) || 0;
+                const finalHighScore = Math.max(serverHighScore, currentDisplayScore);
+                highScoreElement.textContent = finalHighScore;
                 
                 // Cache the high score for immediate display next time
-                localStorage.setItem('snakeServerHighScore', serverHighScore.toString());
+                localStorage.setItem('snakeServerHighScore', finalHighScore.toString());
                 localStorage.setItem('snakeServerHighScoreTimestamp', Date.now().toString());
             } else {
                 // Fallback to local storage if gameScores not available
@@ -4264,10 +4281,14 @@ function initTetris() {
             if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
                 const userRank = await window.gameScores.getUserRank('brickBreaker');
                 const serverHighScore = userRank.score || 0;
-                highScoreElement.textContent = serverHighScore;
+                
+                // Only update display if server score is higher than current display
+                const currentDisplayScore = parseInt(highScoreElement.textContent.replace('--', '0')) || 0;
+                const finalHighScore = Math.max(serverHighScore, currentDisplayScore);
+                highScoreElement.textContent = finalHighScore;
                 
                 // Cache the high score for immediate display next time
-                localStorage.setItem('brickBreakerServerHighScore', serverHighScore.toString());
+                localStorage.setItem('brickBreakerServerHighScore', finalHighScore.toString());
                 localStorage.setItem('brickBreakerServerHighScoreTimestamp', Date.now().toString());
             } else {
                 // Fallback to local storage if gameScores not available
@@ -4409,7 +4430,7 @@ function initTetris() {
                         const highScoreElement = document.getElementById('brick-high-score');
                         if (highScoreElement) {
                             // Always update with the current score if it's higher or if it's a new high score
-                            const currentDisplayScore = parseInt(highScoreElement.textContent) || 0;
+                            const currentDisplayScore = parseInt(highScoreElement.textContent.replace('--', '0')) || 0;
                             const newHighScore = Math.max(score, currentDisplayScore);
                             highScoreElement.textContent = newHighScore;
                             
@@ -4417,18 +4438,24 @@ function initTetris() {
                             localStorage.setItem('brickBreakerServerHighScore', newHighScore.toString());
                             localStorage.setItem('brickBreakerServerHighScoreTimestamp', Date.now().toString());
                             
-                            // Update from server after a delay to ensure database has been updated
-                            setTimeout(() => {
-                                updateBrickBreakerServerHighScore(highScoreElement);
-                            }, 1000); // 1 second delay
+                            // Only update from server if the response indicates it wasn't a new high score
+                            // This prevents overriding a new high score with old server data
+                            if (response.isNewHighScore) {
+                                // New high score confirmed by server, no need to fetch again
+                                console.log('New Brick Breaker high score confirmed by server, keeping display as is');
+                            } else {
+                                // Not a new high score, update from server after delay
+                                setTimeout(() => {
+                                    updateBrickBreakerServerHighScore(highScoreElement);
+                                }, 1000);
+                            }
                         }
                         
-                        // Update rankings display immediately after score submission
+                        // Update rankings display - delay for all to ensure fresh data
                         if (window.gameScores.updateRankingsUI) {
-                            // Also delay rankings update to ensure fresh data
                             setTimeout(() => {
                                 window.gameScores.updateRankingsUI('brickBreaker', 'brickBreaker-rankings-container', false);
-                            }, 1000);
+                            }, 1500); // Slightly longer delay for rankings
                         }
                     })
                     .catch(error => {
