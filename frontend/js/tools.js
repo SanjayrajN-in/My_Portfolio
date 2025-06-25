@@ -226,7 +226,20 @@ class ToolsManager {
         console.log('UltraPDFCompressor available:', typeof UltraPDFCompressor !== 'undefined');
         
         try {
-            if (typeof FreeAPIPDFCompressor !== 'undefined') {
+            if (typeof ILovePDFCompressor !== 'undefined') {
+                this.ultraCompressor = new ILovePDFCompressor();
+                console.log('iLovePDF compressor initialized successfully');
+                
+                // Check if API keys are configured
+                if (!this.ultraCompressor.isConfigured()) {
+                    const config = this.ultraCompressor.getConfigInstructions();
+                    console.warn('iLovePDF API keys not configured:', config);
+                    
+                    // Show configuration notice
+                    this.showConfigurationNotice(config);
+                }
+                
+            } else if (typeof FreeAPIPDFCompressor !== 'undefined') {
                 this.ultraCompressor = new FreeAPIPDFCompressor();
                 console.log('FREE API PDF compressor initialized successfully');
                 
@@ -437,27 +450,29 @@ class ToolsManager {
 
         const features = {
             aggressive: [
-                'Maximum compression (30% image quality, 72 DPI)',
-                'Remove metadata and unnecessary elements',
-                'Multiple API fallbacks for reliability',
-                'Server-side processing for optimal results',
-                'ConvertAPI: 1500 compressions/month',
-                'PDF24 Tools: Rate limited usage',
-                'PDF.co: 300 compressions/month'
+                'iLovePDF Extreme compression (maximum reduction)',
+                'Significant file size reduction with quality trade-off',
+                'Best for web distribution and storage',
+                'Server-side processing via iLovePDF API',
+                'Real compression similar to desktop tools',
+                'Free tier: 250 files/month',
+                'Professional-grade compression algorithms'
             ],
             moderate: [
-                'Balanced compression (50% image quality, 150 DPI)',
-                'Remove metadata, preserve document features',
-                'Automatic API fallback system',
-                'Good compression with quality retention',
-                'Suitable for regular document processing'
+                'iLovePDF Recommended compression (balanced)',
+                'Optimal balance between size and quality',
+                'Good compression with readable text',
+                'Suitable for most business documents',
+                'Preserves important visual elements',
+                'Industry-standard compression level'
             ],
             conservative: [
-                'Quality-focused compression (70% image quality, 300 DPI)',
-                'Preserve all document features and metadata',
-                'Minimal compression for important documents',
-                'Uses most reliable API endpoints first',
-                'Safe processing for professional documents'
+                'iLovePDF Low compression (quality preservation)',
+                'Minimal compression with high quality retention',
+                'Safe for important documents and presentations',
+                'Preserves all visual fidelity',
+                'Best for archival and professional use',
+                'Smallest compression ratio but highest quality'
             ]
         };
 
@@ -1188,6 +1203,30 @@ class ToolsManager {
                 }, 300);
             }
         }, displayTime);
+    }
+
+    showConfigurationNotice(config) {
+        const compressionControls = document.getElementById('pdfCompressionControls');
+        if (compressionControls) {
+            const notice = document.createElement('div');
+            notice.className = 'configuration-notice';
+            notice.innerHTML = `
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                    <h4 style="margin: 0 0 10px 0; color: #856404;">
+                        <i class="fas fa-key"></i> API Configuration Required
+                    </h4>
+                    <p style="margin: 0 0 10px 0; color: #856404;">${config.message}</p>
+                    <ul style="margin: 0 0 10px 0; color: #856404; padding-left: 20px;">
+                        ${config.steps.map(step => `<li>${step}</li>`).join('')}
+                    </ul>
+                    <p style="margin: 0; font-size: 0.9em; color: #856404;">
+                        <strong>Free Tier:</strong> ${config.limits.free} | 
+                        <strong>Max File Size:</strong> ${config.limits.fileSize}
+                    </p>
+                </div>
+            `;
+            compressionControls.prepend(notice);
+        }
     }
 
     // Utility functions
