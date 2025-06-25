@@ -172,6 +172,42 @@
         },
 
         /**
+         * Refresh all game displays after login
+         * Clears local scores and updates from server
+         */
+        refreshAllGameDisplays: function() {
+            console.log('🎮 Refreshing all game displays after login');
+            
+            // Update all game rankings
+            const gameContainers = [
+                { game: 'snake', container: 'snake-rankings-container' },
+                { game: 'memoryMatch', container: 'memoryMatch-rankings-container' },
+                { game: 'brickBreaker', container: 'brickBreaker-rankings-container' }
+            ];
+            
+            gameContainers.forEach(({ game, container }) => {
+                const containerElement = document.getElementById(container);
+                if (containerElement) {
+                    this.updateRankingsUI(game, container);
+                }
+            });
+            
+            // Force refresh Snake high score display
+            const snakeHighScoreElement = document.getElementById('snake-high-score');
+            if (snakeHighScoreElement) {
+                this.getUserRank('snake').then(userRank => {
+                    if (userRank && userRank.score) {
+                        snakeHighScoreElement.textContent = userRank.score;
+                    } else {
+                        snakeHighScoreElement.textContent = '0';
+                    }
+                }).catch(() => {
+                    snakeHighScoreElement.textContent = '0';
+                });
+            }
+        },
+
+        /**
          * Update the rankings UI for a game
          * @param {string} gameName - Name of the game
          * @param {string} containerId - ID of the container element

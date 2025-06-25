@@ -728,10 +728,17 @@ function initMemoryGame() {
     function loadProgress() {
         const saved = localStorage.getItem('memoryGameProgress');
         if (saved) {
-            const progress = JSON.parse(saved);
-            gameState.level = progress.level || 1;
-            // Don't restore score as it's per-session
-            return progress;
+            try {
+                const progress = JSON.parse(saved);
+                gameState.level = progress.level || 1;
+                // Don't restore score as it's per-session
+                return progress;
+            } catch (error) {
+                console.log('Error parsing saved memory game progress:', error);
+                // Clear corrupted data
+                localStorage.removeItem('memoryGameProgress');
+                return null;
+            }
         }
         return null;
     }
@@ -1196,8 +1203,22 @@ function initSnakeGame() {
             }
         }
         if (highScoreElement) {
-            const highScore = localStorage.getItem('snakeHighScore') || 0;
-            highScoreElement.textContent = Math.max(highScore, score);
+            const localHighScore = localStorage.getItem('snakeHighScore') || 0;
+            let displayHighScore = Math.max(localHighScore, score);
+            
+            // If user is logged in, try to get server high score
+            if (window.gameScores && window.authSystem && window.authSystem.currentUser) {
+                window.gameScores.getUserRank('snake').then(userRank => {
+                    if (userRank && userRank.score) {
+                        displayHighScore = Math.max(displayHighScore, userRank.score);
+                        highScoreElement.textContent = displayHighScore;
+                    }
+                }).catch(error => {
+                    console.log('Could not fetch server high score:', error);
+                });
+            }
+            
+            highScoreElement.textContent = displayHighScore;
         }
     }
     

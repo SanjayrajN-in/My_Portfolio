@@ -277,8 +277,114 @@ class AuthSystem {
 
     // Method to refresh auth state (useful after login)
     async refreshAuthState() {
+        const wasLoggedIn = !!this.currentUser;
         this.initialized = false;
         await this.init();
+        
+        // If user just logged in (transition from not logged in to logged in)
+        const isNowLoggedIn = !!this.currentUser;
+        if (!wasLoggedIn && isNowLoggedIn) {
+            this.clearLocalGameData();
+            this.refreshGameScores();
+        }
+    }
+
+    // Clear all local game data when user logs in
+    clearLocalGameData() {
+        console.log('🎮 Clearing local game data for logged-in user');
+        
+        // Clear Snake game high score
+        localStorage.removeItem('snakeHighScore');
+        
+        // Clear Memory game progress
+        localStorage.removeItem('memoryGameProgress');
+        
+        // Clear Tic Tac Toe scores (if any)
+        localStorage.removeItem('ticTacToeScores');
+        
+        // Clear any other game-related localStorage items
+        const gameKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (
+                key.includes('game') || 
+                key.includes('score') || 
+                key.includes('highScore') ||
+                key.includes('bestScore') ||
+                key.includes('tetris') ||
+                key.includes('brickBreaker')
+            )) {
+                gameKeys.push(key);
+            }
+        }
+        
+        // Remove all game-related keys
+        gameKeys.forEach(key => {
+            localStorage.removeItem(key);
+            console.log(`🗑️ Removed local game data: ${key}`);
+        });
+        
+        // Show notification if any game data was cleared
+        if (gameKeys.length > 0) {
+            setTimeout(() => {
+                this.showNotification('Local game scores cleared. Loading your online scores...', 'info', 3000);
+            }, 2000);
+        }
+    }
+
+    // Refresh game scores from server
+    refreshGameScores() {
+        console.log('🔄 Refreshing game scores from server');
+        
+        // Use the centralized refresh method if available
+        if (window.gameScores && typeof window.gameScores.refreshAllGameDisplays === 'function') {
+            window.gameScores.refreshAllGameDisplays();
+        } else {
+            // Fallback to individual updates
+            if (window.gameScores && typeof window.gameScores.updateRankingsUI === 'function') {
+                // Update Snake game rankings
+                const snakeContainer = document.getElementById('snake-rankings-container');
+                if (snakeContainer) {
+                    window.gameScores.updateRankingsUI('snake', 'snake-rankings-container');
+                }
+                
+                // Update Memory Match game rankings
+                const memoryContainer = document.getElementById('memoryMatch-rankings-container');
+                if (memoryContainer) {
+                    window.gameScores.updateRankingsUI('memoryMatch', 'memoryMatch-rankings-container');
+                }
+                
+                // Update Brick Breaker game rankings
+                const brickBreakerContainer = document.getElementById('brickBreaker-rankings-container');
+                if (brickBreakerContainer) {
+                    window.gameScores.updateRankingsUI('brickBreaker', 'brickBreaker-rankings-container');
+                }
+            }
+        }
+        
+        // Force refresh game displays if games are currently active
+        this.refreshActiveGameDisplays();
+    }
+
+    // Refresh displays of currently active games
+    refreshActiveGameDisplays() {
+        // Refresh Snake game high score display
+        const snakeHighScoreElement = document.getElementById('snake-high-score');
+        if (snakeHighScoreElement) {
+            // Reset to 0 since we cleared local storage
+            snakeHighScoreElement.textContent = '0';
+        }
+        
+        // Refresh Memory game if it's active
+        if (window.memoryGameInstance && window.memoryGameInstance.gameState) {
+            // Reset any local progress display
+            const memoryLevelSpan = document.getElementById('memory-level');
+            if (memoryLevelSpan) {
+                memoryLevelSpan.textContent = '1';
+            }
+        }
+        
+        console.log('✅ Game displays refreshed');
     }
 
     // Create global notification container
