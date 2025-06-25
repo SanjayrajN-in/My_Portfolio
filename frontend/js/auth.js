@@ -184,6 +184,45 @@ class AuthSystem {
         console.log('✅ Force logout completed');
     }
     
+    // Debug method to check game data state
+    debugGameDataState() {
+        console.log('🎮 Game Data Debug Information:');
+        console.log('- Snake High Score (localStorage):', localStorage.getItem('snakeHighScore'));
+        console.log('- Memory Game Progress (localStorage):', localStorage.getItem('memoryGameProgress'));
+        console.log('- All localStorage keys:', Object.keys(localStorage));
+        
+        // Check current display values
+        const snakeHighScore = document.getElementById('snake-high-score');
+        if (snakeHighScore) {
+            console.log('- Snake High Score Display:', snakeHighScore.textContent);
+        }
+        
+        const memoryLevel = document.getElementById('memory-level');
+        if (memoryLevel) {
+            console.log('- Memory Game Level Display:', memoryLevel.textContent);
+        }
+        
+        // Check if user is logged in
+        console.log('- User Logged In:', !!this.currentUser);
+        console.log('- Current User:', this.currentUser?.name || this.currentUser?.email || 'None');
+        
+        return {
+            localStorage: {
+                snakeHighScore: localStorage.getItem('snakeHighScore'),
+                memoryGameProgress: localStorage.getItem('memoryGameProgress'),
+                allKeys: Object.keys(localStorage)
+            },
+            displays: {
+                snakeHighScore: snakeHighScore?.textContent,
+                memoryLevel: memoryLevel?.textContent
+            },
+            user: {
+                loggedIn: !!this.currentUser,
+                name: this.currentUser?.name || this.currentUser?.email
+            }
+        };
+    }
+
     // Debug method to check auth state
     debugAuthState() {
         console.log('🔍 Auth Debug Information:');
@@ -277,59 +316,99 @@ class AuthSystem {
 
     // Method to refresh auth state (useful after login)
     async refreshAuthState() {
-        const wasLoggedIn = !!this.currentUser;
         this.initialized = false;
         await this.init();
+    }
+
+    // Method to handle successful login - clears local game data
+    handleSuccessfulLogin(userData) {
+        console.log('🔑 Handling successful login for user:', userData?.name || userData?.email);
         
-        // If user just logged in (transition from not logged in to logged in)
-        const isNowLoggedIn = !!this.currentUser;
-        if (!wasLoggedIn && isNowLoggedIn) {
+        // Store the previous login state
+        const wasLoggedIn = !!this.currentUser;
+        
+        // Update user data
+        this.currentUser = userData;
+        sessionStorage.setItem('currentUser', JSON.stringify(userData));
+        
+        // If user was not previously logged in, clear local game data
+        if (!wasLoggedIn) {
+            console.log('🎮 User just logged in - clearing local game data');
             this.clearLocalGameData();
-            this.refreshGameScores();
+            
+            // Delay the score refresh to ensure everything is properly initialized
+            setTimeout(() => {
+                this.refreshGameScores();
+            }, 1000);
+        } else {
+            console.log('ℹ️ User was already logged in - keeping game data');
         }
+        
+        // Refresh auth state to update navigation
+        this.refreshAuthState();
     }
 
     // Clear all local game data when user logs in
     clearLocalGameData() {
-        console.log('🎮 Clearing local game data for logged-in user');
+        console.log('🎮 Starting to clear local game data for logged-in user');
+        console.log('📊 Current localStorage contents:', Object.keys(localStorage));
         
-        // Clear Snake game high score
-        localStorage.removeItem('snakeHighScore');
+        // List of specific game-related keys to clear
+        const specificGameKeys = [
+            'snakeHighScore',
+            'memoryGameProgress', 
+            'ticTacToeScores',
+            'tetrisHighScore',
+            'brickBreakerHighScore'
+        ];
         
-        // Clear Memory game progress
-        localStorage.removeItem('memoryGameProgress');
+        // Clear specific known game keys
+        specificGameKeys.forEach(key => {
+            if (localStorage.getItem(key)) {
+                localStorage.removeItem(key);
+                console.log(`🗑️ Removed specific game data: ${key}`);
+            }
+        });
         
-        // Clear Tic Tac Toe scores (if any)
-        localStorage.removeItem('ticTacToeScores');
-        
-        // Clear any other game-related localStorage items
+        // Find and clear any other game-related localStorage items
         const gameKeys = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key && (
-                key.includes('game') || 
-                key.includes('score') || 
-                key.includes('highScore') ||
-                key.includes('bestScore') ||
-                key.includes('tetris') ||
-                key.includes('brickBreaker')
+                key.toLowerCase().includes('game') || 
+                key.toLowerCase().includes('score') || 
+                key.toLowerCase().includes('highscore') ||
+                key.toLowerCase().includes('bestscore') ||
+                key.toLowerCase().includes('tetris') ||
+                key.toLowerCase().includes('brickbreaker') ||
+                key.toLowerCase().includes('snake') ||
+                key.toLowerCase().includes('memory')
             )) {
-                gameKeys.push(key);
+                // Don't remove auth-related items
+                if (!key.includes('token') && !key.includes('User') && !key.includes('auth')) {
+                    gameKeys.push(key);
+                }
             }
         }
         
-        // Remove all game-related keys
+        // Remove all found game-related keys
         gameKeys.forEach(key => {
             localStorage.removeItem(key);
-            console.log(`🗑️ Removed local game data: ${key}`);
+            console.log(`🗑️ Removed additional game data: ${key}`);
         });
         
+        const totalCleared = specificGameKeys.length + gameKeys.length;
+        console.log(`✅ Cleared ${totalCleared} game-related localStorage items`);
+        
         // Show notification if any game data was cleared
-        if (gameKeys.length > 0) {
+        if (totalCleared > 0) {
             setTimeout(() => {
-                this.showNotification('Local game scores cleared. Loading your online scores...', 'info', 3000);
-            }, 2000);
+                this.showNotification('Local game scores cleared. Loading your online scores...', 'info', 4000);
+            }, 1500);
         }
+        
+        // Force refresh any visible game score displays immediately
+        this.forceRefreshGameDisplays();
     }
 
     // Refresh game scores from server
@@ -364,6 +443,36 @@ class AuthSystem {
         
         // Force refresh game displays if games are currently active
         this.refreshActiveGameDisplays();
+    }
+
+    // Force refresh game displays immediately after clearing data
+    forceRefreshGameDisplays() {
+        console.log('🔄 Force refreshing game displays immediately');
+        
+        // Reset Snake game high score display
+        const snakeHighScoreElement = document.getElementById('snake-high-score');
+        if (snakeHighScoreElement) {
+            snakeHighScoreElement.textContent = '0';
+            console.log('🐍 Reset Snake high score display to 0');
+        }
+        
+        // Reset Memory game level display
+        const memoryLevelSpan = document.getElementById('memory-level');
+        if (memoryLevelSpan) {
+            memoryLevelSpan.textContent = '1';
+            console.log('🧠 Reset Memory game level to 1');
+        }
+        
+        // Reset any other visible game score elements
+        const scoreElements = document.querySelectorAll('[id*="score"], [id*="level"], [id*="high"]');
+        scoreElements.forEach(element => {
+            if (element.id.includes('game') || element.id.includes('snake') || element.id.includes('memory')) {
+                const currentValue = element.textContent;
+                if (currentValue && currentValue !== '0' && currentValue !== '1') {
+                    console.log(`🎮 Found score element ${element.id} with value: ${currentValue}`);
+                }
+            }
+        });
     }
 
     // Refresh displays of currently active games
@@ -903,7 +1012,19 @@ class AuthSystem {
             window.authSystem = authSystem;
             window.authSystemInitialized = true;
             
+            // Make debug methods globally available for testing
+            window.debugGameData = () => authSystem.debugGameDataState();
+            window.clearGameData = () => authSystem.clearLocalGameData();
+            window.refreshGameScores = () => authSystem.refreshGameScores();
+            window.testLogin = () => {
+                // Simulate a login for testing
+                console.log('🧪 Testing login simulation...');
+                const testUser = { name: 'Test User', email: 'test@example.com' };
+                authSystem.handleSuccessfulLogin(testUser);
+            };
+            
             console.log('🚀 Auth system initialized (singleton)');
+            console.log('🔧 Debug methods available: debugGameData(), clearGameData(), refreshGameScores()');
         }
     };
     

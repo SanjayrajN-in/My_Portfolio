@@ -115,17 +115,7 @@ class LoginPageManager {
                 
                 // Update auth system
                 if (window.authSystem) {
-                    // Clear current user first to ensure proper transition detection
-                    const wasLoggedIn = !!window.authSystem.currentUser;
-                    window.authSystem.currentUser = data.user;
-                    
-                    // If transitioning from not logged in to logged in, clear game data
-                    if (!wasLoggedIn) {
-                        window.authSystem.clearLocalGameData();
-                        window.authSystem.refreshGameScores();
-                    }
-                    
-                    window.authSystem.refreshAuthState();
+                    window.authSystem.handleSuccessfulLogin(data.user);
                 }
                 
                 this.showNotification('Login successful! Redirecting...', 'success');
@@ -294,29 +284,17 @@ class LoginPageManager {
                 // Update auth system with user data
                 if (window.authSystem) {
                     if (data.user) {
-                        // Check if user was previously logged in
-                        const wasLoggedIn = !!window.authSystem.currentUser;
+                        window.authSystem.handleSuccessfulLogin(data.user);
                         
-                        window.authSystem.currentUser = data.user;
-                        // Store user data in sessionStorage for quick access
-                        sessionStorage.setItem('currentUser', JSON.stringify(data.user));
-                        
-                        // If transitioning from not logged in to logged in, clear game data
-                        if (!wasLoggedIn) {
-                            window.authSystem.clearLocalGameData();
-                            window.authSystem.refreshGameScores();
-                        }
+                        // Force navigation refresh to ensure UI updates
+                        setTimeout(() => {
+                            window.authSystem.forceRefreshNavigation();
+                        }, 100);
+                        // Additional force refresh after a longer delay
+                        setTimeout(() => {
+                            window.authSystem.forceRefreshNavigation();
+                        }, 1000);
                     }
-                    // Refresh auth state to update navigation
-                    await window.authSystem.refreshAuthState();
-                    // Force navigation refresh to ensure UI updates
-                    setTimeout(() => {
-                        window.authSystem.forceRefreshNavigation();
-                    }, 100);
-                    // Additional force refresh after a longer delay
-                    setTimeout(() => {
-                        window.authSystem.forceRefreshNavigation();
-                    }, 1000);
                 } else {
                     console.warn('Auth system not available during login');
                 }
