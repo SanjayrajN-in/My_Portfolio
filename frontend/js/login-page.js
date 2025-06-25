@@ -82,6 +82,23 @@ class LoginPageManager {
             
             if (googleRegisterBtn) {
                 googleRegisterBtn.addEventListener('click', () => {
+                    // Check if terms and conditions are accepted
+                    const agreeTermsCheckbox = document.getElementById('agreeTerms');
+                    if (!agreeTermsCheckbox || !agreeTermsCheckbox.checked) {
+                        this.showNotification('Please accept the Terms of Service and Privacy Policy to continue with registration.', 'warning');
+                        // Highlight the checkbox to draw attention
+                        if (agreeTermsCheckbox) {
+                            const checkboxContainer = agreeTermsCheckbox.closest('.checkbox-container');
+                            if (checkboxContainer) {
+                                checkboxContainer.style.animation = 'shake 0.5s ease-in-out';
+                                setTimeout(() => {
+                                    checkboxContainer.style.animation = '';
+                                }, 500);
+                            }
+                        }
+                        return;
+                    }
+                    
                     // Check if there's a pending Google credential from failed login
                     const pendingCredential = sessionStorage.getItem('pendingGoogleCredential');
                     if (pendingCredential) {
@@ -187,12 +204,10 @@ class LoginPageManager {
                 // Switch to register tab and show a helpful message
                 setTimeout(() => {
                     this.switchTab('register');
-                    this.showNotification('Please complete your registration using your Google account', 'info');
+                    this.showNotification('Please accept the Terms of Service and Privacy Policy, then click "Sign up with Google" to complete your registration', 'info');
                     
-                    // Auto-trigger Google registration after switching tabs
-                    setTimeout(() => {
-                        this.handleGoogleRegistration(response.credential);
-                    }, 1000);
+                    // Don't auto-trigger Google registration - let user accept terms first
+                    // The credential is already stored in sessionStorage for when they click the button
                 }, 1500);
             } else {
                 this.showNotification('Failed to complete Google login', 'error');
@@ -211,6 +226,23 @@ class LoginPageManager {
     async handleGoogleRegistration(credential) {
         if (!credential) {
             this.showNotification('Google credential not available for registration', 'error');
+            return;
+        }
+
+        // Check if terms and conditions are accepted
+        const agreeTermsCheckbox = document.getElementById('agreeTerms');
+        if (!agreeTermsCheckbox || !agreeTermsCheckbox.checked) {
+            this.showNotification('Please accept the Terms of Service and Privacy Policy to complete your registration.', 'warning');
+            // Highlight the checkbox to draw attention
+            if (agreeTermsCheckbox) {
+                const checkboxContainer = agreeTermsCheckbox.closest('.checkbox-container');
+                if (checkboxContainer) {
+                    checkboxContainer.style.animation = 'shake 0.5s ease-in-out';
+                    setTimeout(() => {
+                        checkboxContainer.style.animation = '';
+                    }, 500);
+                }
+            }
             return;
         }
 

@@ -537,12 +537,7 @@
                 };
             }
             
-            if (googleRegisterBtn) {
-                googleRegisterBtn.onclick = function(e) {
-                    e.preventDefault();
-                    window.location.href = BASE_URL + '/api/auth/google/register';
-                };
-            }
+            // Google register button is now handled by login-page.js with terms validation
             
             // Setup tabs
             const loginTab = document.getElementById('loginTab');
