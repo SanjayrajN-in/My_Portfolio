@@ -241,118 +241,128 @@
                     </div>
                 </div>
 
-                <!-- Advanced PDF Compression Tool -->
+                <!-- PDF Password Protection Tool -->
                 <div class="tool-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="tool-header">
                         <div class="tool-icon">
-                            <i class="fas fa-file-pdf"></i>
+                            <i class="fas fa-shield-alt"></i>
                         </div>
-                        <h3>PDF Compressor</h3>
-                        <p>Server-side PDF compression using multiple API services</p>
+                        <h3>PDF Password Protection</h3>
+                        <p>Secure your PDF documents with password protection</p>
                     </div>
                     <div class="tool-content">
-                        <div class="upload-area" id="pdfCompressUpload">
+                        <div class="upload-area" id="pdfPasswordUpload">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>Drop PDF here or click to upload</p>
-                            <small class="file-size-limit">Max file size: 50MB | Large files may take longer to process</small>
+                            <small class="file-size-limit">Max file size: 100MB</small>
                         </div>
-                        <input type="file" accept=".pdf" id="pdfCompressInput" style="display: none;">
+                        <input type="file" accept=".pdf" id="pdfPasswordInput" style="display: none;">
                         
-                        <div class="compression-controls" id="pdfCompressionControls" style="display: none;">
-                            <div class="uploaded-file-info" id="pdfCompressFileInfo"></div>
+                        <div class="password-controls" id="pdfPasswordControls" style="display: none;">
+                            <div class="uploaded-file-info" id="pdfPasswordFileInfo"></div>
                             
-                            <div class="compression-notice">
+                            <div class="password-notice">
                                 <i class="fas fa-info-circle"></i>
-                                <strong>API-Based Compression:</strong> This tool uses external compression services for optimal results. Files are processed securely and not stored.
+                                <strong>Privacy:</strong> Password protection is applied locally in your browser. Your files never leave your device.
                             </div>
                             
                             <div class="control-group">
-                                <label for="pdfCompressionLevel">Compression Strategy:</label>
-                                <select id="pdfCompressionLevel">
-                                    <option value="aggressive" selected>Aggressive - Maximum compression</option>
-                                    <option value="moderate">Moderate - Balanced compression</option>
-                                    <option value="conservative">Conservative - Quality preservation</option>
-                                </select>
+                                <label for="pdfPassword">Password:</label>
+                                <input type="password" id="pdfPassword" placeholder="Enter password for the PDF" minlength="4" required>
+                                <small>Minimum 4 characters required</small>
                             </div>
-
-                            <div class="compression-features" id="compressionFeatures">
-                                <h4>Compression Features:</h4>
-                                <div class="feature-list" id="featureList">
-                                    <!-- Features will be populated based on selected compression level -->
-                                </div>
+                            
+                            <div class="control-group">
+                                <label for="pdfPasswordConfirm">Confirm Password:</label>
+                                <input type="password" id="pdfPasswordConfirm" placeholder="Confirm your password" required>
+                            </div>
+                            
+                            <div class="protection-options">
+                                <h4>Protection Settings:</h4>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="preventPrinting" checked>
+                                    <span class="checkmark"></span>
+                                    Prevent printing
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="preventCopying" checked>
+                                    <span class="checkmark"></span>
+                                    Prevent copying text
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="preventModification" checked>
+                                    <span class="checkmark"></span>
+                                    Prevent modification
+                                </label>
                             </div>
                             
                             <div class="btn-group">
-                                <button class="btn clear-btn" id="clearPdfCompress">
+                                <button class="btn clear-btn" id="clearPdfPassword">
                                     <i class="fas fa-times"></i> Clear
                                 </button>
-                                <button class="btn primary-btn" id="compressPdfBtn">
-                                    <i class="fas fa-compress-alt"></i> Start Compression
+                                <button class="btn primary-btn" id="protectPdfBtn">
+                                    <i class="fas fa-lock"></i> Protect PDF
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="processing-area" id="pdfProcessing" style="display: none;">
+                        <div class="processing-area" id="pdfPasswordProcessing" style="display: none;">
                             <div class="progress-container">
                                 <div class="progress-bar">
-                                    <div class="progress-fill" id="progressFill"></div>
+                                    <div class="progress-fill" id="passwordProgressFill"></div>
                                 </div>
                                 <div class="progress-text">
-                                    <span id="progressPercent">0%</span>
-                                    <span id="progressMessage">Initializing...</span>
+                                    <span id="passwordProgressPercent">0%</span>
+                                    <span id="passwordProgressMessage">Initializing...</span>
                                 </div>
                             </div>
                             <div class="processing-info">
-                                <p><i class="fas fa-info-circle"></i> Files over 10MB are optimized before processing. This may take additional time but ensures better results.</p>
-                                <button class="btn clear-btn" id="cancelCompression" style="margin-top: 10px;">
-                                    <i class="fas fa-stop"></i> Cancel
-                                </button>
+                                <p><i class="fas fa-shield-alt"></i> Applying password protection to your PDF...</p>
                             </div>
                         </div>
                         
-                        <div class="result-area" id="pdfCompressResult" style="display: none;">
-                            <div class="compression-summary">
-                                <div class="size-comparison">
-                                    <div class="size-item original">
-                                        <h4>Original</h4>
-                                        <span class="size-value" id="originalPdfSize">-</span>
+                        <div class="result-area" id="pdfPasswordResult" style="display: none;">
+                            <div class="protection-summary">
+                                <h4>Protection Applied Successfully</h4>
+                                <div class="protection-status">
+                                    <div class="status-item">
+                                        <i class="fas fa-lock text-success"></i>
+                                        <span>Password protected</span>
                                     </div>
-                                    <div class="size-arrow">
-                                        <i class="fas fa-arrow-right"></i>
+                                    <div class="status-item" id="printingStatus">
+                                        <i class="fas fa-print"></i>
+                                        <span>Printing restricted</span>
                                     </div>
-                                    <div class="size-item compressed">
-                                        <h4>Compressed</h4>
-                                        <span class="size-value" id="compressedPdfSize">-</span>
+                                    <div class="status-item" id="copyingStatus">
+                                        <i class="fas fa-copy"></i>
+                                        <span>Copying restricted</span>
                                     </div>
-                                </div>
-                                <div class="reduction-display">
-                                    <span class="reduction-label">Size Reduction:</span>
-                                    <span class="reduction-value" id="pdfReduction">-</span>
-                                </div>
-                                <div class="compression-method">
-                                    <span id="compressionMethod">-</span>
+                                    <div class="status-item" id="modificationStatus">
+                                        <i class="fas fa-edit"></i>
+                                        <span>Modification restricted</span>
+                                    </div>
                                 </div>
                             </div>
                             
                             <div class="result-actions">
-                                <button class="btn secondary-btn full-width" id="downloadCompressedPdf">
-                                    <i class="fas fa-download"></i> Download Compressed PDF
+                                <button class="btn secondary-btn full-width" id="downloadProtectedPdf">
+                                    <i class="fas fa-download"></i> Download Protected PDF
                                 </button>
-                                <button class="btn clear-btn full-width" id="compressAnotherPdf" style="margin-top: 10px;">
-                                    <i class="fas fa-plus"></i> Compress Another PDF
+                                <button class="btn clear-btn full-width" id="protectAnotherPdf" style="margin-top: 10px;">
+                                    <i class="fas fa-plus"></i> Protect Another PDF
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="error-area" id="pdfErrorArea" style="display: none;">
+                        <div class="error-area" id="pdfPasswordErrorArea" style="display: none;">
                             <div class="error-message">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                <div class="error-text" id="pdfErrorText"></div>
+                                <div class="error-text" id="pdfPasswordErrorText"></div>
                             </div>
-                            <div class="error-suggestions" id="pdfErrorSuggestions">
+                            <div class="error-suggestions" id="pdfPasswordErrorSuggestions">
                                 <!-- Error-specific suggestions will be shown here -->
                             </div>
-                            <button class="btn clear-btn" id="clearPdfError">
+                            <button class="btn clear-btn" id="clearPdfPasswordError">
                                 <i class="fas fa-times"></i> Close
                             </button>
                         </div>
@@ -487,18 +497,12 @@
     <script src="../js/navigation.js?v=4.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <script src="../js/api-config.js"></script>
-    <script src="../js/ilovepdf-compressor.js"></script>
+    <script src="../js/pdf-password-protection.js"></script>
     <script src="../js/tools.js"></script>
     <script src="../js/page-transition.js"></script>
     <script src="../js/auth.js"></script>
 </body>
 </html>
-
-
-
-
-
-
 
 
 

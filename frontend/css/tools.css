@@ -1358,3 +1358,107 @@
         padding: 12px;
     }
 }
+
+/* PDF Password Protection Styles */
+.password-notice {
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    color: #00ffff;
+    font-size: 0.9em;
+}
+
+.protection-options {
+    margin: 20px 0;
+}
+
+.protection-options h4 {
+    color: #ffffff;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    cursor: pointer;
+    color: #ffffff;
+    font-size: 0.95em;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    accent-color: #00ffff;
+}
+
+.protection-summary {
+    text-align: center;
+    padding: 20px;
+}
+
+.protection-summary h4 {
+    color: #00ffff;
+    margin-bottom: 20px;
+}
+
+.protection-status {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    color: #ffffff;
+}
+
+.status-item i {
+    font-size: 1.2em;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.control-group input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-size: 0.95em;
+    margin-top: 5px;
+}
+
+.control-group input[type="password"]:focus {
+    outline: none;
+    border-color: #00ffff;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.control-group input[type="password"]::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.control-group small {
+    display: block;
+    margin-top: 5px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85em;
+}

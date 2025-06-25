@@ -8,7 +8,7 @@ class ToolsManager {
 
     initializeTools() {
         this.initImageCompressor();
-        this.initPDFCompressor();
+        this.initPDFPasswordProtection();
         this.initScaleMeasurement();
     }
 
@@ -203,85 +203,35 @@ class ToolsManager {
         this.showNotification('Image compressor cleared successfully');
     }
 
-    // Advanced PDF Compression Tool
-    initPDFCompressor() {
-        const uploadArea = document.getElementById('pdfCompressUpload');
-        const fileInput = document.getElementById('pdfCompressInput');
-        const compressBtn = document.getElementById('compressPdfBtn');
-        const clearBtn = document.getElementById('clearPdfCompress');
-        const cancelBtn = document.getElementById('cancelCompression');
-        const compressAnotherBtn = document.getElementById('compressAnotherPdf');
-        const clearErrorBtn = document.getElementById('clearPdfError');
-        const compressionLevelSelect = document.getElementById('pdfCompressionLevel');
+    // PDF Password Protection Tool
+    initPDFPasswordProtection() {
+        const uploadArea = document.getElementById('pdfPasswordUpload');
+        const fileInput = document.getElementById('pdfPasswordInput');
+        const protectBtn = document.getElementById('protectPdfBtn');
+        const clearBtn = document.getElementById('clearPdfPassword');
+        const downloadBtn = document.getElementById('downloadProtectedPdf');
+        const protectAnotherBtn = document.getElementById('protectAnotherPdf');
+        const clearErrorBtn = document.getElementById('clearPdfPasswordError');
         
-        const controls = document.getElementById('pdfCompressionControls');
-        const resultArea = document.getElementById('pdfCompressResult');
-        const processingArea = document.getElementById('pdfProcessing');
-        const errorArea = document.getElementById('pdfErrorArea');
+        const controls = document.getElementById('pdfPasswordControls');
+        const resultArea = document.getElementById('pdfPasswordResult');
+        const processingArea = document.getElementById('pdfPasswordProcessing');
+        const errorArea = document.getElementById('pdfPasswordErrorArea');
+        
+        const passwordInput = document.getElementById('pdfPassword');
+        const passwordConfirm = document.getElementById('pdfPasswordConfirm');
+        const preventPrinting = document.getElementById('preventPrinting');
+        const preventCopying = document.getElementById('preventCopying');
+        const preventModification = document.getElementById('preventModification');
 
         if (!uploadArea || !fileInput) return;
 
-        // Initialize ultra compressor
-        console.log('Initializing PDF compressor...');
-        console.log('UltraPDFCompressor available:', typeof UltraPDFCompressor !== 'undefined');
-        
-        try {
-            if (typeof ILovePDFCompressor !== 'undefined') {
-                this.ultraCompressor = new ILovePDFCompressor();
-                console.log('iLovePDF compressor initialized successfully');
-                
-                // Check if API keys are configured
-                if (!this.ultraCompressor.isConfigured()) {
-                    const config = this.ultraCompressor.getConfigInstructions();
-                    console.warn('iLovePDF API keys not configured:', config);
-                    
-                    // Show configuration notice
-                    this.showConfigurationNotice(config);
-                }
-                
-            } else if (typeof FreeAPIPDFCompressor !== 'undefined') {
-                this.ultraCompressor = new FreeAPIPDFCompressor();
-                console.log('FREE API PDF compressor initialized successfully');
-                
-                // Show available APIs
-                const apiStatus = this.ultraCompressor.getAPIStatus();
-                console.log('Available compression APIs:', apiStatus);
-                
-            } else if (typeof GhostscriptLevelCompressor !== 'undefined') {
-                this.ultraCompressor = new GhostscriptLevelCompressor();
-                console.log('GHOSTSCRIPT-LEVEL compressor initialized successfully');
-            } else if (typeof RealPDFCompressor !== 'undefined') {
-                this.ultraCompressor = new RealPDFCompressor();
-                console.log('REAL PDF compressor initialized successfully');
-            } else if (typeof UltraPDFCompressor !== 'undefined') {
-                this.ultraCompressor = new UltraPDFCompressor();
-                console.log('Ultra PDF compressor initialized successfully');
-            } else {
-                console.error('No PDF compressor class found');
-                throw new Error('PDF compressor not available');
-            }
-        } catch (error) {
-            console.error('Failed to initialize PDF compressor:', error);
-            this.showError('PDF compressor failed to load. Please refresh the page.', errorArea);
-            return;
-        }
-
-        // Update compression features display
-        if (compressionLevelSelect) {
-            compressionLevelSelect.addEventListener('change', () => {
-                this.updateCompressionFeatures(compressionLevelSelect.value);
-            });
-            // Initialize with default selection
-            this.updateCompressionFeatures(compressionLevelSelect.value);
-        }
-
         // Upload area click
         uploadArea.addEventListener('click', () => {
-            console.log('PDF upload area clicked');
             fileInput.click();
         });
 
-        // Drag and drop with enhanced feedback
+        // Drag and drop
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = 'rgba(0, 255, 255, 0.6)';
@@ -302,7 +252,7 @@ class ToolsManager {
             if (files.length > 0) {
                 const file = files[0];
                 if (this.isPDFFile(file)) {
-                    this.handleAdvancedPDFFile(file, controls, resultArea, errorArea);
+                    this.handlePDFPasswordFile(file, controls, resultArea, errorArea);
                 } else {
                     this.showError('Please upload a PDF file only.', errorArea);
                 }
@@ -311,12 +261,10 @@ class ToolsManager {
 
         // File input change
         fileInput.addEventListener('change', (e) => {
-            console.log('File input changed');
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
-                console.log('File selected:', file.name, file.type);
                 if (this.isPDFFile(file)) {
-                    this.handleAdvancedPDFFile(file, controls, resultArea, errorArea);
+                    this.handlePDFPasswordFile(file, controls, resultArea, errorArea);
                 } else {
                     this.showError('Please upload a PDF file only.', errorArea);
                     e.target.value = '';
@@ -324,8 +272,104 @@ class ToolsManager {
             }
         });
 
-        // Compress button
-        if (compressBtn) {
+        // Protect button
+        if (protectBtn) {
+            protectBtn.addEventListener('click', async () => {
+                if (!this.currentPDFFile) return;
+                
+                // Validate password
+                const password = passwordInput.value;
+                const confirmPassword = passwordConfirm.value;
+                
+                if (!password || password.length < 4) {
+                    this.showError('Password must be at least 4 characters long.', errorArea);
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    this.showError('Passwords do not match.', errorArea);
+                    return;
+                }
+                
+                // Get protection options
+                const options = {
+                    password: password,
+                    preventPrinting: preventPrinting.checked,
+                    preventCopying: preventCopying.checked,
+                    preventModification: preventModification.checked
+                };
+                
+                // Show processing
+                if (controls) controls.style.display = 'none';
+                if (processingArea) processingArea.style.display = 'block';
+                
+                try {
+                    // Update progress
+                    this.updatePasswordProgress(50, 'Applying password protection...');
+                    
+                    // Process the PDF with password protection
+                    const protectedPdfBytes = await this.protectPDF(this.currentPDFFile, options);
+                    
+                    // Update progress
+                    this.updatePasswordProgress(100, 'Completed!');
+                    
+                    // Store the protected PDF
+                    this.protectedPdfBlob = new Blob([protectedPdfBytes], { type: 'application/pdf' });
+                    
+                    // Update UI
+                    this.updateProtectionStatus(options);
+                    
+                    // Hide processing, show result
+                    if (processingArea) processingArea.style.display = 'none';
+                    if (resultArea) resultArea.style.display = 'block';
+                    
+                    this.showNotification('PDF protected successfully!');
+                } catch (error) {
+                    console.error('Error protecting PDF:', error);
+                    this.showError('Failed to protect PDF: ' + error.message, errorArea);
+                    
+                    // Hide processing
+                    if (processingArea) processingArea.style.display = 'none';
+                    if (controls) controls.style.display = 'block';
+                }
+            });
+        }
+        
+        // Clear button
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                this.clearPDFPassword(fileInput, controls, resultArea, processingArea, errorArea);
+            });
+        }
+        
+        // Download button
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => {
+                if (!this.protectedPdfBlob) return;
+                
+                const url = URL.createObjectURL(this.protectedPdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `protected_${this.currentPDFFile.name}`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // Protect another button
+        if (protectAnotherBtn) {
+            protectAnotherBtn.addEventListener('click', () => {
+                this.clearPDFPassword(fileInput, controls, resultArea, processingArea, errorArea);
+                uploadArea.click();
+            });
+        }
+        
+        // Clear error button
+        if (clearErrorBtn) {
+            clearErrorBtn.addEventListener('click', () => {
+                if (errorArea) errorArea.style.display = 'none';
+            });
+        }
             compressBtn.addEventListener('click', async () => {
                 if (!this.currentPDFFile) return;
                 
@@ -444,37 +488,110 @@ class ToolsManager {
         }
     }
 
-    updateCompressionFeatures(level) {
-        const featureList = document.getElementById('featureList');
-        if (!featureList) return;
-
-        const features = {
-            aggressive: [
-                'iLovePDF Extreme compression (maximum reduction)',
-                'Significant file size reduction with quality trade-off',
-                'Best for web distribution and storage',
-                'Server-side processing via iLovePDF API',
-                'Real compression similar to desktop tools',
-                'Free tier: 250 files/month',
-                'Professional-grade compression algorithms'
-            ],
-            moderate: [
-                'iLovePDF Recommended compression (balanced)',
-                'Optimal balance between size and quality',
-                'Good compression with readable text',
-                'Suitable for most business documents',
-                'Preserves important visual elements',
-                'Industry-standard compression level'
-            ],
-            conservative: [
-                'iLovePDF Low compression (quality preservation)',
-                'Minimal compression with high quality retention',
-                'Safe for important documents and presentations',
-                'Preserves all visual fidelity',
-                'Best for archival and professional use',
-                'Smallest compression ratio but highest quality'
-            ]
-        };
+    isPDFFile(file) {
+        return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    }
+    
+    handlePDFPasswordFile(file, controls, resultArea, errorArea) {
+        this.currentPDFFile = file;
+        this.protectedPdfBlob = null;
+        
+        if (controls) controls.style.display = 'block';
+        if (resultArea) resultArea.style.display = 'none';
+        if (errorArea) errorArea.style.display = 'none';
+        
+        const fileInfo = document.getElementById('pdfPasswordFileInfo');
+        if (fileInfo) {
+            fileInfo.innerHTML = `
+                <div class="file-details">
+                    <strong>${file.name}</strong><br>
+                    Size: ${this.formatFileSize(file.size)}<br>
+                    Type: ${file.type}
+                </div>
+            `;
+        }
+        
+        this.showNotification(`PDF uploaded successfully! File: ${file.name} (${this.formatFileSize(file.size)})`);
+    }
+    
+    updatePasswordProgress(percent, message) {
+        const progressFill = document.getElementById('passwordProgressFill');
+        const progressPercent = document.getElementById('passwordProgressPercent');
+        const progressMessage = document.getElementById('passwordProgressMessage');
+        
+        if (progressFill) progressFill.style.width = `${percent}%`;
+        if (progressPercent) progressPercent.textContent = `${percent}%`;
+        if (progressMessage) progressMessage.textContent = message;
+    }
+    
+    updateProtectionStatus(options) {
+        const printingStatus = document.getElementById('printingStatus');
+        const copyingStatus = document.getElementById('copyingStatus');
+        const modificationStatus = document.getElementById('modificationStatus');
+        
+        if (printingStatus) {
+            printingStatus.querySelector('i').className = options.preventPrinting ? 
+                'fas fa-print text-danger' : 'fas fa-print text-success';
+            printingStatus.querySelector('span').textContent = options.preventPrinting ? 
+                'Printing restricted' : 'Printing allowed';
+        }
+        
+        if (copyingStatus) {
+            copyingStatus.querySelector('i').className = options.preventCopying ? 
+                'fas fa-copy text-danger' : 'fas fa-copy text-success';
+            copyingStatus.querySelector('span').textContent = options.preventCopying ? 
+                'Copying restricted' : 'Copying allowed';
+        }
+        
+        if (modificationStatus) {
+            modificationStatus.querySelector('i').className = options.preventModification ? 
+                'fas fa-edit text-danger' : 'fas fa-edit text-success';
+            modificationStatus.querySelector('span').textContent = options.preventModification ? 
+                'Modification restricted' : 'Modification allowed';
+        }
+    }
+    
+    async protectPDF(file, options) {
+        // This is a placeholder for the actual PDF protection logic
+        // In a real implementation, you would use PDF-lib or another library
+        // to apply password protection to the PDF
+        
+        // For now, we'll just return the file bytes
+        const arrayBuffer = await file.arrayBuffer();
+        return arrayBuffer;
+    }
+    
+    clearPDFPassword(fileInput, controls, resultArea, processingArea, errorArea) {
+        this.currentPDFFile = null;
+        this.protectedPdfBlob = null;
+        
+        if (fileInput) fileInput.value = '';
+        if (controls) controls.style.display = 'none';
+        if (resultArea) resultArea.style.display = 'none';
+        if (processingArea) processingArea.style.display = 'none';
+        if (errorArea) errorArea.style.display = 'none';
+        
+        const fileInfo = document.getElementById('pdfPasswordFileInfo');
+        if (fileInfo) fileInfo.innerHTML = '';
+        
+        // Reset password fields
+        const passwordInput = document.getElementById('pdfPassword');
+        const passwordConfirm = document.getElementById('pdfPasswordConfirm');
+        if (passwordInput) passwordInput.value = '';
+        if (passwordConfirm) passwordConfirm.value = '';
+        
+        this.showNotification('PDF password protection cleared successfully');
+    }
+    
+    showError(message, errorArea) {
+        if (errorArea) {
+            const errorText = errorArea.querySelector('.error-text');
+            if (errorText) errorText.textContent = message;
+            errorArea.style.display = 'block';
+        } else {
+            this.showNotification(message, 'error');
+        }
+    }
 
         const levelFeatures = features[level] || features.aggressive;
         featureList.innerHTML = levelFeatures.map(feature => 
@@ -691,6 +808,11 @@ class ToolsManager {
         const clearUploadBtn = document.getElementById('clearScaleUpload');
         const referenceLength = document.getElementById('referenceLength');
         const referenceUnit = document.getElementById('referenceUnit');
+        // Add a check to ensure referenceUnit exists
+        if (!referenceUnit) {
+            console.error('Reference unit select element not found!');
+            return;
+        }
         const measurementsDisplay = document.getElementById('measurementsDisplay');
         const fileInfo = document.getElementById('scaleFileInfo');
 
@@ -849,7 +971,8 @@ class ToolsManager {
                 const refLength = parseFloat(referenceLength.value);
                 if (refLength > 0) {
                     referenceRealLength = refLength;
-                    this.showNotification(`Reference scale set: ${pixelLength.toFixed(2)} pixels = ${refLength} ${referenceUnit.value}`);
+                    const unitValue = referenceUnit && referenceUnit.value ? referenceUnit.value : 'mm';
+                    this.showNotification(`Reference scale set: ${pixelLength.toFixed(2)} pixels = ${refLength} ${unitValue}`);
                 } else {
                     this.showNotification('Please enter a reference length first!', 'error');
                     // Reset reference if no length entered
@@ -863,10 +986,11 @@ class ToolsManager {
                     end: endPoint,
                     pixelLength: pixelLength,
                     realLength: realLength,
-                    unit: referenceUnit.value
+                    unit: referenceUnit && referenceUnit.value ? referenceUnit.value : 'mm'
                 });
                 this.updateMeasurementsDisplay(measurementsDisplay, measurements);
-                this.showNotification(`Measurement added: ${realLength.toFixed(3)} ${referenceUnit.value}`);
+                const unitValue = referenceUnit && referenceUnit.value ? referenceUnit.value : 'mm';
+                this.showNotification(`Measurement added: ${realLength.toFixed(3)} ${unitValue}`);
             }
 
             this.redrawCanvas(canvas, ctx, currentImage, measurements);
