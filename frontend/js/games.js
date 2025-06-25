@@ -1408,8 +1408,8 @@ function initSnakeGame() {
                     
                     if (direction === 'LEFT') snakeX -= box;
                     else if (direction === 'UP') snakeY -= box;
-                        else if (direction === 'RIGHT') snakeX += box;
-                else if (direction === 'DOWN') snakeY += box;
+                    else if (direction === 'RIGHT') snakeX += box;
+                    else if (direction === 'DOWN') snakeY += box;
                 
                     // Check wall collision
                     if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) {
@@ -1433,7 +1433,7 @@ function initSnakeGame() {
                             else if (snakeX >= canvasSize) snakeX = 0;
                             if (snakeY < 0) snakeY = canvasSize - box;
                             else if (snakeY >= canvasSize) snakeY = 0;
-                     }
+                        }
                     }
                    
                     const newHead = { x: snakeX, y: snakeY };
@@ -4058,16 +4058,16 @@ function initTetris() {
         try {
             if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
                 const userRank = await window.gameScores.getUserRank('brickBreaker');
-            highScoreElement.textContent = serverHighScore;
+                const serverHighScore = userRank.score || 0;
+                highScoreElement.textContent = serverHighScore;
             } else {
                 // Fallback to local storage if gameScores not available
                 const localHighScore = localStorage.getItem('brickBreakerHighScore') || 0;
-    const serverHighScore = userRank.score || 0;
-                               console.error('Error updating brick breaker high scorentent = localHighScore;
+                highScoreElement.textContent = localHighScore;
             }
-        } catch (error
-             highScoreElement.textCo:', error);
-            // Fallback to local storage on error) {
+        } catch (error) {
+            console.error('Error updating brick breaker high score:', error);
+            // Fallback to local storage on error
             const localHighScore = localStorage.getItem('brickBreakerHighScore') || 0;
             highScoreElement.textContent = localHighScore;
         }

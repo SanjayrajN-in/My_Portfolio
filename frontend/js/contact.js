@@ -1,38 +1,143 @@
 // Contact page specific JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Auto-fill email from logged-in user
+    autoFillUserEmail();
+    
     // Form submission handling
     const contactForm = document.getElementById('contactForm');
     
     if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form data
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const subject = document.getElementById('subject').value;
-            const message = document.getElementById('message').value;
-            
-            // Here you would typically send the data to a server
-            // For now, we'll just log it and show a success message
+        contactForm.addEventListener('submit', handleFormSubmission);
+    }
     
+    // Function to auto-fill email from logged-in user
+    function autoFillUserEmail() {
+        const emailInput = document.getElementById('email');
+        const nameInput = document.getElementById('name');
+        const emailHint = document.querySelector('.email-hint');
+        
+        if (emailInput && typeof authSystem !== 'undefined' && authSystem.currentUser) {
+            // Auto-fill email from logged-in user
+            emailInput.value = authSystem.currentUser.email;
+            emailInput.parentElement.classList.add('focused');
             
-            // Show success message
-            const formMessage = document.createElement('div');
-            formMessage.className = 'form-message success';
-            formMessage.innerHTML = '<i class="fas fa-check-circle"></i> Thank you for your message! I will get back to you soon.';
+            // Show the email hint
+            if (emailHint) {
+                emailHint.style.display = 'block';
+                emailHint.style.opacity = '0';
+                setTimeout(() => {
+                    emailHint.style.transition = 'opacity 0.3s ease';
+                    emailHint.style.opacity = '1';
+                }, 100);
+            }
             
-            contactForm.appendChild(formMessage);
+            // Auto-fill name if available
+            if (nameInput && authSystem.currentUser.name) {
+                nameInput.value = authSystem.currentUser.name;
+                nameInput.parentElement.classList.add('focused');
+            }
             
-            // Reset form
-            contactForm.reset();
+            // Add event listener to hide hint when email is manually changed
+            emailInput.addEventListener('input', function() {
+                if (emailHint && this.value !== authSystem.currentUser.email) {
+                    emailHint.style.display = 'none';
+                } else if (emailHint && this.value === authSystem.currentUser.email) {
+                    emailHint.style.display = 'block';
+                }
+            });
+        }
+    }
+    
+    // Handle form submission
+    async function handleFormSubmission(e) {
+        e.preventDefault();
+        
+        // Get form data
+        const formData = {
+            name: document.getElementById('name').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            subject: document.getElementById('subject').value.trim(),
+            message: document.getElementById('message').value.trim()
+        };
+        
+        // Validation
+        if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+            showFormMessage('Please fill in all fields.', 'error');
+            return;
+        }
+        
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            showFormMessage('Please enter a valid email address.', 'error');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.querySelector('.btn-text').textContent;
+        submitBtn.querySelector('.btn-text').textContent = 'Sending...';
+        submitBtn.disabled = true;
+        
+        try {
+            // Send contact form data to server
+            const response = await fetch(`${window.API_BASE_URL || 'https://sanjayraj-n.onrender.com'}/api/contact/send`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
             
-            // Remove message after 5 seconds
-            setTimeout(() => {
+            const result = await response.json();
+            
+            if (result.success) {
+                showFormMessage(result.message || 'Thank you for your message! I will get back to you soon.', 'success');
+                contactForm.reset();
+                
+                // Re-fill email if user is logged in (since form was reset)
+                setTimeout(() => {
+                    autoFillUserEmail();
+                }, 100);
+            } else {
+                showFormMessage(result.message || 'Failed to send message. Please try again.', 'error');
+            }
+            
+        } catch (error) {
+            console.error('Contact form error:', error);
+            showFormMessage('An error occurred while sending your message. Please try again later.', 'error');
+        } finally {
+            // Reset button state
+            submitBtn.querySelector('.btn-text').textContent = originalBtnText;
+            submitBtn.disabled = false;
+        }
+    }
+    
+    // Show form message
+    function showFormMessage(message, type) {
+        // Remove existing messages
+        const existingMessages = contactForm.querySelectorAll('.form-message');
+        existingMessages.forEach(msg => msg.remove());
+        
+        // Create new message
+        const formMessage = document.createElement('div');
+        formMessage.className = `form-message ${type}`;
+        
+        const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+        formMessage.innerHTML = `<i class="${icon}"></i> ${message}`;
+        
+        contactForm.appendChild(formMessage);
+        
+        // Auto-remove message after 8 seconds
+        setTimeout(() => {
+            if (formMessage.parentNode) {
                 formMessage.remove();
-            }, 5000);
-        });
+            }
+        }, 8000);
+        
+        // Scroll to message
+        formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     
     // FAQ accordion functionality
