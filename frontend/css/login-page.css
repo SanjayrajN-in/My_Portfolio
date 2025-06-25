@@ -841,7 +841,7 @@
 /* Notification System */
 .notification-container {
     position: fixed;
-    top: 2rem;
+    top: calc(80px + 1rem); /* Nav bar height + margin */
     right: 2rem;
     z-index: 9999999;
     display: flex;
@@ -956,7 +956,7 @@
     }
     
     .notification-container {
-        top: 1rem;
+        top: calc(80px + 1rem); /* Nav bar height + margin */
         right: 1rem;
         left: 1rem;
     }
