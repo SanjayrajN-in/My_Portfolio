@@ -625,7 +625,7 @@
     
     /* Add visual indicator for active mode on mobile */
     #scaleCanvas.drawing-mode::before {
-        content: "TAP TO SET REFERENCE";
+        content: "TAP & DRAG TO SET REFERENCE";
         position: absolute;
         top: 10px;
         left: 50%;
@@ -641,7 +641,7 @@
     }
     
     #scaleCanvas.measuring-mode::before {
-        content: "TAP TO MEASURE";
+        content: "TAP & DRAG TO MEASURE";
         position: absolute;
         top: 10px;
         left: 50%;
@@ -1501,4 +1501,245 @@
     margin-top: 5px;
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.85em;
+}
+
+/* ===== NOTIFICATION SYSTEM ===== */
+.notification-container {
+    position: fixed;
+    top: calc(var(--header-height) + 20px);
+    right: 20px;
+    z-index: 1000000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+.notification {
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    overflow: hidden;
+    position: relative;
+}
+
+.notification::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--accent-color);
+}
+
+.notification.notification-success::before {
+    background: linear-gradient(135deg, #00ff88, #00cc6a);
+}
+
+.notification.notification-error::before {
+    background: linear-gradient(135deg, #ff4757, #ff3742);
+}
+
+.notification.notification-warning::before {
+    background: linear-gradient(135deg, #ffa502, #ff8c00);
+}
+
+.notification.notification-info::before {
+    background: linear-gradient(135deg, #00ffff, #0099cc);
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification.hide {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    position: relative;
+}
+
+.notification-content i {
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.notification-success .notification-content i {
+    color: #00ff88;
+}
+
+.notification-error .notification-content i {
+    color: #ff4757;
+}
+
+.notification-warning .notification-content i {
+    color: #ffa502;
+}
+
+.notification-info .notification-content i {
+    color: #00ffff;
+}
+
+.notification-message {
+    flex: 1;
+    color: #ffffff;
+    font-size: 0.95em;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.notification-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+.notification-close i {
+    font-size: 0.8em;
+}
+
+/* Notification animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Mobile responsiveness for notifications */
+@media (max-width: 768px) {
+    .notification-container {
+        top: calc(var(--header-height) + 10px);
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .notification {
+        transform: translateY(-100%);
+    }
+    
+    .notification.show {
+        transform: translateY(0);
+    }
+    
+    .notification.hide {
+        transform: translateY(-100%);
+    }
+    
+    .notification-content {
+        padding: 14px 16px;
+        gap: 10px;
+    }
+    
+    .notification-message {
+        font-size: 0.9em;
+    }
+}
+
+/* Enhanced notification styles with glow effects */
+.notification-success {
+    box-shadow: 0 8px 32px rgba(0, 255, 136, 0.15);
+}
+
+.notification-error {
+    box-shadow: 0 8px 32px rgba(255, 71, 87, 0.15);
+}
+
+.notification-warning {
+    box-shadow: 0 8px 32px rgba(255, 165, 2, 0.15);
+}
+
+.notification-info {
+    box-shadow: 0 8px 32px rgba(0, 255, 255, 0.15);
+}
+
+/* Progress bar for timed notifications */
+.notification::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--accent-color);
+    width: 100%;
+    opacity: 0.6;
+    transform-origin: left;
+    transition: transform var(--progress-duration, 5s) linear;
+}
+
+.notification.progress-animate::after {
+    transform: scaleX(0);
+}
+
+.notification-success::after {
+    background: #00ff88;
+}
+
+.notification-error::after {
+    background: #ff4757;
+}
+
+.notification-warning::after {
+    background: #ffa502;
+}
+
+.notification-info::after {
+    background: #00ffff;
+}
+
+@keyframes notificationProgress {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
 }

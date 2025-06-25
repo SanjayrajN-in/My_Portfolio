@@ -4,12 +4,142 @@ class ToolsManager {
         this.currentImageFile = null;
         this.currentPDFFile = null;
         this.initializeTools();
+        this.initializeNotificationSystem();
+    }
+
+    // Notification System
+    initializeNotificationSystem() {
+        // Create notification container if it doesn't exist
+        if (!document.getElementById('notificationContainer')) {
+            const container = document.createElement('div');
+            container.id = 'notificationContainer';
+            container.className = 'notification-container';
+            document.body.appendChild(container);
+        }
+    }
+
+    showNotification(message, type = 'info', duration = 5000) {
+        const container = document.getElementById('notificationContainer');
+        if (!container) return;
+
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        
+        const icon = this.getNotificationIcon(type);
+        
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="${icon}"></i>
+                <span class="notification-message">${message}</span>
+                <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(notification);
+
+        // Trigger animation
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+
+        // Auto remove after duration
+        if (duration > 0) {
+            // Animate progress bar
+            setTimeout(() => {
+                notification.style.setProperty('--progress-duration', `${duration}ms`);
+                notification.classList.add('progress-animate');
+            }, 50);
+            
+            setTimeout(() => {
+                this.removeNotification(notification);
+            }, duration);
+        }
+
+        return notification;
+    }
+
+    getNotificationIcon(type) {
+        const icons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-exclamation-circle',
+            warning: 'fas fa-exclamation-triangle',
+            info: 'fas fa-info-circle'
+        };
+        return icons[type] || icons.info;
+    }
+
+    removeNotification(notification) {
+        if (notification && notification.parentElement) {
+            notification.classList.add('hide');
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
+        }
+    }
+
+    // Convenience methods for different notification types
+    showSuccess(message, duration = 4000) {
+        return this.showNotification(message, 'success', duration);
+    }
+
+    showError(message, duration = 6000) {
+        return this.showNotification(message, 'error', duration);
+    }
+
+    showWarning(message, duration = 5000) {
+        return this.showNotification(message, 'warning', duration);
+    }
+
+    showInfo(message, duration = 4000) {
+        return this.showNotification(message, 'info', duration);
+    }
+
+    // Update existing notification
+    updateNotification(notification, message, type = null) {
+        if (!notification || !notification.parentElement) return;
+        
+        const messageEl = notification.querySelector('.notification-message');
+        const iconEl = notification.querySelector('.notification-content i');
+        
+        if (messageEl) messageEl.textContent = message;
+        
+        if (type && iconEl) {
+            // Update icon and colors
+            iconEl.className = this.getNotificationIcon(type);
+            notification.className = `notification notification-${type} show`;
+        }
+    }
+
+    // Clear all notifications
+    clearAllNotifications() {
+        const container = document.getElementById('notificationContainer');
+        if (container) {
+            const notifications = container.querySelectorAll('.notification');
+            notifications.forEach(notification => {
+                this.removeNotification(notification);
+            });
+        }
     }
 
     initializeTools() {
         this.initImageCompressor();
         this.initPDFCompressor();
         this.initScaleMeasurement();
+        this.initKeyboardShortcuts();
+    }
+
+    // Initialize keyboard shortcuts
+    initKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Escape key to clear all notifications
+            if (e.key === 'Escape') {
+                this.clearAllNotifications();
+            }
+        });
     }
 
     // Image Compression Tool
@@ -50,7 +180,7 @@ class ToolsManager {
                 if (this.isImageFile(file)) {
                     this.handleImageFile(file, controls, resultArea, fileInfo);
                 } else {
-                    alert('Please upload an image file only (JPG, PNG, WebP, etc.).');
+                    this.showError('Please upload an image file only (JPG, PNG, WebP, etc.).');
                 }
             }
         });
@@ -62,7 +192,7 @@ class ToolsManager {
                 if (this.isImageFile(file)) {
                     this.handleImageFile(file, controls, resultArea, fileInfo);
                 } else {
-                    alert('Please upload an image file only (JPG, PNG, WebP, etc.).');
+                    this.showError('Please upload an image file only (JPG, PNG, WebP, etc.).');
                     e.target.value = ''; // Clear the input
                 }
             }
@@ -114,6 +244,8 @@ class ToolsManager {
                 </div>
             `;
         }
+        // Show success notification for file upload
+        this.showSuccess(`Image uploaded successfully: ${file.name}`);
     }
 
     async compressImage(quality, resultArea) {
@@ -137,7 +269,7 @@ class ToolsManager {
             img.src = URL.createObjectURL(this.currentImageFile);
         } catch (error) {
             console.error('Error compressing image:', error);
-            alert('Error compressing image. Please try again.');
+            this.showError('Error compressing image. Please try again.');
         }
     }
 
@@ -175,6 +307,14 @@ class ToolsManager {
         }
 
         resultArea.style.display = 'block';
+        
+        // Show success notification
+        const reduction = Math.round(((originalFile.size - compressedBlob.size) / originalFile.size) * 100);
+        if (reduction > 0) {
+            this.showSuccess(`Image compressed successfully! Reduced size by ${reduction}%`);
+        } else {
+            this.showInfo('Image processed. File size may vary based on original compression.');
+        }
     }
 
     clearImageCompressor(fileInput, controls, resultArea, fileInfo) {
@@ -183,6 +323,7 @@ class ToolsManager {
         if (controls) controls.style.display = 'none';
         if (resultArea) resultArea.style.display = 'none';
         if (fileInfo) fileInfo.innerHTML = '';
+        this.showInfo('Image compressor cleared');
     }
 
     // PDF Compression Tool
@@ -220,7 +361,7 @@ class ToolsManager {
                 if (this.isPDFFile(file)) {
                     this.handlePDFFile(file, controls, resultArea);
                 } else {
-                    alert('Please upload a PDF file only.');
+                    this.showError('Please upload a PDF file only.');
                 }
             }
         });
@@ -232,7 +373,7 @@ class ToolsManager {
                 if (this.isPDFFile(file)) {
                     this.handlePDFFile(file, controls, resultArea);
                 } else {
-                    alert('Please upload a PDF file only.');
+                    this.showError('Please upload a PDF file only.');
                     e.target.value = ''; // Clear the input
                 }
             }
@@ -279,6 +420,8 @@ class ToolsManager {
                 </div>
             `;
         }
+        // Show success notification for file upload
+        this.showSuccess(`PDF uploaded successfully: ${file.name}`);
     }
 
     async compressPDF(quality, resultArea, processingArea) {
@@ -387,6 +530,14 @@ class ToolsManager {
             if (processingArea) processingArea.style.display = 'none';
             if (resultArea) resultArea.style.display = 'block';
 
+            // Show success notification
+            const reduction = Math.round(((this.currentPDFFile.size - compressedBlob.size) / this.currentPDFFile.size) * 100);
+            if (reduction > 0) {
+                this.showSuccess(`PDF compressed successfully! Reduced size by ${reduction}%`);
+            } else {
+                this.showInfo('PDF processed. File size may vary based on content and original compression.');
+            }
+
         } catch (error) {
             console.error('Error compressing PDF:', error);
             
@@ -398,7 +549,7 @@ class ToolsManager {
             if (compressedSizeEl) compressedSizeEl.textContent = 'Error';
             if (reductionEl) reductionEl.textContent = 'Error';
             
-            alert('Error compressing PDF. The file might be corrupted or password-protected.');
+            this.showError('Error compressing PDF. The file might be corrupted or password-protected.');
         }
     }
 
@@ -439,6 +590,7 @@ class ToolsManager {
         
         const fileInfo = document.getElementById('pdfCompressFileInfo');
         if (fileInfo) fileInfo.innerHTML = '';
+        this.showInfo('PDF compressor cleared');
     }
 
 
@@ -523,7 +675,17 @@ class ToolsManager {
                 referencePixelLength = null;
                 referenceRealLength = null;
                 currentMode = 'none';
+                canvas.style.cursor = 'default';
+                canvas.classList.remove('drawing-mode', 'measuring-mode');
                 if (referenceLength) referenceLength.value = '';
+                
+                // Reset button visual feedback and text
+                if (setReferenceBtn) setReferenceBtn.style.background = '';
+                if (measureBtn) {
+                    measureBtn.style.background = '';
+                    measureBtn.innerHTML = '<i class="fas fa-search-plus"></i> Measure';
+                }
+                
                 currentImage = this.loadImageForScale(files[0], workspace, canvas, ctx, fileInfo, measurements);
             }
         });
@@ -537,7 +699,17 @@ class ToolsManager {
                 referencePixelLength = null;
                 referenceRealLength = null;
                 currentMode = 'none';
+                canvas.style.cursor = 'default';
+                canvas.classList.remove('drawing-mode', 'measuring-mode');
                 if (referenceLength) referenceLength.value = '';
+                
+                // Reset button visual feedback and text
+                if (setReferenceBtn) setReferenceBtn.style.background = '';
+                if (measureBtn) {
+                    measureBtn.style.background = '';
+                    measureBtn.innerHTML = '<i class="fas fa-search-plus"></i> Measure';
+                }
+                
                 currentImage = this.loadImageForScale(e.target.files[0], workspace, canvas, ctx, fileInfo, measurements);
             }
         });
@@ -587,9 +759,16 @@ class ToolsManager {
                         realLength: refLength,
                         unit: referenceUnit.value
                     };
-                    alert(`Reference scale set: ${pixelLength.toFixed(2)} pixels = ${refLength} ${referenceUnit.value}`);
+                    this.showSuccess(`Reference scale set: ${pixelLength.toFixed(2)} pixels = ${refLength} ${referenceUnit.value}`);
+                    
+                    // Reset mode after setting reference
+                    currentMode = 'none';
+                    canvas.style.cursor = 'default';
+                    canvas.classList.remove('drawing-mode', 'measuring-mode');
+                    if (setReferenceBtn) setReferenceBtn.style.background = '';
                 } else {
-                    alert('Please enter a reference length first!');
+                    this.showWarning('Please enter a reference length first!');
+                    // Don't reset mode if reference length is invalid
                 }
             } else if (currentMode === 'measure' && referencePixelLength && referenceRealLength) {
                 const realLength = (pixelLength / referencePixelLength) * referenceRealLength;
@@ -602,18 +781,15 @@ class ToolsManager {
                     unit: referenceUnit.value
                 });
                 this.updateMeasurementsDisplay(measurementsDisplay, measurements);
+                this.showSuccess(`Measurement added: ${realLength.toFixed(2)} ${referenceUnit.value}`);
+                
+                // Stay in measure mode for continuous measurements
+                // Don't reset currentMode, cursor, or visual feedback
             }
 
             this.redrawCanvas(canvas, ctx, currentImage, measurements, referenceLine);
             isDrawing = false;
             startPoint = null;
-            currentMode = 'none'; // Reset mode after drawing
-            canvas.style.cursor = 'default';
-            canvas.classList.remove('drawing-mode', 'measuring-mode');
-            
-            // Reset button visual feedback
-            if (setReferenceBtn) setReferenceBtn.style.background = '';
-            if (measureBtn) measureBtn.style.background = '';
         };
 
         // Mouse events
@@ -654,9 +830,12 @@ class ToolsManager {
                 isDrawing = false;
                 startPoint = null;
                 
-                // Reset button visual feedback
+                // Reset button visual feedback and text
                 if (setReferenceBtn) setReferenceBtn.style.background = '';
-                if (measureBtn) measureBtn.style.background = '';
+                if (measureBtn) {
+                    measureBtn.style.background = '';
+                    measureBtn.innerHTML = '<i class="fas fa-search-plus"></i> Measure';
+                }
             }
         });
 
@@ -664,9 +843,18 @@ class ToolsManager {
         if (setReferenceBtn) {
             setReferenceBtn.addEventListener('click', () => {
                 if (!currentImage) {
-                    alert('Please upload an image first!');
+                    this.showWarning('Please upload an image first!');
                     return;
                 }
+                
+                // Check if reference length is entered
+                const refLength = parseFloat(referenceLength.value);
+                if (!refLength || refLength <= 0) {
+                    this.showWarning('Please enter a reference length first!');
+                    referenceLength.focus();
+                    return;
+                }
+                
                 currentMode = 'reference';
                 canvas.style.cursor = 'crosshair';
                 canvas.classList.add('drawing-mode');
@@ -681,21 +869,32 @@ class ToolsManager {
         if (measureBtn) {
             measureBtn.addEventListener('click', () => {
                 if (!currentImage) {
-                    alert('Please upload an image first!');
+                    this.showWarning('Please upload an image first!');
                     return;
                 }
                 if (!referencePixelLength) {
-                    alert('Please set a reference scale first!');
+                    this.showWarning('Please set a reference scale first!');
                     return;
                 }
-                currentMode = 'measure';
-                canvas.style.cursor = 'crosshair';
-                canvas.classList.add('measuring-mode');
-                canvas.classList.remove('drawing-mode');
                 
-                // Visual feedback
-                if (measureBtn) measureBtn.style.background = 'rgba(0, 255, 255, 0.3)';
-                if (setReferenceBtn) setReferenceBtn.style.background = '';
+                // Toggle measure mode - if already in measure mode, turn it off
+                if (currentMode === 'measure') {
+                    currentMode = 'none';
+                    canvas.style.cursor = 'default';
+                    canvas.classList.remove('measuring-mode');
+                    measureBtn.style.background = '';
+                    measureBtn.innerHTML = '<i class="fas fa-search-plus"></i> Measure';
+                } else {
+                    currentMode = 'measure';
+                    canvas.style.cursor = 'crosshair';
+                    canvas.classList.add('measuring-mode');
+                    canvas.classList.remove('drawing-mode');
+                    
+                    // Visual feedback
+                    measureBtn.style.background = 'rgba(0, 255, 255, 0.3)';
+                    measureBtn.innerHTML = '<i class="fas fa-times"></i> Stop Measuring';
+                    if (setReferenceBtn) setReferenceBtn.style.background = '';
+                }
             });
         }
 
@@ -710,12 +909,16 @@ class ToolsManager {
                 canvas.classList.remove('drawing-mode', 'measuring-mode');
                 if (referenceLength) referenceLength.value = '';
                 
-                // Reset button visual feedback
+                // Reset button visual feedback and text
                 if (setReferenceBtn) setReferenceBtn.style.background = '';
-                if (measureBtn) measureBtn.style.background = '';
+                if (measureBtn) {
+                    measureBtn.style.background = '';
+                    measureBtn.innerHTML = '<i class="fas fa-search-plus"></i> Measure';
+                }
                 
                 this.redrawCanvas(canvas, ctx, currentImage, measurements, referenceLine);
                 this.updateMeasurementsDisplay(measurementsDisplay, measurements);
+                this.showInfo('All measurements cleared');
             });
         }
 
@@ -731,6 +934,15 @@ class ToolsManager {
                 referenceRealLength = null;
                 currentMode = 'none';
                 canvas.style.cursor = 'default';
+                canvas.classList.remove('drawing-mode', 'measuring-mode');
+                if (referenceLength) referenceLength.value = '';
+                
+                // Reset button visual feedback and text
+                if (setReferenceBtn) setReferenceBtn.style.background = '';
+                if (measureBtn) {
+                    measureBtn.style.background = '';
+                    measureBtn.innerHTML = '<i class="fas fa-search-plus"></i> Measure';
+                }
             });
         }
     }
