@@ -581,7 +581,7 @@ class LoginPageManager {
             return;
         }
 
-        const submitBtn = document.getElementById('otpSubmitBtn');
+        const submitBtn = document.getElementById('verifyOtpBtn');
         this.setLoading(submitBtn, true);
 
         try {
@@ -1078,6 +1078,11 @@ class LoginPageManager {
     }
 
     setLoading(button, loading) {
+        if (!button) {
+            console.warn('setLoading called with null button');
+            return;
+        }
+        
         if (loading) {
             button.classList.add('loading');
             button.disabled = true;
