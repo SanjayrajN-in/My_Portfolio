@@ -139,20 +139,11 @@ class ProfilePageManager {
             btn.addEventListener('click', (e) => this.togglePassword(e));
         });
 
-        // Avatar edit (placeholder)
-        document.getElementById('avatarEditBtn').addEventListener('click', () => {
-            this.showNotification('Avatar upload feature coming soon!', 'info');
-        });
 
-        // Edit profile (placeholder)
-        document.getElementById('editProfileBtn').addEventListener('click', () => {
-            this.showNotification('Profile editing feature coming soon!', 'info');
-        });
 
-        // 2FA enable (placeholder)
-        document.getElementById('enable2FABtn').addEventListener('click', () => {
-            this.showNotification('Two-factor authentication setup coming soon!', 'info');
-        });
+
+
+
 
         // Close modal when clicking outside
         document.getElementById('changePasswordModal').addEventListener('click', (e) => {
@@ -238,15 +229,6 @@ class ProfilePageManager {
         const avatarImg = document.getElementById('profileAvatar');
         if (avatarImg) {
             avatarImg.src = this.currentUser.avatar || '../images/default-avatar.svg';
-        }
-
-        // Update game stats
-        if (this.currentUser.gameStats) {
-            const stats = this.currentUser.gameStats;
-            document.getElementById('totalGamesPlayed').textContent = stats.totalGamesPlayed || 0;
-            document.getElementById('totalScore').textContent = stats.totalScore || 0;
-            document.getElementById('highScore').textContent = stats.highScore || 0;
-            document.getElementById('achievements').textContent = stats.achievements || 0;
         }
 
         // Update verification badge

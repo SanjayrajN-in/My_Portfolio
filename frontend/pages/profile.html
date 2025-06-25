@@ -127,9 +127,6 @@
                 <div class="profile-avatar-section">
                     <div class="profile-avatar-container">
                         <img src="../images/default-avatar.svg" alt="Profile Avatar" class="profile-avatar" id="profileAvatar">
-                        <button class="avatar-edit-btn" id="avatarEditBtn">
-                            <i class="fas fa-camera"></i>
-                        </button>
                     </div>
                     <div class="profile-basic-info">
                         <h1 class="profile-name" id="profileName">Loading...</h1>
@@ -144,10 +141,6 @@
                 </div>
                 
                 <div class="profile-actions">
-                    <button class="btn secondary-btn" id="editProfileBtn">
-                        <i class="fas fa-edit"></i>
-                        <span>Edit Profile</span>
-                    </button>
                     <button class="btn danger-btn" onclick="authSystem.logout()">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Logout</span>
@@ -197,32 +190,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="profile-card">
-                            <div class="card-header">
-                                <h3><i class="fas fa-gamepad"></i> Game Statistics</h3>
-                            </div>
-                            <div class="card-content">
-                                <div class="stats-grid">
-                                    <div class="stat-item">
-                                        <div class="stat-value" id="totalGamesPlayed">0</div>
-                                        <div class="stat-label">Games Played</div>
-                                    </div>
-                                    <div class="stat-item">
-                                        <div class="stat-value" id="totalScore">0</div>
-                                        <div class="stat-label">Total Score</div>
-                                    </div>
-                                    <div class="stat-item">
-                                        <div class="stat-value" id="highScore">0</div>
-                                        <div class="stat-label">High Score</div>
-                                    </div>
-                                    <div class="stat-item">
-                                        <div class="stat-value" id="achievements">0</div>
-                                        <div class="stat-label">Achievements</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -242,17 +209,6 @@
                                     <button class="btn secondary-btn" id="changePasswordBtn">
                                         <i class="fas fa-key"></i>
                                         Change Password
-                                    </button>
-                                </div>
-                                
-                                <div class="security-item">
-                                    <div class="security-info">
-                                        <h4>Two-Factor Authentication</h4>
-                                        <p>Add an extra layer of security to your account</p>
-                                    </div>
-                                    <button class="btn primary-btn" id="enable2FABtn">
-                                        <i class="fas fa-shield-alt"></i>
-                                        Enable 2FA
                                     </button>
                                 </div>
                             </div>
