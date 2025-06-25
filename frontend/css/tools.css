@@ -666,12 +666,20 @@
     .scale-measurement-notification {
         left: 10px !important;
         right: 10px !important;
-        top: calc(var(--header-height, 80px) + 10px) !important;
+        top: 100px !important; /* Consistent with main notification container */
         transform: none !important;
         max-width: none !important;
         width: calc(100vw - 20px) !important;
         box-sizing: border-box;
-        z-index: 10000000 !important;
+        z-index: 10000001 !important; /* Consistent with main notification container */
+    }
+    
+    /* Ensure all notifications on mobile are positioned below nav bar */
+    .notification-container {
+        top: 100px !important;
+        left: 10px !important;
+        right: 10px !important;
+        max-width: none !important;
     }
 }
 
@@ -1505,15 +1513,19 @@
 
 /* ===== NOTIFICATION SYSTEM ===== */
 .notification-container {
-    position: fixed;
-    top: calc(var(--header-height) + 20px);
-    right: 20px;
-    z-index: 1000000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 400px;
-    pointer-events: none;
+    position: fixed !important;
+    top: 100px !important; /* Override nav-fix.css - ensure clear separation from nav bar */
+    right: 20px !important;
+    left: auto !important; /* Override nav-fix.css centering */
+    transform: none !important; /* Override nav-fix.css transform */
+    z-index: 10000001 !important; /* Higher than any existing z-index */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    max-width: 400px !important;
+    pointer-events: none !important;
+    align-items: flex-end !important; /* Override nav-fix.css centering */
+    width: auto !important;
 }
 
 .notification {
@@ -1656,10 +1668,11 @@
 /* Mobile responsiveness for notifications */
 @media (max-width: 768px) {
     .notification-container {
-        top: calc(var(--header-height) + 10px);
-        right: 10px;
-        left: 10px;
-        max-width: none;
+        top: 100px !important; /* Override nav-fix.css and ensure consistent positioning */
+        right: 10px !important;
+        left: 10px !important;
+        max-width: none !important;
+        transform: none !important; /* Override nav-fix.css transform */
     }
     
     .notification {
