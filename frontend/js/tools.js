@@ -203,73 +203,151 @@ class ToolsManager {
         this.showNotification('Image compressor cleared successfully');
     }
 
-    // PDF Compression Tool
+    // Advanced PDF Compression Tool
     initPDFCompressor() {
         const uploadArea = document.getElementById('pdfCompressUpload');
         const fileInput = document.getElementById('pdfCompressInput');
         const compressBtn = document.getElementById('compressPdfBtn');
         const clearBtn = document.getElementById('clearPdfCompress');
+        const cancelBtn = document.getElementById('cancelCompression');
+        const compressAnotherBtn = document.getElementById('compressAnotherPdf');
+        const clearErrorBtn = document.getElementById('clearPdfError');
+        const compressionLevelSelect = document.getElementById('pdfCompressionLevel');
+        
         const controls = document.getElementById('pdfCompressionControls');
         const resultArea = document.getElementById('pdfCompressResult');
+        const processingArea = document.getElementById('pdfProcessing');
+        const errorArea = document.getElementById('pdfErrorArea');
 
         if (!uploadArea || !fileInput) return;
 
+        // Initialize ultra compressor
+        console.log('Initializing PDF compressor...');
+        console.log('UltraPDFCompressor available:', typeof UltraPDFCompressor !== 'undefined');
+        
+        try {
+            if (typeof FreeAPIPDFCompressor !== 'undefined') {
+                this.ultraCompressor = new FreeAPIPDFCompressor();
+                console.log('FREE API PDF compressor initialized successfully');
+                
+                // Show available APIs
+                const apiStatus = this.ultraCompressor.getAPIStatus();
+                console.log('Available compression APIs:', apiStatus);
+                
+            } else if (typeof GhostscriptLevelCompressor !== 'undefined') {
+                this.ultraCompressor = new GhostscriptLevelCompressor();
+                console.log('GHOSTSCRIPT-LEVEL compressor initialized successfully');
+            } else if (typeof RealPDFCompressor !== 'undefined') {
+                this.ultraCompressor = new RealPDFCompressor();
+                console.log('REAL PDF compressor initialized successfully');
+            } else if (typeof UltraPDFCompressor !== 'undefined') {
+                this.ultraCompressor = new UltraPDFCompressor();
+                console.log('Ultra PDF compressor initialized successfully');
+            } else {
+                console.error('No PDF compressor class found');
+                throw new Error('PDF compressor not available');
+            }
+        } catch (error) {
+            console.error('Failed to initialize PDF compressor:', error);
+            this.showError('PDF compressor failed to load. Please refresh the page.', errorArea);
+            return;
+        }
+
+        // Update compression features display
+        if (compressionLevelSelect) {
+            compressionLevelSelect.addEventListener('change', () => {
+                this.updateCompressionFeatures(compressionLevelSelect.value);
+            });
+            // Initialize with default selection
+            this.updateCompressionFeatures(compressionLevelSelect.value);
+        }
+
         // Upload area click
         uploadArea.addEventListener('click', () => {
+            console.log('PDF upload area clicked');
             fileInput.click();
         });
 
-        // Drag and drop
+        // Drag and drop with enhanced feedback
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = 'rgba(0, 255, 255, 0.6)';
+            uploadArea.style.backgroundColor = 'rgba(0, 255, 255, 0.05)';
         });
 
         uploadArea.addEventListener('dragleave', () => {
             uploadArea.style.borderColor = 'rgba(0, 255, 255, 0.3)';
+            uploadArea.style.backgroundColor = 'transparent';
         });
 
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = 'rgba(0, 255, 255, 0.3)';
+            uploadArea.style.backgroundColor = 'transparent';
+            
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 const file = files[0];
                 if (this.isPDFFile(file)) {
-                    this.handlePDFFile(file, controls, resultArea);
+                    this.handleAdvancedPDFFile(file, controls, resultArea, errorArea);
                 } else {
-                    this.showNotification('Please upload a PDF file only.', 'error');
+                    this.showError('Please upload a PDF file only.', errorArea);
                 }
             }
         });
 
         // File input change
         fileInput.addEventListener('change', (e) => {
+            console.log('File input changed');
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
+                console.log('File selected:', file.name, file.type);
                 if (this.isPDFFile(file)) {
-                    this.handlePDFFile(file, controls, resultArea);
+                    this.handleAdvancedPDFFile(file, controls, resultArea, errorArea);
                 } else {
-                    this.showNotification('Please upload a PDF file only.', 'error');
-                    e.target.value = ''; // Clear the input
+                    this.showError('Please upload a PDF file only.', errorArea);
+                    e.target.value = '';
                 }
             }
         });
 
         // Compress button
         if (compressBtn) {
-            compressBtn.addEventListener('click', () => {
-                const qualitySelect = document.getElementById('pdfQuality');
-                const quality = qualitySelect ? parseFloat(qualitySelect.value) : 0.5;
-                const processingArea = document.getElementById('pdfProcessing');
-                this.compressPDF(quality, resultArea, processingArea);
+            compressBtn.addEventListener('click', async () => {
+                if (!this.currentPDFFile) return;
+                
+                const compressionLevel = compressionLevelSelect ? compressionLevelSelect.value : 'aggressive';
+                await this.compressAdvancedPDF(compressionLevel, processingArea, resultArea, errorArea);
+            });
+        }
+
+        // Cancel button
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                this.ultraCompressor.cancelCompression();
+                this.hideProcessing(processingArea);
+                this.showNotification('Compression cancelled', 'warning');
             });
         }
 
         // Clear button
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
-                this.clearPDFCompressor(fileInput, controls, resultArea);
+                this.clearAdvancedPDFCompressor(fileInput, controls, resultArea, processingArea, errorArea);
+            });
+        }
+
+        // Compress another button
+        if (compressAnotherBtn) {
+            compressAnotherBtn.addEventListener('click', () => {
+                this.clearAdvancedPDFCompressor(fileInput, controls, resultArea, processingArea, errorArea);
+            });
+        }
+
+        // Clear error button
+        if (clearErrorBtn) {
+            clearErrorBtn.addEventListener('click', () => {
+                this.hideError(errorArea);
             });
         }
     }
@@ -281,193 +359,298 @@ class ToolsManager {
         return isPDFMimeType || isPDFExtension;
     }
 
-    handlePDFFile(file, controls, resultArea) {
-        console.log('PDF file selected:', file.name, file.size, file.type);
+    handleAdvancedPDFFile(file, controls, resultArea, errorArea) {
+        // Hide any previous errors
+        this.hideError(errorArea);
+        
+        // Validate file size first
+        const maxSize = 100 * 1024 * 1024; // 100MB
+        if (file.size > maxSize) {
+            this.showError(
+                `File size (${this.formatFileSize(file.size)}) exceeds the maximum limit of ${this.formatFileSize(maxSize)}.`,
+                errorArea,
+                [
+                    'Try splitting the PDF into smaller files',
+                    'Use a backend service for very large files',
+                    'Compress the PDF externally before uploading'
+                ]
+            );
+            return;
+        }
+
+        if (file.size < 1024) {
+            this.showError('File is too small to compress effectively.', errorArea);
+            return;
+        }
+
         this.currentPDFFile = file;
         if (controls) controls.style.display = 'block';
         if (resultArea) resultArea.style.display = 'none';
         
         const fileInfo = document.getElementById('pdfCompressFileInfo');
         if (fileInfo) {
+            const sizeCategory = this.getFileSizeCategory(file.size);
             fileInfo.innerHTML = `
                 <div class="file-details">
-                    <strong>${file.name}</strong><br>
-                    Size: ${this.formatFileSize(file.size)}<br>
-                    Type: PDF Document
+                    <div class="file-name"><strong>${file.name}</strong></div>
+                    <div class="file-meta">
+                        <span class="file-size">Size: ${this.formatFileSize(file.size)}</span>
+                        <span class="file-category ${sizeCategory.class}">${sizeCategory.label}</span>
+                    </div>
+                    <div class="file-type">PDF Document</div>
                 </div>
             `;
         }
         
-        // Show success notification
-        this.showNotification(`PDF uploaded successfully! File: ${file.name} (${this.formatFileSize(file.size)})`);
+        // Show success notification with size-based tips
+        const tips = this.getCompressionTips(file.size);
+        this.showNotification(`PDF uploaded successfully! ${tips}`);
     }
 
-    async compressPDF(quality, resultArea, processingArea) {
+    getFileSizeCategory(size) {
+        if (size < 1024 * 1024) { // < 1MB
+            return { class: 'small', label: 'Small file' };
+        } else if (size < 10 * 1024 * 1024) { // < 10MB
+            return { class: 'medium', label: 'Medium file' };
+        } else if (size < 50 * 1024 * 1024) { // < 50MB
+            return { class: 'large', label: 'Large file' };
+        } else {
+            return { class: 'very-large', label: 'Very large file' };
+        }
+    }
+
+    getCompressionTips(size) {
+        if (size < 1024 * 1024) {
+            return 'Small files may see minimal compression benefits.';
+        } else if (size < 10 * 1024 * 1024) {
+            return 'Good compression potential expected.';
+        } else if (size < 50 * 1024 * 1024) {
+            return 'Large file detected - will use Web Worker for processing.';
+        } else {
+            return 'Very large file - processing may take several minutes.';
+        }
+    }
+
+    updateCompressionFeatures(level) {
+        const featureList = document.getElementById('featureList');
+        if (!featureList) return;
+
+        const features = {
+            aggressive: [
+                'Maximum compression (30% image quality, 72 DPI)',
+                'Remove metadata and unnecessary elements',
+                'Multiple API fallbacks for reliability',
+                'Server-side processing for optimal results',
+                'ConvertAPI: 1500 compressions/month',
+                'PDF24 Tools: Rate limited usage',
+                'PDF.co: 300 compressions/month'
+            ],
+            moderate: [
+                'Balanced compression (50% image quality, 150 DPI)',
+                'Remove metadata, preserve document features',
+                'Automatic API fallback system',
+                'Good compression with quality retention',
+                'Suitable for regular document processing'
+            ],
+            conservative: [
+                'Quality-focused compression (70% image quality, 300 DPI)',
+                'Preserve all document features and metadata',
+                'Minimal compression for important documents',
+                'Uses most reliable API endpoints first',
+                'Safe processing for professional documents'
+            ]
+        };
+
+        const levelFeatures = features[level] || features.aggressive;
+        featureList.innerHTML = levelFeatures.map(feature => 
+            `<div class="feature-item">${feature}</div>`
+        ).join('');
+    }
+
+    async compressAdvancedPDF(compressionLevel, processingArea, resultArea, errorArea) {
         if (!this.currentPDFFile) return;
 
-        // Show processing indicator and notification
-        if (processingArea) processingArea.style.display = 'block';
+        this.hideError(errorArea);
+        this.showProcessing(processingArea);
         if (resultArea) resultArea.style.display = 'none';
-        
-        this.showNotification(`Starting PDF compression with ${Math.round(quality * 100)}% quality...`, 'info');
+
+        try {
+            const result = await this.ultraCompressor.compressPDF(
+                this.currentPDFFile,
+                compressionLevel,
+                (progress, message) => {
+                    this.updateProgress(progress, message);
+                }
+            );
+
+            this.hideProcessing(processingArea);
+            this.showCompressionResult(result, resultArea);
+
+        } catch (error) {
+            console.error('Advanced PDF compression error:', error);
+            this.hideProcessing(processingArea);
+            
+            let errorMessage = error.message;
+            let suggestions = [];
+
+            // Provide specific error handling and suggestions
+            if (error.message.includes('exceeds maximum limit')) {
+                suggestions = [
+                    'Split the PDF into smaller files',
+                    'Use online compression services for very large files',
+                    'Reduce image quality in the PDF using external tools first'
+                ];
+            } else if (error.message.includes('corrupted') || error.message.includes('load')) {
+                suggestions = [
+                    'Check if the PDF file is corrupted',
+                    'Try opening the PDF in another application first',
+                    'Ensure the file is not password-protected'
+                ];
+            } else if (error.message.includes('memory') || error.message.includes('worker')) {
+                suggestions = [
+                    'Close other browser tabs to free up memory',
+                    'Try a smaller compression level',
+                    'Restart your browser and try again'
+                ];
+            } else {
+                suggestions = [
+                    'Try a different compression level',
+                    'Ensure the PDF is not password-protected',
+                    'Check if the file is corrupted'
+                ];
+            }
+
+            this.showError(errorMessage, errorArea, suggestions);
+        }
+    }
+
+    showProcessing(processingArea) {
+        if (processingArea) {
+            processingArea.style.display = 'block';
+            this.updateProgress(0, 'Initializing...');
+        }
+    }
+
+    hideProcessing(processingArea) {
+        if (processingArea) {
+            processingArea.style.display = 'none';
+        }
+    }
+
+    updateProgress(progress, message) {
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressMessage = document.getElementById('progressMessage');
+
+        if (progressFill) {
+            progressFill.style.width = `${progress}%`;
+        }
+        if (progressPercent) {
+            progressPercent.textContent = `${Math.round(progress)}%`;
+        }
+        if (progressMessage) {
+            progressMessage.textContent = message;
+        }
+    }
+
+    showCompressionResult(result, resultArea) {
+        if (!resultArea) return;
 
         const originalSizeEl = document.getElementById('originalPdfSize');
         const compressedSizeEl = document.getElementById('compressedPdfSize');
         const reductionEl = document.getElementById('pdfReduction');
+        const compressionMethodEl = document.getElementById('compressionMethod');
         const downloadBtn = document.getElementById('downloadCompressedPdf');
 
-        try {
-            // Read the PDF file
-            const arrayBuffer = await this.currentPDFFile.arrayBuffer();
-            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
-
-            console.log(`Starting PDF compression with ${Math.round(quality * 100)}% quality...`);
-
-            // Get compression settings
-            const compressionSettings = this.getSimpleCompressionSettings(quality);
-            
-            // Remove metadata based on quality level
-            if (quality <= 0.5) {
-                pdfDoc.setTitle('');
-                pdfDoc.setAuthor('');
-                pdfDoc.setSubject('');
-                pdfDoc.setCreator('');
-                pdfDoc.setProducer('');
-                pdfDoc.setKeywords([]);
-            }
-
-            // Save with quality-based compression settings
-            const compressedPdfBytes = await pdfDoc.save({
-                useObjectStreams: compressionSettings.useObjectStreams,
-                addDefaultPage: false,
-                objectsPerTick: compressionSettings.objectsPerTick,
-                updateFieldAppearances: false
-            });
-
-            const originalSize = this.currentPDFFile.size;
-            const compressedSize = compressedPdfBytes.length;
-
-            // If compression made it larger, try alternative approach
-            let finalBytes = compressedPdfBytes;
-            let finalSize = compressedSize;
-
-            if (compressedSize >= originalSize) {
-                console.log('Initial compression increased size, trying minimal approach...');
-                
-                // Try minimal compression
-                const minimalBytes = await pdfDoc.save({
-                    useObjectStreams: true,
-                    addDefaultPage: false,
-                    objectsPerTick: 50,
-                    updateFieldAppearances: false
-                });
-
-                if (minimalBytes.length < originalSize) {
-                    finalBytes = minimalBytes;
-                    finalSize = minimalBytes.length;
-                } else {
-                    // If still larger, use original approach but show warning
-                    finalBytes = compressedPdfBytes;
-                    finalSize = compressedSize;
-                }
-            }
-
-            const actualReduction = Math.round(((originalSize - finalSize) / originalSize) * 100);
-
-            console.log(`Compression result: ${this.formatFileSize(originalSize)} → ${this.formatFileSize(finalSize)} (${actualReduction}%)`);
-
-            // Update UI
-            if (originalSizeEl) originalSizeEl.textContent = this.formatFileSize(originalSize);
-            if (compressedSizeEl) compressedSizeEl.textContent = this.formatFileSize(finalSize);
-            if (reductionEl) {
-                if (actualReduction > 0) {
-                    reductionEl.textContent = `${actualReduction}%`;
-                    reductionEl.style.color = '#4CAF50';
-                } else if (actualReduction === 0) {
-                    reductionEl.textContent = 'No change';
-                    reductionEl.style.color = '#ff9800';
-                } else {
-                    reductionEl.textContent = 'Size increased';
-                    reductionEl.style.color = '#f44336';
-                }
-            }
-
-            // Create download functionality
-            const compressedBlob = new Blob([finalBytes], { type: 'application/pdf' });
-            
-            if (downloadBtn) {
-                downloadBtn.onclick = () => {
-                    const url = URL.createObjectURL(compressedBlob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `compressed_${Math.round(quality * 100)}%_${this.currentPDFFile.name}`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                };
-            }
-
-            // Hide processing and show results
-            if (processingArea) processingArea.style.display = 'none';
-            if (resultArea) resultArea.style.display = 'block';
-            
-            // Show success notification with compression results
-            if (actualReduction > 0) {
-                this.showNotification(`PDF compressed successfully! Reduced by ${actualReduction}% (${this.formatFileSize(originalSize)} → ${this.formatFileSize(finalSize)})`);
-            } else if (actualReduction === 0) {
-                this.showNotification('PDF compression completed, but no size reduction achieved.', 'warning');
+        // Update size display
+        if (originalSizeEl) originalSizeEl.textContent = this.formatFileSize(result.originalSize);
+        if (compressedSizeEl) compressedSizeEl.textContent = this.formatFileSize(result.compressedSize);
+        
+        // Update reduction display with color coding
+        if (reductionEl) {
+            if (result.reduction > 0) {
+                reductionEl.textContent = `${result.reduction}%`;
+                reductionEl.className = 'reduction-value positive';
+            } else if (result.reduction === 0) {
+                reductionEl.textContent = 'No change';
+                reductionEl.className = 'reduction-value neutral';
             } else {
-                this.showNotification('PDF compression completed, but file size increased. You may want to try a different quality setting.', 'warning');
+                reductionEl.textContent = 'Size increased';
+                reductionEl.className = 'reduction-value negative';
             }
+        }
 
-        } catch (error) {
-            console.error('Error compressing PDF:', error);
-            
-            // Hide processing indicator
-            if (processingArea) processingArea.style.display = 'none';
-            
-            // Reset UI on error
-            if (originalSizeEl) originalSizeEl.textContent = this.formatFileSize(this.currentPDFFile.size);
-            if (compressedSizeEl) compressedSizeEl.textContent = 'Error';
-            if (reductionEl) reductionEl.textContent = 'Error';
-            
-            this.showNotification('Error compressing PDF. The file might be corrupted or password-protected.', 'error');
+        // Show compression method
+        if (compressionMethodEl) {
+            compressionMethodEl.textContent = `Compression method: Advanced ${result.filename.split('_')[1]} mode`;
+        }
+
+        // Setup download
+        if (downloadBtn) {
+            const compressedBlob = new Blob([result.compressedBytes], { type: 'application/pdf' });
+            downloadBtn.onclick = () => {
+                const url = URL.createObjectURL(compressedBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = result.filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+        }
+
+        resultArea.style.display = 'block';
+
+        // Show success notification
+        if (result.reduction > 0) {
+            this.showNotification(`🎉 PDF compressed successfully! Reduced by ${result.reduction}% (${this.formatFileSize(result.originalSize)} → ${this.formatFileSize(result.compressedSize)})`);
+        } else {
+            this.showNotification('PDF processing completed, but no size reduction achieved. The file may already be optimized.', 'warning');
         }
     }
 
-    getSimpleCompressionSettings(quality) {
-        // Simple, working compression settings for PDF-lib
-        switch (quality) {
-            case 0.7: // High quality - 70%
-                return {
-                    useObjectStreams: true,
-                    objectsPerTick: 50
-                };
-            case 0.5: // Medium quality - 50%
-                return {
-                    useObjectStreams: true,
-                    objectsPerTick: 200
-                };
-            case 0.3: // Low quality - 30%
-                return {
-                    useObjectStreams: true,
-                    objectsPerTick: 1000
-                };
-            default:
-                return {
-                    useObjectStreams: true,
-                    objectsPerTick: 100
-                };
+    showError(message, errorArea, suggestions = []) {
+        if (!errorArea) return;
+
+        const errorText = document.getElementById('pdfErrorText');
+        const errorSuggestions = document.getElementById('pdfErrorSuggestions');
+
+        if (errorText) {
+            errorText.textContent = message;
+        }
+
+        if (errorSuggestions && suggestions.length > 0) {
+            errorSuggestions.innerHTML = `
+                <h4>💡 Suggestions:</h4>
+                <ul>
+                    ${suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                </ul>
+            `;
+        } else if (errorSuggestions) {
+            errorSuggestions.innerHTML = '';
+        }
+
+        errorArea.style.display = 'block';
+        this.showNotification(message, 'error');
+    }
+
+    hideError(errorArea) {
+        if (errorArea) {
+            errorArea.style.display = 'none';
         }
     }
 
-    clearPDFCompressor(fileInput, controls, resultArea) {
+    clearAdvancedPDFCompressor(fileInput, controls, resultArea, processingArea, errorArea) {
+        // Cancel any ongoing compression
+        if (this.ultraCompressor) {
+            this.ultraCompressor.cancelCompression();
+        }
+        
         this.currentPDFFile = null;
         if (fileInput) fileInput.value = '';
         if (controls) controls.style.display = 'none';
         if (resultArea) resultArea.style.display = 'none';
-        
-        const processingArea = document.getElementById('pdfProcessing');
         if (processingArea) processingArea.style.display = 'none';
+        if (errorArea) errorArea.style.display = 'none';
         
         const fileInfo = document.getElementById('pdfCompressFileInfo');
         if (fileInfo) fileInfo.innerHTML = '';
@@ -1014,6 +1197,14 @@ class ToolsManager {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    isPDFFile(file) {
+        return file && (
+            file.type === 'application/pdf' || 
+            file.type.includes('pdf') ||
+            file.name.toLowerCase().endsWith('.pdf')
+        );
     }
 }
 
