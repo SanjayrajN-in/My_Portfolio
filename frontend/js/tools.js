@@ -404,7 +404,6 @@ class ToolsManager {
     }
 
     handlePDFFile(file, controls, resultArea) {
-        
         this.currentPDFFile = file;
         if (controls) controls.style.display = 'block';
         if (resultArea) resultArea.style.display = 'none';
@@ -440,8 +439,6 @@ class ToolsManager {
             const arrayBuffer = await this.currentPDFFile.arrayBuffer();
             const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
 
-            }% quality...`);
-
             // Get compression settings
             const compressionSettings = this.getSimpleCompressionSettings(quality);
             
@@ -471,8 +468,6 @@ class ToolsManager {
             let finalSize = compressedSize;
 
             if (compressedSize >= originalSize) {
-                
-                
                 // Try minimal compression
                 const minimalBytes = await pdfDoc.save({
                     useObjectStreams: true,
@@ -492,8 +487,6 @@ class ToolsManager {
             }
 
             const actualReduction = Math.round(((originalSize - finalSize) / originalSize) * 100);
-
-            } → ${this.formatFileSize(finalSize)} (${actualReduction}%)`);
 
             // Update UI
             if (originalSizeEl) originalSizeEl.textContent = this.formatFileSize(originalSize);

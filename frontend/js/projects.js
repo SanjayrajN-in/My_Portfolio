@@ -8,11 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.location.hash) {
         const projectId = window.location.hash.substring(1); // Remove the # character
         
-        
         // Special handling for keithley project (Data Logger)
         if (projectId === 'keithley') {
-            
-            
             // Wait for page to fully load
             setTimeout(() => {
                 // Get the keithley project element
@@ -46,8 +43,6 @@ document.addEventListener('DOMContentLoaded', function() {
         else {
             const projectItem = document.getElementById(projectId);
             if (projectItem) {
-                
-                
                 // Wait for page to fully load
                 setTimeout(() => {
                     // Get the position of the element relative to the viewport
@@ -72,8 +67,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 1500);
                     
                 }, 300);
-            } else {
-                
             }
         }
     }
@@ -86,21 +79,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Check if modal elements exist
     if (!modal || !modalContent) {
-        
         return;
     }
     
     // Debug: Log all project buttons
-    
     viewButtons.forEach((button, index) => {
-        }"`);
+        // Button processing logic can be added here if needed
     });
     
     // Debug: Log all project templates
     const projectTemplates = document.querySelectorAll('.project-details-template');
-    
     projectTemplates.forEach(template => {
-        
+        // Template processing logic can be added here if needed
     });
     
     // Close modal function
@@ -166,21 +156,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get the project ID directly from the button
             const projectId = this.getAttribute('data-project');
             
-            
             // Find the template for this project
             const templateId = `${projectId}-details`;
             const template = document.getElementById(templateId);
             
             if (!template) {
-                
-                
                 document.querySelectorAll('.project-details-template').forEach(t => {
-                    
+                    // Template debugging logic can be added here if needed
                 });
                 return;
             }
-            
-            
             
             // Load the template content
             modalContent.innerHTML = template.innerHTML;
