@@ -72,6 +72,12 @@
                 localStorage.removeItem(`${gameName}_user_rank_cache`);
                 localStorage.removeItem(`${gameName}_rankings_cache`);
                 
+                // If it's a new high score, immediately cache it
+                if (data.isNewHighScore && data.score && data.score.score) {
+                    localStorage.setItem(`${gameName}ServerHighScore`, data.score.score.toString());
+                    localStorage.setItem(`${gameName}ServerHighScoreTimestamp`, Date.now().toString());
+                }
+                
                 return data;
             } catch (error) {
                 console.error('Error submitting score:', error);
@@ -478,7 +484,12 @@
                         initialScore = parseInt(localStorage.getItem(game.localKey) || '0');
                     }
                     
-                    element.textContent = initialScore;
+                    // Don't show 0 for logged-in users until we get server data
+                    if (isLoggedIn && initialScore === 0) {
+                        element.textContent = '--';
+                    } else {
+                        element.textContent = initialScore;
+                    }
                     console.log(`Initialized ${game.name} high score display: ${initialScore}`);
                 }
             });

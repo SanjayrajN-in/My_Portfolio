@@ -51,24 +51,45 @@ router.post('/submit', auth, async (req, res) => {
             if (!existingRecord) {
                 // No existing record, create new one
                 console.log('Creating new score record');
-                result = new GameScore({
-                    userId: req.user.id,
-                    username: username,
-                    gameName: gameName,
-                    score: numericScore,
-                    level: numericLevel,
-                    timeElapsed: numericTimeElapsed
-                });
-                await result.save();
+                result = await GameScore.findOneAndUpdate(
+                    {
+                        userId: req.user.id,
+                        gameName: gameName
+                    },
+                    {
+                        userId: req.user.id,
+                        username: username,
+                        gameName: gameName,
+                        score: numericScore,
+                        level: numericLevel,
+                        timeElapsed: numericTimeElapsed
+                    },
+                    { 
+                        upsert: true, 
+                        new: true,
+                        runValidators: true 
+                    }
+                );
                 isNewHighScore = true;
             } else if (numericScore > existingRecord.score) {
                 // New score is higher, update the existing record
                 console.log('Updating existing score record with higher score');
-                existingRecord.score = numericScore;
-                existingRecord.level = numericLevel;
-                existingRecord.timeElapsed = numericTimeElapsed;
-                existingRecord.username = username; // Update username in case it changed
-                result = await existingRecord.save();
+                result = await GameScore.findOneAndUpdate(
+                    {
+                        userId: req.user.id,
+                        gameName: gameName
+                    },
+                    {
+                        score: numericScore,
+                        level: numericLevel,
+                        timeElapsed: numericTimeElapsed,
+                        username: username // Update username in case it changed
+                    },
+                    { 
+                        new: true,
+                        runValidators: true 
+                    }
+                );
                 isNewHighScore = true;
             } else {
                 // Score is not higher, don't update
