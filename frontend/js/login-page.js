@@ -14,12 +14,35 @@ class LoginPageManager {
         this.setupGoogleAuth();
         this.setupPasswordValidation();
         this.setupOTPInput();
+        this.cleanupPendingCredentials();
         
         // Delay auth state check to ensure API is loaded
         setTimeout(() => {
             this.checkAuthState();
             this.showLoginMessage();
         }, 1000);
+    }
+
+    cleanupPendingCredentials() {
+        // Clean up any stale pending credentials on page load
+        // Only keep them if they're fresh (less than 5 minutes old)
+        const pendingCredential = sessionStorage.getItem('pendingGoogleCredential');
+        const credentialTimestamp = sessionStorage.getItem('pendingGoogleCredentialTime');
+        
+        if (pendingCredential && credentialTimestamp) {
+            const now = Date.now();
+            const timestamp = parseInt(credentialTimestamp);
+            const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+            
+            if (now - timestamp > fiveMinutes) {
+                // Credential is stale, remove it
+                sessionStorage.removeItem('pendingGoogleCredential');
+                sessionStorage.removeItem('pendingGoogleCredentialTime');
+            }
+        } else if (pendingCredential) {
+            // No timestamp, assume it's stale
+            sessionStorage.removeItem('pendingGoogleCredential');
+        }
     }
     
     setupGoogleAuth() {
@@ -49,6 +72,8 @@ class LoginPageManager {
             // Set up custom Google Sign In buttons
             if (googleLoginBtn) {
                 googleLoginBtn.addEventListener('click', () => {
+                    // Set flag to indicate this is for login
+                    sessionStorage.setItem('googleActionType', 'login');
                     this.showNotification('Select your Google account...', 'info');
                     // Use the client-side prompt which works well on desktop
                     google.accounts.id.prompt();
@@ -57,9 +82,18 @@ class LoginPageManager {
             
             if (googleRegisterBtn) {
                 googleRegisterBtn.addEventListener('click', () => {
-                    this.showNotification('Select your Google account...', 'info');
-                    // Use the client-side prompt which works well on desktop
-                    google.accounts.id.prompt();
+                    // Check if there's a pending Google credential from failed login
+                    const pendingCredential = sessionStorage.getItem('pendingGoogleCredential');
+                    if (pendingCredential) {
+                        // Use the stored credential for registration
+                        this.handleGoogleRegistration(pendingCredential);
+                    } else {
+                        // Set flag to indicate this is for registration
+                        sessionStorage.setItem('googleActionType', 'register');
+                        this.showNotification('Select your Google account for registration...', 'info');
+                        // Use the client-side prompt which works well on desktop
+                        google.accounts.id.prompt();
+                    }
                 });
             }
         }).catch(error => {
@@ -98,6 +132,17 @@ class LoginPageManager {
             return;
         }
         
+        // Check what action the user intended (login or register)
+        const actionType = sessionStorage.getItem('googleActionType') || 'login';
+        sessionStorage.removeItem('googleActionType'); // Clean up
+        
+        if (actionType === 'register') {
+            // User clicked register button, go directly to registration
+            this.handleGoogleRegistration(response.credential);
+            return;
+        }
+        
+        // Default behavior: try to login first
         this.showNotification('Google authentication successful, logging in...', 'info');
         
         try {
@@ -130,7 +175,28 @@ class LoginPageManager {
             }
         } catch (error) {
             console.error('Google login error:', error);
-            this.showNotification('Failed to complete Google login', 'error');
+            
+            // Check if the error is due to account not found (404 status)
+            if (error.status === 404 || (error.message && error.message.includes('No account found'))) {
+                this.showNotification('No account found with this Google account. Redirecting to registration...', 'info');
+                
+                // Store the Google credential for registration with timestamp
+                sessionStorage.setItem('pendingGoogleCredential', response.credential);
+                sessionStorage.setItem('pendingGoogleCredentialTime', Date.now().toString());
+                
+                // Switch to register tab and show a helpful message
+                setTimeout(() => {
+                    this.switchTab('register');
+                    this.showNotification('Please complete your registration using your Google account', 'info');
+                    
+                    // Auto-trigger Google registration after switching tabs
+                    setTimeout(() => {
+                        this.handleGoogleRegistration(response.credential);
+                    }, 1000);
+                }, 1500);
+            } else {
+                this.showNotification('Failed to complete Google login', 'error');
+            }
         }
     }
     
@@ -140,6 +206,61 @@ class LoginPageManager {
         const parts = value.split(`; ${name}=`);
         if (parts.length === 2) return parts.pop().split(';').shift();
         return null;
+    }
+
+    async handleGoogleRegistration(credential) {
+        if (!credential) {
+            this.showNotification('Google credential not available for registration', 'error');
+            return;
+        }
+
+        this.showNotification('Registering your account with Google...', 'info');
+
+        try {
+            // Send the credential to your backend for registration
+            const data = await window.API.googleRegister(credential);
+
+            if (data.success) {
+                // Store token
+                localStorage.setItem('token', data.token);
+
+                // Store user data
+                if (data.user) {
+                    sessionStorage.setItem('currentUser', JSON.stringify(data.user));
+                }
+
+                // Update auth system
+                if (window.authSystem) {
+                    window.authSystem.currentUser = data.user;
+                    window.authSystem.refreshAuthState();
+                }
+
+                this.showNotification('Registration successful! Welcome to our platform!', 'success');
+
+                // Clear the pending credential
+                sessionStorage.removeItem('pendingGoogleCredential');
+
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 1500);
+            } else {
+                this.showNotification(data.message || 'Registration failed', 'error');
+            }
+        } catch (error) {
+            console.error('Google registration error:', error);
+            
+            // Handle specific error cases
+            if (error.message && error.message.includes('already exists')) {
+                this.showNotification('An account with this email already exists. Please try logging in instead.', 'error');
+                // Switch back to login tab
+                setTimeout(() => {
+                    this.switchTab('login');
+                }, 2000);
+            } else {
+                this.showNotification('Failed to complete Google registration. Please try again.', 'error');
+            }
+        }
     }
 
     setupEventListeners() {
@@ -208,8 +329,15 @@ class LoginPageManager {
         } else {
             title.textContent = 'Create Account';
             subtitle.textContent = 'Join our community today';
-            // Show terms and conditions notification when switching to register
-            this.showNotification('By registering, you agree to our Terms and Conditions', 'info');
+            
+            // Check if there's a pending Google credential for registration
+            const pendingCredential = sessionStorage.getItem('pendingGoogleCredential');
+            if (pendingCredential) {
+                this.showNotification('Complete your registration using your Google account', 'info');
+            } else {
+                // Show terms and conditions notification when switching to register
+                this.showNotification('By registering, you agree to our Terms and Conditions', 'info');
+            }
         }
 
         this.currentForm = tab;

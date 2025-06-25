@@ -41,12 +41,20 @@ class APIConfig {
             const data = await response.json();
             
             if (!response.ok) {
-                throw new Error(data.message || 'API request failed');
+                const error = new Error(data.message || 'API request failed');
+                error.status = response.status;
+                error.statusText = response.statusText;
+                throw error;
             }
             
             return data;
         } catch (error) {
             console.error('API Request Error:', error);
+            // If it's a network error or JSON parsing error, preserve the original error
+            if (!error.status && error.name !== 'SyntaxError') {
+                // For network errors, we don't have status info
+                error.status = 0;
+            }
             throw error;
         }
     }
