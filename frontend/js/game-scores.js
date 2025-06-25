@@ -91,51 +91,89 @@
          * @returns {Promise} - Promise that resolves with the rankings
          */
         getRankings: async function(gameName) {
+            console.log(`[RANKINGS API] Fetching rankings for ${gameName}...`);
+            
             try {
-                const response = await fetch(`${API_URL}/api/scores/rankings/${gameName}`, {
+                const url = `${API_URL}/api/scores/rankings/${gameName}`;
+                console.log(`[RANKINGS API] Making request to: ${url}`);
+                
+                const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 });
                 
+                console.log(`[RANKINGS API] Response status: ${response.status} ${response.statusText}`);
+                
                 // Check if the response is ok (status in the range 200-299)
                 if (!response.ok) {
-                    console.warn(`Rankings request failed with status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.warn(`[RANKINGS API] Rankings request failed with status: ${response.status}`, errorText);
+                    
                     // Try to get cached rankings
                     const cachedRankings = localStorage.getItem(`${gameName}_rankings_cache`);
                     if (cachedRankings) {
-                        const parsed = JSON.parse(cachedRankings);
-                        return parsed.data || [];
+                        try {
+                            const parsed = JSON.parse(cachedRankings);
+                            console.log(`[RANKINGS API] Using cached rankings for ${gameName}:`, parsed.data?.length || 0, 'items');
+                            return parsed.data || [];
+                        } catch (parseError) {
+                            console.warn('[RANKINGS API] Error parsing cached rankings:', parseError);
+                        }
                     }
                     return [];
                 }
                 
                 const data = await response.json();
+                console.log(`[RANKINGS API] Received data for ${gameName}:`, {
+                    isArray: Array.isArray(data),
+                    length: data?.length,
+                    firstItem: data?.[0],
+                    dataType: typeof data
+                });
                 
                 // Ensure the data is an array
                 if (!Array.isArray(data)) {
-                    console.warn('Rankings data is not an array:', data);
+                    console.warn('[RANKINGS API] Rankings data is not an array:', data);
                     return [];
                 }
                 
+                // Validate the data structure
+                const validRankings = data.filter(item => {
+                    const isValid = item && 
+                                   typeof item.username === 'string' && 
+                                   typeof item.score === 'number' && 
+                                   item.username.trim() !== '';
+                    
+                    if (!isValid) {
+                        console.warn('[RANKINGS API] Invalid ranking item:', item);
+                    }
+                    return isValid;
+                });
+                
+                console.log(`[RANKINGS API] Valid rankings for ${gameName}: ${validRankings.length}/${data.length}`);
+                
                 // Cache the rankings for offline use
                 localStorage.setItem(`${gameName}_rankings_cache`, JSON.stringify({
-                    data: data,
+                    data: validRankings,
                     timestamp: Date.now()
                 }));
                 
-                return data;
+                return validRankings;
             } catch (error) {
-                console.warn('Error fetching rankings:', error);
+                console.error(`[RANKINGS API] Error fetching rankings for ${gameName}:`, error);
+                
                 // Try to get cached rankings
                 const cachedRankings = localStorage.getItem(`${gameName}_rankings_cache`);
                 if (cachedRankings) {
                     try {
                         const parsed = JSON.parse(cachedRankings);
+                        const cacheAge = Date.now() - (parsed.timestamp || 0);
+                        console.log(`[RANKINGS API] Using cached rankings for ${gameName} (age: ${Math.round(cacheAge/1000)}s):`, parsed.data?.length || 0, 'items');
                         return parsed.data || [];
                     } catch (parseError) {
-                        console.warn('Error parsing cached rankings:', parseError);
+                        console.warn('[RANKINGS API] Error parsing cached rankings:', parseError);
                     }
                 }
                 return [];
@@ -239,116 +277,129 @@
          * @param {boolean} startPeriodicRefresh - Whether to start periodic refresh
          */
         updateRankingsUI: async function(gameName, containerId, startPeriodicRefresh = false) {
-            const rankingsList = document.getElementById(`${gameName}-rankings-list`);
-            const userRankElement = document.getElementById(`${gameName}-user-rank`);
+            console.log(`[RANKINGS DEBUG] Starting updateRankingsUI for ${gameName}`);
+            
+            // Wait for DOM elements to exist with retry mechanism
+            let retryCount = 0;
+            const maxRetries = 10;
+            let rankingsList, userRankElement;
+            
+            while (retryCount < maxRetries) {
+                rankingsList = document.getElementById(`${gameName}-rankings-list`);
+                userRankElement = document.getElementById(`${gameName}-user-rank`);
+                
+                if (rankingsList && userRankElement) {
+                    break;
+                }
+                
+                console.log(`[RANKINGS DEBUG] Waiting for DOM elements... retry ${retryCount + 1}/${maxRetries}`);
+                await new Promise(resolve => setTimeout(resolve, 200));
+                retryCount++;
+            }
             
             if (!rankingsList || !userRankElement) {
+                console.error(`[RANKINGS DEBUG] Failed to find DOM elements for ${gameName} after ${maxRetries} retries`);
+                console.error(`[RANKINGS DEBUG] rankingsList:`, rankingsList);
+                console.error(`[RANKINGS DEBUG] userRankElement:`, userRankElement);
                 return;
             }
 
+            // Show loading indicator
+            rankingsList.innerHTML = '<div class="loading-rankings">Loading rankings...</div>';
+            userRankElement.innerHTML = '<div class="loading-rankings">Loading your rank...</div>';
+
             try {
-                // Fetch rankings and user rank in parallel
+                // Clear any stale cache first if this is a fresh request
+                if (!startPeriodicRefresh) {
+                    localStorage.removeItem(`${gameName}_rankings_cache_temp`);
+                }
+                
+                // Fetch rankings and user rank in parallel with longer timeout
                 let rankings = [];
                 let userRank = { rank: null, score: null };
                 
+                console.log(`[RANKINGS DEBUG] Fetching data for ${gameName}...`);
+                
+                // Create fetch promises with timeout
+                const createTimeoutPromise = (promise, timeout = 10000) => {
+                    return Promise.race([
+                        promise,
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('Request timeout')), timeout)
+                        )
+                    ]);
+                };
+                
                 try {
-                    console.log(`Updating rankings UI for ${gameName}...`);
-                    
-                    // Use Promise.allSettled to handle potential failures gracefully
+                    // Use Promise.allSettled with timeout handling
                     const results = await Promise.allSettled([
-                        this.getRankings(gameName),
-                        this.getUserRank(gameName)
+                        createTimeoutPromise(this.getRankings(gameName)),
+                        createTimeoutPromise(this.getUserRank(gameName))
                     ]);
                     
-                    // Check if rankings request succeeded
-                    if (results[0].status === 'fulfilled' && Array.isArray(results[0].value)) {
-                        rankings = results[0].value;
-                        console.log(`Successfully fetched ${rankings.length} rankings for ${gameName}`);
+                    // Process rankings result
+                    if (results[0].status === 'fulfilled') {
+                        const rankingsData = results[0].value;
+                        if (Array.isArray(rankingsData)) {
+                            rankings = rankingsData;
+                            console.log(`[RANKINGS DEBUG] Successfully fetched ${rankings.length} rankings for ${gameName}`);
+                        } else {
+                            console.warn(`[RANKINGS DEBUG] Rankings data is not an array:`, rankingsData);
+                        }
                     } else {
-                        console.warn(`Failed to fetch rankings for ${gameName}:`, results[0].reason);
+                        console.warn(`[RANKINGS DEBUG] Failed to fetch rankings for ${gameName}:`, results[0].reason);
                     }
                     
-                    // Check if user rank request succeeded
-                    if (results[1].status === 'fulfilled' && results[1].value) {
-                        userRank = results[1].value;
-                        console.log(`Successfully fetched user rank for ${gameName}:`, userRank);
+                    // Process user rank result
+                    if (results[1].status === 'fulfilled') {
+                        const userRankData = results[1].value;
+                        if (userRankData && (userRankData.rank !== undefined || userRankData.score !== undefined)) {
+                            userRank = userRankData;
+                            console.log(`[RANKINGS DEBUG] Successfully fetched user rank for ${gameName}:`, userRank);
+                        } else {
+                            console.warn(`[RANKINGS DEBUG] Invalid user rank data:`, userRankData);
+                        }
                     } else {
-                        console.warn(`Failed to fetch user rank for ${gameName}:`, results[1].reason);
+                        console.warn(`[RANKINGS DEBUG] Failed to fetch user rank for ${gameName}:`, results[1].reason);
                     }
                 } catch (fetchError) {
-                    console.error(`Error fetching data for ${gameName}:`, fetchError);
+                    console.error(`[RANKINGS DEBUG] Error fetching data for ${gameName}:`, fetchError);
                 }
 
-                // Update rankings list
-                if (!Array.isArray(rankings) || rankings.length === 0) {
-                    console.log(`No rankings found for ${gameName}, checking cache...`);
+                // Handle rankings display with improved fallback logic
+                let finalRankings = rankings;
+                
+                if (!Array.isArray(finalRankings) || finalRankings.length === 0) {
+                    console.log(`[RANKINGS DEBUG] No rankings found for ${gameName}, checking cache...`);
                     
                     // Try to get cached rankings as fallback
                     const cachedRankings = localStorage.getItem(`${gameName}_rankings_cache`);
                     if (cachedRankings) {
                         try {
                             const parsed = JSON.parse(cachedRankings);
-                            if (parsed.data && Array.isArray(parsed.data) && parsed.data.length > 0) {
-                                console.log(`Using cached rankings for ${gameName}`);
-                                rankings = parsed.data;
+                            const cacheAge = Date.now() - (parsed.timestamp || 0);
+                            
+                            // Use cache if it's less than 10 minutes old and has data
+                            if (cacheAge < 600000 && parsed.data && Array.isArray(parsed.data) && parsed.data.length > 0) {
+                                console.log(`[RANKINGS DEBUG] Using cached rankings for ${gameName} (age: ${Math.round(cacheAge/1000)}s)`);
+                                finalRankings = parsed.data;
                             }
                         } catch (e) {
-                            console.warn('Error parsing cached rankings:', e);
+                            console.warn('[RANKINGS DEBUG] Error parsing cached rankings:', e);
                         }
                     }
-                    
-                    if (!Array.isArray(rankings) || rankings.length === 0) {
-                        rankingsList.innerHTML = '<div class="no-rankings">No rankings yet. Be the first!</div>';
-                    } else {
-                        let rankingsHTML = '';
-                        rankings.forEach((rank, index) => {
-                            rankingsHTML += `
-                                <div class="ranking-item ${index === 0 ? 'first-place' : ''}">
-                                    <div class="ranking-position">${index + 1}</div>
-                                    <div class="ranking-username">${rank.username}</div>
-                                    <div class="ranking-score">${rank.score}</div>
-                                </div>
-                            `;
-                        });
-                        rankingsList.innerHTML = rankingsHTML;
-                    }
-                } else {
-                    let rankingsHTML = '';
-                    rankings.forEach((rank, index) => {
-                        rankingsHTML += `
-                            <div class="ranking-item ${index === 0 ? 'first-place' : ''}">
-                                <div class="ranking-position">${index + 1}</div>
-                                <div class="ranking-username">${rank.username}</div>
-                                <div class="ranking-score">${rank.score}</div>
-                            </div>
-                        `;
-                    });
-                    rankingsList.innerHTML = rankingsHTML;
                 }
-
-                // Update user rank
-                if (userRank && userRank.rank && userRank.score) {
-                    userRankElement.innerHTML = `
-                        <div class="user-rank-title">Your Rank</div>
-                        <div class="user-rank-info">
-                            <span class="user-rank-position">#${userRank.rank}</span>
-                            <span class="user-rank-score">Score: ${userRank.score}</span>
-                        </div>
-                    `;
-                } else {
-                    // Show appropriate message based on whether there are rankings or not
-                    const hasRankings = Array.isArray(rankings) && rankings.length > 0;
-                    const message = hasRankings ? "Not ranked yet - play to get ranked!" : "No rankings yet - be the first!";
-                    
-                    userRankElement.innerHTML = `
-                        <div class="user-rank-title">Your Rank</div>
-                        <div class="user-rank-info">
-                            <span class="user-not-ranked">${message}</span>
-                        </div>
-                    `;
-                }
+                
+                // Update rankings list with better error handling
+                this.renderRankingsList(rankingsList, finalRankings, gameName);
+                
+                // Update user rank with better error handling
+                this.renderUserRank(userRankElement, userRank, finalRankings);
+                
             } catch (error) {
-                rankingsList.innerHTML = '<div class="rankings-error">Error loading rankings</div>';
+                console.error(`[RANKINGS DEBUG] Critical error in updateRankingsUI for ${gameName}:`, error);
+                rankingsList.innerHTML = '<div class="rankings-error">Error loading rankings. Please try refreshing.</div>';
+                userRankElement.innerHTML = '<div class="rankings-error">Error loading rank</div>';
             }
             
             // Start periodic refresh if requested and not already running
@@ -357,13 +408,73 @@
             }
             
             if (startPeriodicRefresh && !this._refreshIntervals[gameName]) {
+                console.log(`[RANKINGS DEBUG] Starting periodic refresh for ${gameName}`);
                 this._refreshIntervals[gameName] = setInterval(() => {
                     // Only refresh if the game container is visible
                     const container = document.getElementById(containerId);
-                    if (container && container.closest('.game-container')?.classList.contains('active')) {
+                    const gameContainer = container?.closest('.game-container');
+                    if (gameContainer?.classList.contains('active')) {
+                        console.log(`[RANKINGS DEBUG] Periodic refresh for ${gameName}`);
                         this.updateRankingsUI(gameName, containerId, false); // Don't restart the interval
                     }
                 }, 30000); // Refresh every 30 seconds
+            }
+        },
+
+        /**
+         * Render the rankings list HTML
+         */
+        renderRankingsList: function(rankingsList, rankings, gameName) {
+            if (!Array.isArray(rankings) || rankings.length === 0) {
+                console.log(`[RANKINGS DEBUG] Showing 'no rankings' message for ${gameName}`);
+                rankingsList.innerHTML = '<div class="no-rankings">No rankings yet. Be the first!</div>';
+                return;
+            }
+
+            console.log(`[RANKINGS DEBUG] Rendering ${rankings.length} rankings for ${gameName}`);
+            let rankingsHTML = '';
+            rankings.forEach((rank, index) => {
+                if (rank && rank.username && rank.score !== undefined) {
+                    rankingsHTML += `
+                        <div class="ranking-item ${index === 0 ? 'first-place' : ''}">
+                            <div class="ranking-position">${index + 1}</div>
+                            <div class="ranking-username">${rank.username || 'Anonymous'}</div>
+                            <div class="ranking-score">${rank.score || 0}</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (rankingsHTML) {
+                rankingsList.innerHTML = rankingsHTML;
+            } else {
+                rankingsList.innerHTML = '<div class="no-rankings">No valid rankings found</div>';
+            }
+        },
+
+        /**
+         * Render the user rank HTML
+         */
+        renderUserRank: function(userRankElement, userRank, rankings) {
+            if (userRank && userRank.rank && userRank.score) {
+                userRankElement.innerHTML = `
+                    <div class="user-rank-title">Your Rank</div>
+                    <div class="user-rank-info">
+                        <span class="user-rank-position">#${userRank.rank}</span>
+                        <span class="user-rank-score">Score: ${userRank.score}</span>
+                    </div>
+                `;
+            } else {
+                // Show appropriate message based on whether there are rankings or not
+                const hasRankings = Array.isArray(rankings) && rankings.length > 0;
+                const message = hasRankings ? "Not ranked yet - play to get ranked!" : "No rankings yet - be the first!";
+                
+                userRankElement.innerHTML = `
+                    <div class="user-rank-title">Your Rank</div>
+                    <div class="user-rank-info">
+                        <span class="user-not-ranked">${message}</span>
+                    </div>
+                `;
             }
         },
 
@@ -426,8 +537,8 @@
         /**
          * Initialize game scores when page loads
          */
-        initializeGameScores: function() {
-            console.log('Initializing game scores...');
+        initializeGameScores: async function() {
+            console.log('[INIT DEBUG] Initializing game scores...');
             
             // Always initialize high score displays, whether logged in or not
             this.initializeHighScoreDisplays();
@@ -435,14 +546,93 @@
             // Check if user is logged in for server data
             const token = localStorage.getItem('token');
             if (token) {
-                console.log('User is logged in, fetching server data...');
-                // Delay to ensure DOM is ready
+                console.log('[INIT DEBUG] User is logged in, fetching server data...');
+                
+                // Wait for DOM to be fully ready with longer delay
+                await this.waitForDOM();
+                
+                // Initialize rankings containers first
+                await this.initializeRankingsContainers();
+                
+                // Then refresh all games data
                 setTimeout(() => {
                     this.forceRefreshAllGames();
-                }, 500);
+                }, 1000);
             } else {
-                console.log('User not logged in, using local high scores');
+                console.log('[INIT DEBUG] User not logged in, using local high scores');
                 this.initializeLocalHighScores();
+                
+                // Still initialize ranking containers for logged-out display
+                await this.waitForDOM();
+                await this.initializeRankingsContainers();
+            }
+        },
+
+        /**
+         * Wait for DOM elements to be ready
+         */
+        waitForDOM: function() {
+            return new Promise((resolve) => {
+                if (document.readyState === 'complete') {
+                    console.log('[INIT DEBUG] DOM already complete');
+                    resolve();
+                    return;
+                }
+                
+                let attempts = 0;
+                const maxAttempts = 20;
+                
+                const checkDOM = () => {
+                    attempts++;
+                    console.log(`[INIT DEBUG] Checking DOM readiness... attempt ${attempts}/${maxAttempts}`);
+                    
+                    if (document.readyState === 'complete' || attempts >= maxAttempts) {
+                        console.log('[INIT DEBUG] DOM ready or max attempts reached');
+                        resolve();
+                    } else {
+                        setTimeout(checkDOM, 250);
+                    }
+                };
+                
+                checkDOM();
+            });
+        },
+
+        /**
+         * Initialize all ranking containers proactively
+         */
+        initializeRankingsContainers: async function() {
+            console.log('[INIT DEBUG] Initializing ranking containers...');
+            
+            const games = [
+                { name: 'snake', containerId: 'snake-rankings-container' },
+                { name: 'memoryMatch', containerId: 'memoryMatch-rankings-container' },
+                { name: 'brickBreaker', containerId: 'brickBreaker-rankings-container' }
+            ];
+            
+            for (const game of games) {
+                const container = document.getElementById(game.containerId);
+                if (container && !container.querySelector('.game-rankings')) {
+                    console.log(`[INIT DEBUG] Creating rankings UI for ${game.name}`);
+                    
+                    // Create the basic structure immediately
+                    container.innerHTML = `
+                        <div class="game-rankings">
+                            <h3>Top Players</h3>
+                            <div class="rankings-list" id="${game.name}-rankings-list">
+                                <div class="loading-rankings">Loading rankings...</div>
+                            </div>
+                            <div class="user-rank" id="${game.name}-user-rank">
+                                <div class="loading-rankings">Loading your rank...</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Small delay to let the DOM settle
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                } else {
+                    console.log(`[INIT DEBUG] Container ${game.containerId} ${!container ? 'not found' : 'already initialized'}`);
+                }
             }
         },
 
@@ -496,6 +686,52 @@
         },
 
         /**
+         * Debug function to check rankings status
+         */
+        debugRankings: function(gameName) {
+            console.log(`=== RANKINGS DEBUG for ${gameName} ===`);
+            
+            // Check DOM elements
+            const container = document.getElementById(`${gameName}-rankings-container`);
+            const rankingsList = document.getElementById(`${gameName}-rankings-list`);
+            const userRank = document.getElementById(`${gameName}-user-rank`);
+            
+            console.log('DOM Elements:', {
+                container: !!container,
+                rankingsList: !!rankingsList,
+                userRank: !!userRank,
+                containerHTML: container?.innerHTML?.substring(0, 100) + '...',
+                rankingsListHTML: rankingsList?.innerHTML?.substring(0, 100) + '...'
+            });
+            
+            // Check cache
+            const rankingsCache = localStorage.getItem(`${gameName}_rankings_cache`);
+            const userRankCache = localStorage.getItem(`${gameName}_user_rank_cache`);
+            
+            console.log('Cache Status:', {
+                hasRankingsCache: !!rankingsCache,
+                hasUserRankCache: !!userRankCache,
+                rankingsCacheAge: rankingsCache ? Math.round((Date.now() - JSON.parse(rankingsCache).timestamp) / 1000) : 'N/A',
+                userRankCacheAge: userRankCache ? Math.round((Date.now() - JSON.parse(userRankCache).timestamp) / 1000) : 'N/A'
+            });
+            
+            // Check auth status
+            const token = localStorage.getItem('token');
+            console.log('Auth Status:', {
+                hasToken: !!token,
+                tokenLength: token?.length || 0
+            });
+            
+            // Check refresh intervals
+            console.log('Refresh Intervals:', {
+                hasRefreshIntervals: !!this._refreshIntervals,
+                activeIntervals: this._refreshIntervals ? Object.keys(this._refreshIntervals) : []
+            });
+            
+            console.log('=== END DEBUG ===');
+        },
+
+        /**
          * Initialize local high scores for non-logged-in users
          */
         initializeLocalHighScores: function() {
@@ -537,4 +773,31 @@
 
     // Make the service available globally
     window.gameScores = gameScores;
+    
+    // Debug helper functions for console use
+    window.debugRankings = function(gameName = 'snake') {
+        gameScores.debugRankings(gameName);
+    };
+    
+    window.refreshRankings = async function(gameName = 'snake') {
+        console.log(`Manually refreshing rankings for ${gameName}...`);
+        const containerId = `${gameName}-rankings-container`;
+        await gameScores.updateRankingsUI(gameName, containerId, false);
+        console.log(`Refresh complete for ${gameName}`);
+    };
+    
+    window.clearRankingsCache = function(gameName = null) {
+        if (gameName) {
+            localStorage.removeItem(`${gameName}_rankings_cache`);
+            localStorage.removeItem(`${gameName}_user_rank_cache`);
+            console.log(`Cleared cache for ${gameName}`);
+        } else {
+            const games = ['snake', 'memoryMatch', 'brickBreaker'];
+            games.forEach(game => {
+                localStorage.removeItem(`${game}_rankings_cache`);
+                localStorage.removeItem(`${game}_user_rank_cache`);
+            });
+            console.log('Cleared all rankings cache');
+        }
+    };
 })();
