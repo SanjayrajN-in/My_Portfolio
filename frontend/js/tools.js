@@ -268,7 +268,6 @@ class ToolsManager {
 
             img.src = URL.createObjectURL(this.currentImageFile);
         } catch (error) {
-            
             this.showError('Error compressing image. Please try again.');
         }
     }
@@ -539,8 +538,6 @@ class ToolsManager {
             }
 
         } catch (error) {
-            
-            
             // Hide processing indicator
             if (processingArea) processingArea.style.display = 'none';
             
