@@ -275,7 +275,7 @@ header.scrolled{background:rgba(12,12,20,0.95);backdrop-filter:blur(25px);-webki
             <div class="export-info" style="background: rgba(0, 168, 255, 0.1); border: 1px solid rgba(0, 168, 255, 0.3); border-radius: 8px; padding: 12px; margin: 10px 0; font-size: 0.9rem; color: var(--text-color);">
                 <i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 8px;"></i>
                 <strong>New:</strong> Export now includes both JSON (note data) and WebM audio files! Record new tracks to get audio files with your exports.
-                <button onclick="if(typeof window.showExportDialog === 'function') window.showExportDialog(); else alert('Export function not available');" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-left: 10px; cursor: pointer;">Test Export</button>
+                <button onclick="if(typeof window.showExportDialog === 'function') window.showExportDialog(); else if(typeof window.showNotification === 'function') window.showNotification('Export function not available'); else alert('Export function not available');" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-left: 10px; cursor: pointer;">Test Export</button>
             </div>
             <div id="tracks-list" class="tracks-list">
                 <!-- Track items will be added here -->
@@ -395,12 +395,9 @@ header.scrolled{background:rgba(12,12,20,0.95);backdrop-filter:blur(25px);-webki
         document.addEventListener('DOMContentLoaded', function() {
             // Wait for the main script to initialize
             setTimeout(() => {
-                console.log('Checking for export button...');
                 const exportBtn = document.getElementById('export-tracks');
                 if (exportBtn) {
-                    console.log('Export button found, adding direct event listener');
                     exportBtn.addEventListener('click', function() {
-                        console.log('Export button clicked via direct listener');
                         // Try to find the showExportDialog function in the global scope
                         if (typeof window.showExportDialog === 'function') {
                             window.showExportDialog();
@@ -409,14 +406,17 @@ header.scrolled{background:rgba(12,12,20,0.95);backdrop-filter:blur(25px);-webki
                             for (let key in window) {
                                 if (typeof window[key] === 'object' && window[key] !== null) {
                                     if (typeof window[key].showExportDialog === 'function') {
-                                        console.log('Found showExportDialog in', key);
                                         window[key].showExportDialog();
                                         return;
                                     }
                                 }
                             }
-                            console.error('showExportDialog function not found');
-                            alert('Export function not available. Please try refreshing the page.');
+                            // Show notification instead of alert
+                            if (typeof window.showNotification === 'function') {
+                                window.showNotification('Export function not available. Please try refreshing the page.');
+                            } else {
+                                alert('Export function not available. Please try refreshing the page.');
+                            }
                         }
                     });
                 }

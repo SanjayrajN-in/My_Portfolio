@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 createDrumSamples();
                 
             } catch (e) {
-                alert("There was a problem initializing audio. Please try a different browser.");
+                showNotification("There was a problem initializing audio. Please try a different browser.");
             }
         }
     }
@@ -795,21 +795,51 @@ document.addEventListener('DOMContentLoaded', function() {
     function showNotification(message) {
         // Check if notification element exists, if not create it
         let notification = document.querySelector('.keyboard-notification');
-        if (!notification) {
-            notification = document.createElement('div');
-            notification.className = 'keyboard-notification';
-            document.querySelector('.keyboard-container').appendChild(notification);
+        if (notification) {
+            // Remove existing notification
+            notification.parentNode.removeChild(notification);
         }
         
-        // Set message and show
-        notification.textContent = message;
+        // Create new notification
+        notification = document.createElement('div');
+        notification.className = 'keyboard-notification';
+        
+        // Add icon based on message content
+        let icon = '';
+        if (message.toLowerCase().includes('error') || message.toLowerCase().includes('failed')) {
+            icon = '<i class="fas fa-exclamation-circle" style="margin-right: 8px; color: #ff5252;"></i>';
+        } else if (message.toLowerCase().includes('success') || message.toLowerCase().includes('saved')) {
+            icon = '<i class="fas fa-check-circle" style="margin-right: 8px; color: #4CAF50;"></i>';
+        } else {
+            icon = '<i class="fas fa-info-circle" style="margin-right: 8px; color: #00a8ff;"></i>';
+        }
+        
+        // Set message with icon
+        notification.innerHTML = `${icon}<span>${message}</span>`;
+        
+        // Add to body (not to keyboard container)
+        document.body.appendChild(notification);
+        
+        // Force reflow to ensure animation works
+        notification.offsetHeight;
+        
+        // Show notification
         notification.classList.add('show');
         
-        // Hide after 2 seconds
+        // Hide after 2.5 seconds
         setTimeout(() => {
             notification.classList.remove('show');
-        }, 2000);
+            // Remove after animation completes
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 2500);
     }
+    
+    // Expose notification function globally
+    window.showNotification = showNotification;
     
     // Set up event listeners
     function setupEventListeners() {
@@ -910,7 +940,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showExportDialog();
             });
         } else {
-            console.error('Export button not found in the DOM');
+            // Export button not found in the DOM
         }
         
         if (importTracksBtn) {
@@ -2273,7 +2303,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (!audioContext) {
-            alert("Audio context failed to initialize. Please refresh and try again.");
+            showNotification("Audio context failed to initialize. Please refresh and try again.");
             return;
         }
         
@@ -2405,7 +2435,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (appState.tracks.length === 0) {
-            alert('No tracks to play. Record something first!');
+            showNotification('No tracks to play. Record something first!');
             return;
         }
         
@@ -3170,7 +3200,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 keyMapItem.classList.toggle('editing');
                 
                 if (keyMapItem.classList.contains('editing')) {
-                    alert(`Press any key to map it to note ${key.note}`);
+                    showNotification(`Press any key to map it to note ${key.note}`);
                 }
             });
             
@@ -3188,10 +3218,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             localStorage.setItem('musicKeyboardPreferences', JSON.stringify(preferences));
-            alert('Preferences saved successfully!');
+            showNotification('Preferences saved successfully!');
         } catch (e) {
-            
-            alert('Failed to save preferences. Local storage may be full or disabled.');
+            showNotification('Failed to save preferences. Local storage may be full or disabled.');
         }
     }
     
@@ -3259,7 +3288,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 setupAudioNodes();
             } catch (e) {
-                alert('Web Audio API is not supported in this browser. Audio recording will not work.');
+                showNotification('Web Audio API is not supported in this browser. Audio recording will not work.');
                 return;
             }
         }
@@ -3279,7 +3308,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     trackGainNode.connect(appState.audioDestination);
                 }
             } catch (e) {
-                alert('Could not create audio recording destination. Audio recording will not work.');
+                showNotification('Could not create audio recording destination. Audio recording will not work.');
                 return;
             }
         }
@@ -3343,7 +3372,7 @@ document.addEventListener('DOMContentLoaded', function() {
             appState.isAudioRecording = true;
             
         } catch (error) {
-            alert('Audio recording failed to start. Your browser may not support this feature.');
+            showNotification('Audio recording failed to start. Your browser may not support this feature.');
             appState.isAudioRecording = false;
         }
     }
@@ -3354,7 +3383,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 appState.mediaRecorder.stop();
             } catch (error) {
-                console.warn('Error stopping audio recording:', error);
+                // Error stopping audio recording
             }
         }
         appState.isAudioRecording = false;
@@ -3494,7 +3523,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Ensure audio context is running
             if (audioContext.state !== 'running') {
                 audioContext.resume().catch(e => {
-                    console.warn('Could not resume audio context:', e);
+                    // Could not resume audio context
                 });
             }
             
@@ -3629,7 +3658,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             resolve(audioBlob);
                         } catch (error) {
-                            console.error('Error finalizing audio recording:', error);
+                            // Error finalizing audio recording
                             appState.recordedChunks = originalRecordedChunks;
                             
                             // Restore original gain values even on error
@@ -3650,7 +3679,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Expose this function globally so it can be called from HTML
     window.showExportDialog = function() {
         if (!appState.tracks || appState.tracks.length === 0) {
-            alert('No tracks to export. Record something first!');
+            showNotification('No tracks to export. Record something first!');
             return;
         }
         
@@ -3742,12 +3771,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const exportAudio = dialog.querySelector('#export-audio').checked;
             
             if (selectedTrackIds.length === 0) {
-                alert('Please select at least one track to export.');
+                showNotification('Please select at least one track to export.');
                 return;
             }
             
             if (!exportJson && !exportAudio) {
-                alert('Please select at least one export format.');
+                showNotification('Please select at least one export format.');
                 return;
             }
             
@@ -3767,64 +3796,70 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Show styled notification
-    function showNotification(type, title, messages) {
+    // Show styled notification with title and multiple messages
+    function showAdvancedNotification(type, title, messages) {
         // Remove any existing notifications
         const existingNotifications = document.querySelectorAll('.keyboard-notification');
         existingNotifications.forEach(notification => {
-            document.body.removeChild(notification);
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
         });
-        
-        // Create styles based on type
-        let bgColor, textColor;
-        if (type === 'success') {
-            bgColor = '#d4edda';
-            textColor = '#155724';
-        } else if (type === 'error') {
-            bgColor = '#f8d7da';
-            textColor = '#721c24';
-        } else if (type === 'warning') {
-            bgColor = '#fff3cd';
-            textColor = '#856404';
-        } else {
-            bgColor = '#d1ecf1';
-            textColor = '#0c5460';
-        }
         
         // Create notification element
         const notification = document.createElement('div');
         notification.className = 'keyboard-notification';
-        notification.style.cssText = `
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: ${bgColor}; color: ${textColor}; padding: 15px 20px;
-            border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            font-family: 'Rajdhani', sans-serif; z-index: 10001;
-            max-width: 80%; text-align: center;
-        `;
+        
+        // Add icon based on type
+        let icon = '';
+        if (type === 'success') {
+            icon = '<i class="fas fa-check-circle" style="color: #4CAF50; margin-right: 10px; font-size: 1.2em;"></i>';
+        } else if (type === 'error') {
+            icon = '<i class="fas fa-exclamation-circle" style="color: #ff5252; margin-right: 10px; font-size: 1.2em;"></i>';
+        } else if (type === 'warning') {
+            icon = '<i class="fas fa-exclamation-triangle" style="color: #FFC107; margin-right: 10px; font-size: 1.2em;"></i>';
+        } else {
+            icon = '<i class="fas fa-info-circle" style="color: #00a8ff; margin-right: 10px; font-size: 1.2em;"></i>';
+        }
         
         // Create content
-        let content = `<h3 style="margin: 0 0 10px 0;">${title}</h3>`;
+        let content = `<div style="display: flex; align-items: center; margin-bottom: 8px;">
+                          ${icon}<h3 style="margin: 0; color: #fff; font-size: 1.1em;">${title}</h3>
+                       </div>`;
         
         if (Array.isArray(messages) && messages.length > 0) {
-            content += '<ul style="margin: 0; padding-left: 20px; text-align: left;">';
+            content += '<ul style="margin: 0; padding-left: 20px; color: rgba(255,255,255,0.9);">';
             messages.forEach(msg => {
                 content += `<li>${msg}</li>`;
             });
             content += '</ul>';
         } else if (typeof messages === 'string') {
-            content += `<p style="margin: 0;">${messages}</p>`;
+            content += `<p style="margin: 0; color: rgba(255,255,255,0.9);">${messages}</p>`;
         }
         
         notification.innerHTML = content;
         document.body.appendChild(notification);
         
+        // Force reflow to ensure animation works
+        notification.offsetHeight;
+        
+        // Show notification
+        notification.classList.add('show');
+        
         // Remove after 5 seconds
         setTimeout(() => {
-            if (document.body.contains(notification)) {
-                document.body.removeChild(notification);
-            }
+            notification.classList.remove('show');
+            // Remove after animation completes
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
         }, 5000);
     }
+    
+    // Expose advanced notification function globally
+    window.showAdvancedNotification = showAdvancedNotification;
     
     // Export selected tracks
     // Expose this function globally so it can be called from HTML
@@ -3984,11 +4019,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            alert(message);
+            showNotification(message);
             
         } catch (error) {
-            console.error('Export error:', error);
-            alert('Failed to export tracks: ' + error.message);
+            // Export error occurred
+            showNotification('Failed to export tracks: ' + error.message);
         } finally {
             // Restore button state
             if (exportTracksBtn) {
@@ -4013,13 +4048,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         appState.tracks = importedTracks;
                         saveTracks();
                         updateTracksList();
-                        alert('Tracks imported successfully!');
+                        showNotification('Tracks imported successfully!');
                     }
                 } else {
-                    alert('Invalid tracks file format.');
+                    showNotification('Invalid tracks file format.');
                 }
             } catch (error) {
-                alert('Error importing tracks: ' + error.message);
+                showNotification('Error importing tracks: ' + error.message);
             }
         };
         
