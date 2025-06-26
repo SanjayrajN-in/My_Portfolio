@@ -25,24 +25,12 @@ const HighScoreCache = {
         if (isLoggedIn) {
             // Try server cache first
             const serverScore = localStorage.getItem(`${gameName}ServerHighScore`);
-            const serverTimestamp = localStorage.getItem(`${gameName}ServerHighScoreTimestamp`);
-            
             if (serverScore && !isNaN(serverScore) && parseInt(serverScore) > 0) {
-                // Check if the cached server score is still valid (not too old)
-                if (serverTimestamp) {
-                    const age = Date.now() - parseInt(serverTimestamp);
-                    if (age < 24 * 60 * 60 * 1000) { // 24 hours
-                        return parseInt(serverScore);
-                    }
-                }
                 return parseInt(serverScore);
             }
-            
-            // For logged-in users, don't fallback to local scores to prevent confusion
-            return 0;
         }
         
-        // For non-logged-in users, use local scores
+        // Fallback to local high score (this is important for proper sync!)
         const localScore = localStorage.getItem(`${gameName}HighScore`);
         if (localScore && !isNaN(localScore)) {
             return parseInt(localScore);
@@ -178,9 +166,9 @@ const HighScoreCache = {
             const serverScore = userRank.score || 0;
             
             if (serverScore > 0) {
-                // Only update if server score is different from current cached score
-                const currentCachedScore = localStorage.getItem(`${gameName}ServerHighScore`);
-                if (!currentCachedScore || parseInt(currentCachedScore) !== serverScore) {
+                // Only update if server score is higher than current display (original logic restored)
+                const currentDisplayScore = this.getScore(gameName);
+                if (serverScore > currentDisplayScore) {
                     localStorage.setItem(`${gameName}ServerHighScore`, serverScore.toString());
                     localStorage.setItem(`${gameName}ServerHighScoreTimestamp`, Date.now().toString());
                     
@@ -203,6 +191,25 @@ const HighScoreCache = {
             // Clean up the refresh lock
             const refreshKey = `refreshing_${gameName}`;
             this[refreshKey] = false;
+        }
+    },
+
+    // Force sync with server (useful for debugging sync issues)
+    forceSyncWithServer: async function(gameName) {
+        if (!localStorage.getItem('token')) {
+            return false;
+        }
+        
+        try {
+            // Clear any cached server scores to force fresh fetch
+            localStorage.removeItem(`${gameName}ServerHighScore`);
+            localStorage.removeItem(`${gameName}ServerHighScoreTimestamp`);
+            
+            // Force refresh from server
+            await this.refreshFromServer(gameName);
+            return true;
+        } catch (error) {
+            return false;
         }
     }
 };
