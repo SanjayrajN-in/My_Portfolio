@@ -626,6 +626,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
     border-left: 4px solid var(--primary-color);
     transition: all 0.3s ease;
     border: 1px solid rgba(0, 168, 255, 0.2);
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .track-item:hover {
@@ -654,6 +657,24 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .track-actions {
     display: flex;
     gap: 10px;
+    flex-shrink: 0;
+}
+
+.track-actions .btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    min-width: auto;
+    max-width: 100px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.track-actions .btn i {
+    font-size: 0.9rem;
 }
 
 #no-tracks-message {
@@ -815,6 +836,18 @@ input[type="range"]::-webkit-slider-thumb:hover {
         font-size: 2.2rem;
     }
     
+    /* Prevent all content from overflowing on mobile */
+    .music-keyboard-container {
+        padding: 15px;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .tracks-container {
+        max-width: 100%;
+        overflow: hidden;
+    }
+    
     /* Default single-row keyboard for desktop view within mobile breakpoint */
     .piano-keyboard:not(.piano-keyboard) .white-key {
         width: 40px;
@@ -838,6 +871,44 @@ input[type="range"]::-webkit-slider-thumb:hover {
     
     .instruction-card {
         padding: 20px;
+    }
+    
+    /* Mobile track items optimization */
+    .track-item {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+        align-items: stretch;
+        margin: 0 5px 16px 5px;
+    }
+    
+    .track-info {
+        text-align: center;
+        margin-bottom: 0;
+        flex: 1;
+    }
+    
+    .track-actions {
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: nowrap;
+        width: 100%;
+        max-width: 200px;
+        margin: 0 auto;
+    }
+    
+    .track-actions .btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        min-width: 50px;
+        flex: 1;
+        max-width: 70px;
+        height: 36px;
+        border-radius: 6px;
+    }
+    
+    .track-actions .btn i {
+        font-size: 0.8rem;
     }
 }
 
@@ -883,6 +954,19 @@ input[type="range"]::-webkit-slider-thumb:hover {
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     }
     
+    /* Ensure tracks container doesn't overflow */
+    .tracks-container {
+        padding: 0 10px;
+        overflow: hidden;
+    }
+    
+    .tracks-list {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    
     .tracks-controls, .key-mapping-controls {
         flex-wrap: wrap;
         gap: 8px;
@@ -925,6 +1009,45 @@ input[type="range"]::-webkit-slider-thumb:hover {
     /* Add touch feedback */
     .piano-key:active, .drum-pad:active, .btn:active {
         transform: scale(0.95);
+    }
+    
+    /* Extra small mobile track items and buttons */
+    .track-item {
+        padding: 12px;
+        gap: 12px;
+        margin: 0 2px 12px 2px;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .track-info {
+        margin-bottom: 0;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .track-actions {
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        max-width: 160px;
+        margin: 0 auto;
+    }
+    
+    .track-actions .btn {
+        padding: 6px 8px;
+        font-size: 0.7rem;
+        min-width: 40px;
+        max-width: 60px;
+        height: 32px;
+        flex: 1;
+        border-radius: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+    
+    .track-actions .btn i {
+        font-size: 0.7rem;
     }
 }
 
