@@ -1,6 +1,12 @@
 /**
  * Instant High Score System - Immediate, reliable high score display
  * Fixes the "0 high score" issue by ensuring cached scores are ALWAYS shown immediately
+ * 
+ * RESET FIX: Added smooth loading animation when resetDisplay is called
+ * - Prevents glitching between different score values
+ * - Shows loading state with shimmer effect for 800ms
+ * - Smoothly transitions to final score
+ * - Prevents multiple simultaneous operations causing conflicts
  */
 
 // Immediate high score cache - loads synchronously
@@ -19,12 +25,24 @@ const HighScoreCache = {
         if (isLoggedIn) {
             // Try server cache first
             const serverScore = localStorage.getItem(`${gameName}ServerHighScore`);
+            const serverTimestamp = localStorage.getItem(`${gameName}ServerHighScoreTimestamp`);
+            
             if (serverScore && !isNaN(serverScore) && parseInt(serverScore) > 0) {
+                // Check if the cached server score is still valid (not too old)
+                if (serverTimestamp) {
+                    const age = Date.now() - parseInt(serverTimestamp);
+                    if (age < 24 * 60 * 60 * 1000) { // 24 hours
+                        return parseInt(serverScore);
+                    }
+                }
                 return parseInt(serverScore);
             }
+            
+            // For logged-in users, don't fallback to local scores to prevent confusion
+            return 0;
         }
         
-        // Fallback to local high score
+        // For non-logged-in users, use local scores
         const localScore = localStorage.getItem(`${gameName}HighScore`);
         if (localScore && !isNaN(localScore)) {
             return parseInt(localScore);
@@ -38,6 +56,12 @@ const HighScoreCache = {
         const currentScore = this.getScore(gameName);
         
         if (newScore > currentScore) {
+            // Clear any pending reset timeouts to prevent conflicts
+            if (this._refreshTimeouts && this._refreshTimeouts[gameName]) {
+                clearTimeout(this._refreshTimeouts[gameName]);
+                delete this._refreshTimeouts[gameName];
+            }
+            
             const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
             
             if (isLoggedIn) {
@@ -72,23 +96,68 @@ const HighScoreCache = {
 
     // Initialize all high scores immediately
     initializeAll: function() {
+        // Prevent multiple simultaneous initializations
+        if (this._initializing) {
+            return;
+        }
+        this._initializing = true;
+        
         Object.keys(this.games).forEach(gameName => {
             const score = this.getScore(gameName);
             this.displayScore(gameName, score);
         });
+        
+        // Clear the initialization lock after a short delay
+        setTimeout(() => {
+            this._initializing = false;
+        }, 100);
     },
 
     // Reset display to cached score (called on game reset)
     resetDisplay: function(gameName) {
-        const score = this.getScore(gameName);
-        this.displayScore(gameName, score);
+        const elementId = this.games[gameName];
+        const element = document.getElementById(elementId);
         
-        // If score is 0 and user is logged in, trigger background refresh
-        if (score === 0 && localStorage.getItem('token')) {
-            setTimeout(() => {
-                this.refreshFromServer(gameName);
-            }, 500);
+        if (!element) return;
+        
+        // Show loading state immediately to prevent glitching
+        element.textContent = '...';
+        element.style.opacity = '0.6';
+        
+        // Add loading animation
+        element.classList.add('score-loading');
+        
+        // Disable any pending server refreshes to prevent conflicts
+        if (this._refreshTimeouts && this._refreshTimeouts[gameName]) {
+            clearTimeout(this._refreshTimeouts[gameName]);
+            delete this._refreshTimeouts[gameName];
         }
+        
+        // Initialize refresh timeouts object if needed
+        if (!this._refreshTimeouts) {
+            this._refreshTimeouts = {};
+        }
+        
+        // Get the actual score after a brief loading delay
+        this._refreshTimeouts[gameName] = setTimeout(() => {
+            const score = this.getScore(gameName);
+            
+            // Smoothly transition to the final score
+            element.style.transition = 'opacity 0.3s ease';
+            element.textContent = score;
+            element.style.opacity = '1';
+            element.classList.remove('score-loading');
+            
+            // If score is 0 and user is logged in, trigger background refresh
+            if (score === 0 && localStorage.getItem('token')) {
+                this._refreshTimeouts[gameName] = setTimeout(() => {
+                    this.refreshFromServer(gameName);
+                }, 1000);
+            }
+            
+            // Clean up timeout reference
+            delete this._refreshTimeouts[gameName];
+        }, 800); // 800ms loading delay for smooth UX
     },
 
     // Refresh from server (asynchronous background task)
@@ -98,20 +167,42 @@ const HighScoreCache = {
                 return;
             }
 
+            // Prevent multiple simultaneous refreshes for the same game
+            const refreshKey = `refreshing_${gameName}`;
+            if (this[refreshKey]) {
+                return;
+            }
+            this[refreshKey] = true;
+
             const userRank = await window.gameScores.getUserRank(gameName, true);
             const serverScore = userRank.score || 0;
             
             if (serverScore > 0) {
-                // Only update if server score is higher than current display
-                const currentDisplayScore = this.getScore(gameName);
-                if (serverScore > currentDisplayScore) {
+                // Only update if server score is different from current cached score
+                const currentCachedScore = localStorage.getItem(`${gameName}ServerHighScore`);
+                if (!currentCachedScore || parseInt(currentCachedScore) !== serverScore) {
                     localStorage.setItem(`${gameName}ServerHighScore`, serverScore.toString());
                     localStorage.setItem(`${gameName}ServerHighScoreTimestamp`, Date.now().toString());
-                    this.displayScore(gameName, serverScore);
+                    
+                    // Smooth update with animation
+                    const elementId = this.games[gameName];
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        element.style.transition = 'opacity 0.3s ease';
+                        element.style.opacity = '0.7';
+                        setTimeout(() => {
+                            element.textContent = serverScore;
+                            element.style.opacity = '1';
+                        }, 150);
+                    }
                 }
             }
         } catch (error) {
-            console.warn(`Failed to refresh ${gameName} high score from server:`, error);
+            // Silent error handling - don't log to avoid console spam
+        } finally {
+            // Clean up the refresh lock
+            const refreshKey = `refreshing_${gameName}`;
+            this[refreshKey] = false;
         }
     }
 };
@@ -133,10 +224,32 @@ window.addEventListener('load', () => {
     HighScoreCache.initializeAll();
 });
 
-// Re-initialize periodically to catch any missed elements
+// Re-initialize periodically to catch any missed elements (reduced frequency)
 setInterval(() => {
-    HighScoreCache.initializeAll();
-}, 5000);
+    // Only reinitialize if there are elements that need it
+    let needsReinit = false;
+    Object.keys(HighScoreCache.games).forEach(gameName => {
+        const elementId = HighScoreCache.games[gameName];
+        const element = document.getElementById(elementId);
+        if (element && (element.textContent === '' || element.textContent === '0')) {
+            needsReinit = true;
+        }
+    });
+    
+    if (needsReinit) {
+        HighScoreCache.initializeAll();
+    }
+}, 15000); // Reduced from 5 seconds to 15 seconds
+
+// Clean up timeouts on page unload
+window.addEventListener('beforeunload', () => {
+    if (HighScoreCache._refreshTimeouts) {
+        Object.values(HighScoreCache._refreshTimeouts).forEach(timeoutId => {
+            clearTimeout(timeoutId);
+        });
+        HighScoreCache._refreshTimeouts = {};
+    }
+});
 
 // Global access
 window.HighScoreCache = HighScoreCache;

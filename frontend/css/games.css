@@ -3451,3 +3451,34 @@ html {
         transform: scale(0.95);
     }
 }
+
+/* High Score Loading Animation */
+.score-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.score-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 168, 255, 0.3),
+        transparent
+    );
+    animation: scoreShimmer 1.5s infinite;
+}
+
+@keyframes scoreShimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
