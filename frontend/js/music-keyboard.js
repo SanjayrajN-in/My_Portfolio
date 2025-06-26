@@ -237,28 +237,24 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If there are active notes but no pressed keys, they might be stuck
             if (appState.activeNotes.size > 0 && appState.pressedKeys.size === 0) {
-                
                 stopAllNotes();
             }
             
             // Check for audio context issues
             if (audioContext.state === 'suspended') {
-                
                 audioContext.resume().catch(e => {
-                    
+                    // Audio context resume failed, but we'll continue
                 });
             }
             
             // Check for inactive UI but active notes
             const activeUIElements = document.querySelectorAll('.piano-key.active, .drum-pad.active');
             if (activeUIElements.length === 0 && appState.activeNotes.size > 0) {
-                
                 stopAllNotes();
             }
             
             // Check for no recent activity but active notes
             if (appState.activeNotes.size > 0 && audioContext.currentTime - appState.lastNoteTime > 5) {
-                
                 stopAllNotes();
             }
         }, 3000);
@@ -276,19 +272,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 const maxDuration = appState.isLowPerformanceMode ? 10 : 20;
                 
                 if (currentTime - data.startTime > maxDuration) {
-                    
                     stopNote(note);
                     stuckNotesFound = true;
                 }
             });
             
             if (stuckNotesFound) {
-                
+                // Stuck notes were found and cleaned up
             }
             
             // Check for memory usage (indirect way to detect leaks)
             if (appState.audioNodesRegistry.size > 100) {
-                
                 forceCleanupAllAudio();
             }
             
@@ -297,8 +291,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 (document.visibilityState === 'visible' && 
                  performance && performance.now && 
                  performance.memory && performance.memory.usedJSHeapSize > 50000000)) {
-                
-                
                 appState.isLowPerformanceMode = true;
                 document.body.classList.add('low-performance');
             }
@@ -311,15 +303,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!appState.activeNotes.has(note)) {
                     clearTimeout(timeout);
                     appState.noteTimeouts.delete(note);
-                    
                 }
             });
             
             // If we have active notes but UI doesn't match, force reset
             const activeUICount = document.querySelectorAll('.piano-key.active, .drum-pad.active').length;
             if (activeUICount !== appState.activeNotes.size) {
-                
-                
                 // Reset UI to match audio state
                 document.querySelectorAll('.piano-key.active, .drum-pad.active').forEach(el => {
                     el.classList.remove('active');
@@ -333,7 +322,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If we have more than a few active notes, it might be a leak
             if (appState.activeNotes.size > 5) {
-                
                 forceCleanupAllAudio();
             }
         }, 30000);
@@ -341,8 +329,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Force cleanup all audio nodes
     function forceCleanupAllAudio() {
-        
-        
         try {
             // First try to stop all active notes
             stopAllNotes();
@@ -382,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Try to close the old context
                     if (oldContext.state !== 'closed') {
                         oldContext.close().catch(() => {
-                            
+                            // Context close failed, but we'll continue
                         });
                     }
                     
@@ -391,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         initAudioContext();
                     }, 300);
                 } catch (e) {
-                    
+                    // Audio context recreation failed
                 }
             }
             
@@ -405,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
         } catch (e) {
-            
+            // Force cleanup failed
         }
     }
     
@@ -427,15 +413,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Resume audio context if it's suspended (common on mobile)
             if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume().catch(err => );
+                audioContext.resume().catch(err => {
+                    // Audio context resume failed on mobile
+                });
             }
         }, { once: true });
         
         // Apply low performance mode if detected
         if (appState.isLowPerformanceMode) {
-            
             document.body.classList.add('low-performance');
-            
             // Reduce max note length for low-end devices
             appState.maxNoteLength = 8;
         }
@@ -485,7 +471,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('focus', function() {
             // When window gets focus back, check if there are any active notes without pressed keys
             if (appState.activeNotes.size > 0 && appState.pressedKeys.size === 0) {
-                
                 stopAllNotes();
             }
         });
@@ -497,7 +482,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add emergency cleanup on errors
         window.addEventListener('error', function(e) {
-            
             forceCleanupAllAudio();
         });
         
@@ -525,7 +509,6 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 // Check global sound setting from games.js
                 if (typeof window.soundEnabled !== 'undefined' && !window.soundEnabled) {
-                    
                     return null;
                 }
                 
@@ -560,9 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Create drum samples
                 createDrumSamples();
                 
-                
             } catch (e) {
-                
                 alert("There was a problem initializing audio. Please try a different browser.");
             }
         }
@@ -947,7 +928,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Resume audio context if suspended (fixes issues with keys not working)
         if (audioContext && audioContext.state === 'suspended') {
-            audioContext.resume().catch(err => );
+            audioContext.resume().catch(err => {
+                // Audio context resume failed
+            });
         }
         
         // Prevent space bar from scrolling
@@ -2020,8 +2003,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!document.body.hasAttribute('tabindex')) {
             document.body.setAttribute('tabindex', '-1');
         }
-        
-        
     }
     
     // Reset key mapping to default
