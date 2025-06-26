@@ -517,24 +517,34 @@
          * Called when user logs in or page loads
          */
         forceRefreshAllGames: async function() {
-            const games = ['snake', 'memoryMatch', 'brickBreaker'];
+            const games = [
+                { name: 'snake', localKey: 'snakeHighScore' },
+                { name: 'memoryMatch', localKey: 'memoryMatchHighScore' },
+                { name: 'brickBreaker', localKey: 'brickBreakerHighScore' }
+            ];
             
-            // Clear all cached data first
-            games.forEach(gameName => {
-                localStorage.removeItem(`${gameName}_user_rank_cache`);
-                localStorage.removeItem(`${gameName}_rankings_cache`);
-                localStorage.removeItem(`${gameName}ServerHighScore`);
-                localStorage.removeItem(`${gameName}ServerHighScoreTimestamp`);
+            // Clear all cached data first including local scores when logged in
+            games.forEach(game => {
+                localStorage.removeItem(`${game.name}_user_rank_cache`);
+                localStorage.removeItem(`${game.name}_rankings_cache`);
+                localStorage.removeItem(`${game.name}ServerHighScore`);
+                localStorage.removeItem(`${game.name}ServerHighScoreTimestamp`);
+                
+                // Clear local high scores when user logs in to prevent conflicts
+                const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+                if (isLoggedIn) {
+                    localStorage.removeItem(game.localKey);
+                }
             });
 
             // Update all visible game containers
-            for (const gameName of games) {
-                const containerId = `${gameName}-rankings-container`;
+            for (const game of games) {
+                const containerId = `${game.name}-rankings-container`;
                 const container = document.getElementById(containerId);
                 
                 if (container) {
                     try {
-                        await this.updateRankingsUI(gameName, containerId, false);
+                        await this.updateRankingsUI(game.name, containerId, false);
                     } catch (error) {
                         // Silent error handling
                     }
@@ -643,12 +653,11 @@
             games.forEach(game => {
                 const element = document.getElementById(game.elementId);
                 if (element) {
-                    // Set initial value to prevent showing 0
                     const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
                     let initialScore = 0;
                     
                     if (isLoggedIn) {
-                        // Try cached server score first
+                        // Only try cached server score when logged in
                         const cachedScore = localStorage.getItem(`${game.name}ServerHighScore`);
                         const timestamp = localStorage.getItem(`${game.name}ServerHighScoreTimestamp`);
                         
@@ -659,19 +668,16 @@
                             }
                         }
                         
-                        // Fallback to local if no cached server score
+                        // DON'T fallback to local scores for logged-in users
+                        // Show placeholder until server data arrives
                         if (initialScore === 0) {
-                            initialScore = parseInt(localStorage.getItem(game.localKey) || '0');
+                            element.textContent = '--';
+                        } else {
+                            element.textContent = initialScore;
                         }
                     } else {
                         // Use local score when not logged in
                         initialScore = parseInt(localStorage.getItem(game.localKey) || '0');
-                    }
-                    
-                    // Don't show 0 for logged-in users until we get server data
-                    if (isLoggedIn && initialScore === 0) {
-                        element.textContent = '--';
-                    } else {
                         element.textContent = initialScore;
                     }
                 }
@@ -703,6 +709,22 @@
     // Listen for auth state changes
     window.addEventListener('authStateChanged', function(event) {
         if (gameScores && typeof gameScores.forceRefreshAllGames === 'function') {
+            // Clear local scores immediately when user logs in
+            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+            if (isLoggedIn) {
+                // Clear local high scores immediately
+                localStorage.removeItem('snakeHighScore');
+                localStorage.removeItem('brickBreakerHighScore');
+                localStorage.removeItem('memoryMatchHighScore');
+                
+                // Update display to show server scores
+                setTimeout(() => {
+                    if (typeof updateAllHighScores === 'function') {
+                        updateAllHighScores();
+                    }
+                }, 500);
+            }
+            
             gameScores.forceRefreshAllGames();
         }
     });
@@ -711,6 +733,20 @@
     window.addEventListener('storage', function(event) {
         if (event.key === 'token') {
             if (gameScores && typeof gameScores.forceRefreshAllGames === 'function') {
+                // Clear local scores when user logs in (detected via storage change)
+                if (event.newValue) { // Token was added (user logged in)
+                    localStorage.removeItem('snakeHighScore');
+                    localStorage.removeItem('brickBreakerHighScore');
+                    localStorage.removeItem('memoryMatchHighScore');
+                    
+                    // Update display with server scores
+                    setTimeout(() => {
+                        if (typeof updateAllHighScores === 'function') {
+                            updateAllHighScores();
+                        }
+                    }, 500);
+                }
+                
                 setTimeout(() => {
                     gameScores.forceRefreshAllGames();
                 }, 100);

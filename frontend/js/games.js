@@ -33,35 +33,34 @@ async function updateAllHighScores() {
     const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
     
     if (!isLoggedIn) {
-        console.log('User not logged in, using local high scores');
         return;
     }
     
-    console.log('Updating all high scores from server...');
+    const games = [
+        { name: 'snake', elementId: 'snake-high-score' },
+        { name: 'brickBreaker', elementId: 'brick-high-score' },
+        { name: 'memoryMatch', elementId: 'memory-high-score' }
+    ];
     
-    // Update Snake high score
-    const snakeHighScoreElement = document.getElementById('snake-high-score');
-    if (snakeHighScoreElement && window.gameScores) {
-        try {
-            const userRank = await window.gameScores.getUserRank('snake');
-            const serverHighScore = userRank.score || 0;
-            snakeHighScoreElement.textContent = serverHighScore;
-            console.log(`Updated Snake high score: ${serverHighScore}`);
-        } catch (error) {
-            console.warn('Failed to update Snake high score:', error);
-        }
-    }
-    
-    // Update Brick Breaker high score  
-    const brickHighScoreElement = document.getElementById('brick-high-score');
-    if (brickHighScoreElement && window.gameScores) {
-        try {
-            const userRank = await window.gameScores.getUserRank('brickBreaker');
-            const serverHighScore = userRank.score || 0;
-            brickHighScoreElement.textContent = serverHighScore;
-            console.log(`Updated Brick Breaker high score: ${serverHighScore}`);
-        } catch (error) {
-            console.warn('Failed to update Brick Breaker high score:', error);
+    for (const game of games) {
+        const element = document.getElementById(game.elementId);
+        if (element && window.gameScores) {
+            try {
+                const userRank = await window.gameScores.getUserRank(game.name);
+                const serverHighScore = userRank.score || 0;
+                
+                // Always show server score, even if it's 0 or lower than previous local score
+                element.textContent = serverHighScore;
+                
+                // Cache the server score for future reference
+                if (serverHighScore > 0) {
+                    localStorage.setItem(`${game.name}ServerHighScore`, serverHighScore.toString());
+                    localStorage.setItem(`${game.name}ServerHighScoreTimestamp`, Date.now().toString());
+                }
+            } catch (error) {
+                // Show 0 if we can't get server data
+                element.textContent = '0';
+            }
         }
     }
 }
@@ -1621,10 +1620,13 @@ function initSnakeGame() {
                         if (!(powerUpActive && powerUp === POWER_UPS.INVINCIBLE)) {
                             gameOver = true;
                             
-                            // Save high score to localStorage (for offline play)
-                            const highScore = localStorage.getItem('snakeHighScore') || 0;
-                            if (score > highScore) {
-                                localStorage.setItem('snakeHighScore', score);
+                            // Save high score to localStorage (for offline play only)
+                            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+                            if (!isLoggedIn) {
+                                const highScore = localStorage.getItem('snakeHighScore') || 0;
+                                if (score > highScore) {
+                                    localStorage.setItem('snakeHighScore', score);
+                                }
                             }
                             
                             // Update pause button to show restart icon
@@ -1647,10 +1649,13 @@ function initSnakeGame() {
                     if (collision(newHead, snake) && !(powerUpActive && powerUp === POWER_UPS.INVINCIBLE)) {
                         gameOver = true;
                         
-                        // Save high score to localStorage (for offline play)
-                        const highScore = localStorage.getItem('snakeHighScore') || 0;
-                        if (score > highScore) {
-                            localStorage.setItem('snakeHighScore', score);
+                        // Save high score to localStorage (for offline play only)
+                        const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+                        if (!isLoggedIn) {
+                            const highScore = localStorage.getItem('snakeHighScore') || 0;
+                            if (score > highScore) {
+                                localStorage.setItem('snakeHighScore', score);
+                            }
                         }
                         
                         // Update pause button to show restart icon
