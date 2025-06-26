@@ -89,13 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
         initAttempts++;
         
         if (window.gameScores && typeof window.gameScores.initializeGameScores === 'function') {
-            console.log('Game scores service found, initializing...');
             window.gameScores.initializeGameScores();
         } else if (initAttempts < maxAttempts) {
-            console.log(`Game scores service not ready, attempt ${initAttempts}/${maxAttempts}`);
             setTimeout(ensureGameScoresInitialized, 500);
-        } else {
-            console.warn('Game scores service failed to load after maximum attempts');
         }
     };
     
@@ -845,14 +841,9 @@ function initMemoryGame() {
             gameState.scoreSubmitted = true;
             window.gameScores.submitScore('memoryMatch', gameState.score, gameState.level, gameState.gameTime)
                 .then(response => {
-                    console.log('Memory Match score submitted successfully:', response);
-                    
                     // Update high score using instant cache - IMMEDIATE update
                     if (window.HighScoreCache) {
-                        const isNewHighScore = window.HighScoreCache.updateScore('memoryMatch', gameState.score);
-                        if (isNewHighScore) {
-                            console.log('New Memory Match high score achieved:', gameState.score);
-                        }
+                        window.HighScoreCache.updateScore('memoryMatch', gameState.score);
                     } else {
                         // Fallback - direct update
                         const highScoreElement = document.getElementById('memory-high-score');
@@ -878,7 +869,7 @@ function initMemoryGame() {
                     }
                 })
                 .catch(error => {
-                    console.error('Error submitting Memory Match score:', error);
+                    // Silent error handling
                 });
         }
         
@@ -1273,14 +1264,9 @@ function initSnakeGame() {
             scoreSubmitted = true;
             window.gameScores.submitScore('snake', score, level, 0)
                 .then(response => {
-                    console.log('Score submitted successfully:', response);
-                    
                     // Update high score using instant cache - IMMEDIATE update
                     if (window.HighScoreCache) {
-                        const isNewHighScore = window.HighScoreCache.updateScore('snake', score);
-                        if (isNewHighScore) {
-                            console.log('New Snake high score achieved:', score);
-                        }
+                        window.HighScoreCache.updateScore('snake', score);
                     } else {
                         // Fallback - direct update
                         const highScoreElement = document.getElementById('snake-high-score');
@@ -1340,7 +1326,6 @@ function initSnakeGame() {
                 highScoreElement.textContent = localHighScore;
             }
         } catch (error) {
-            console.error('Error updating high score:', error);
             // Try to use cached server high score first, then fallback to local
             const cachedServerHighScore = localStorage.getItem('snakeServerHighScore');
             if (cachedServerHighScore) {
@@ -4326,7 +4311,6 @@ function initTetris() {
                 highScoreElement.textContent = localHighScore;
             }
         } catch (error) {
-            console.error('Error updating brick breaker high score:', error);
             // Try to use cached server high score first, then fallback to local
             const cachedServerHighScore = localStorage.getItem('brickBreakerServerHighScore');
             if (cachedServerHighScore) {
@@ -4462,8 +4446,6 @@ function initTetris() {
                 scoreSubmitted = true;
                 window.gameScores.submitScore('brickBreaker', score, level, 0)
                     .then(response => {
-                        console.log('Brick Breaker score submitted successfully:', response);
-                        
                         // Update high score display after successful submission
                         const highScoreElement = document.getElementById('brick-high-score');
                         if (highScoreElement) {
@@ -4496,7 +4478,7 @@ function initTetris() {
                         }
                     })
                     .catch(error => {
-                        console.error('Error submitting Brick Breaker score:', error);
+                        // Silent error handling
                     });
             }
         } else if (gameState === 'won') {

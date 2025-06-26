@@ -1004,6 +1004,3 @@ function hideFeatureNotification() {
 
 // Resize listener for notifications - DISABLED
 // Now handled by notification-fix.js to prevent conflicts
-// window.addEventListener('resize', function() {
-//     console.log('🚫 PortfolioApp resize listener disabled - using notification-fix.js');
-// });

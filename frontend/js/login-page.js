@@ -1079,7 +1079,6 @@ class LoginPageManager {
 
     setLoading(button, loading) {
         if (!button) {
-            console.warn('setLoading called with null button');
             return;
         }
         
