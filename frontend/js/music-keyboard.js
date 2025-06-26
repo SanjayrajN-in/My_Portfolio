@@ -3497,10 +3497,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Generate combined audio from multiple tracks
     // Expose this function globally so it can be called from HTML
     window.generateCombinedAudio = async function(tracks) {
-        console.log('generateCombinedAudio called with', tracks ? tracks.length : 0, 'tracks');
+        // Process tracks for audio generation
         
         if (!audioContext || !tracks || tracks.length === 0) {
-            console.log('No tracks or audio context');
+            // No tracks or audio context available
             return null;
         }
         

@@ -215,6 +215,7 @@ header.scrolled{background:rgba(12,12,20,0.95);backdrop-filter:blur(25px);-webki
         <section class="app-header" data-aos="fade-up">
             <h1 class="glitch neon-text" data-text="Web Music Keyboard">Web Music Keyboard</h1>
             <p>Play, record, and create music directly in your browser!</p>
+            <span class="beta-badge">Beta test</span>
         </section>
 
         <section class="controls-container" data-aos="fade-up" data-aos-delay="200">
@@ -262,8 +263,8 @@ header.scrolled{background:rgba(12,12,20,0.95);backdrop-filter:blur(25px);-webki
         </section>
 
         <section class="tracks-container" data-aos="fade-up" data-aos-delay="400">
-            <h2 class="section-title">Your Tracks</h2>
-            <div class="section-line"></div>
+            <h2 class="section-title" style="text-align: center;">Your Tracks</h2>
+            <div class="section-line" style="margin: 0 auto;"></div>
             
             <div class="tracks-controls">
                 <button id="play-all-tracks" class="btn primary-btn"><i class="fas fa-play"></i> Play All Tracks</button>
@@ -275,7 +276,6 @@ header.scrolled{background:rgba(12,12,20,0.95);backdrop-filter:blur(25px);-webki
             <div class="export-info" style="background: rgba(0, 168, 255, 0.1); border: 1px solid rgba(0, 168, 255, 0.3); border-radius: 8px; padding: 12px; margin: 10px 0; font-size: 0.9rem; color: var(--text-color);">
                 <i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 8px;"></i>
                 <strong>New:</strong> Export now includes both JSON (note data) and WebM audio files! Record new tracks to get audio files with your exports.
-                <button onclick="if(typeof window.showExportDialog === 'function') window.showExportDialog(); else if(typeof window.showNotification === 'function') window.showNotification('Export function not available'); else alert('Export function not available');" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-left: 10px; cursor: pointer;">Test Export</button>
             </div>
             <div id="tracks-list" class="tracks-list">
                 <!-- Track items will be added here -->
@@ -284,8 +284,8 @@ header.scrolled{background:rgba(12,12,20,0.95);backdrop-filter:blur(25px);-webki
         </section>
 
         <section class="key-mapping-container" data-aos="fade-up" data-aos-delay="500">
-            <h2 class="section-title">Customize Key Mapping</h2>
-            <div class="section-line"></div>
+            <h2 class="section-title" style="text-align: center;">Customize Key Mapping</h2>
+            <div class="section-line" style="margin: 0 auto;"></div>
             
             <div class="key-mapping-controls">
                 <button id="reset-mapping" class="btn secondary-btn"><i class="fas fa-undo"></i> Reset to Default</button>
@@ -301,8 +301,8 @@ header.scrolled{background:rgba(12,12,20,0.95);backdrop-filter:blur(25px);-webki
         </section>
         
         <section class="instructions-container" data-aos="fade-up" data-aos-delay="600">
-            <h2 class="section-title">How to Use</h2>
-            <div class="section-line"></div>
+            <h2 class="section-title" style="text-align: center;">How to Use</h2>
+            <div class="section-line" style="margin: 0 auto;"></div>
             
             <div class="instructions-grid">
                 <div class="instruction-card tilt-effect with-glare">
