@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
         isRecording: false,
         isPlaying: false,
         isLooping: false, // Track if loop mode is enabled
-        currentTrack: [],
+        currentTrack: null,
         tracks: [],
         recordingStartTime: 0,
         soundTheme: 'piano',
@@ -44,7 +44,11 @@ document.addEventListener('DOMContentLoaded', function() {
         maxNoteLength: 15, // Maximum note length in seconds (to prevent stuck notes)
         audioNodesRegistry: new Set(), // Registry of all created audio nodes for global cleanup
         playbackTimeouts: [], // Store timeouts for track playback to support looping
-        keyboardEnabled: true // Track if PC keyboard input is enabled
+        keyboardEnabled: true, // Track if PC keyboard input is enabled
+        // Audio recording related
+        currentTrack: [],
+        recordingStartTime: 0,
+        audioElements: new Map() // Store audio elements for playback
     };
     
     // DOM Elements
@@ -1303,7 +1307,8 @@ document.addEventListener('DOMContentLoaded', function() {
             appState.currentTrack.push({
                 drum: drumName,
                 startTime: audioContext.currentTime - appState.recordingStartTime,
-                endTime: audioContext.currentTime - appState.recordingStartTime + 0.1 // Short duration for drums
+                endTime: audioContext.currentTime - appState.recordingStartTime + 0.1,
+                theme: appState.soundTheme // Lock in the current theme
             });
         }
     }
@@ -1406,7 +1411,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 appState.currentTrack.push({
                     note,
                     startTime: audioContext.currentTime - appState.recordingStartTime,
-                    endTime: null // Will be set when the note is released
+                    endTime: null,
+                    theme: appState.soundTheme // Lock in the current theme
                 });
             }
             
@@ -1495,6 +1501,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     noteRecord.endTime = audioContext.currentTime - appState.recordingStartTime;
                 }
             }
+            
         } catch (e) {
             
             // Emergency cleanup - immediate disconnect and stop
@@ -1648,10 +1655,11 @@ document.addEventListener('DOMContentLoaded', function() {
             initAudioContext();
         }
         
-        if (!audioContext) return; // Exit if audio context initialization failed
+        if (!audioContext) return;
         
-        appState.isRecording = true;
+        // Reset recording data
         appState.currentTrack = [];
+        appState.isRecording = true;
         appState.recordingStartTime = audioContext.currentTime;
         
         // Update UI
@@ -1672,7 +1680,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Save recording
     function saveRecording() {
-        if (!trackNameInput) return;
+        if (!trackNameInput || !appState.currentTrack || appState.currentTrack.length === 0) return;
         
         const trackName = trackNameInput.value.trim() || `Track ${appState.tracks.length + 1}`;
         
@@ -1681,7 +1689,8 @@ document.addEventListener('DOMContentLoaded', function() {
             name: trackName,
             notes: appState.currentTrack,
             theme: appState.soundTheme,
-            duration: Math.max(...appState.currentTrack.map(note => note.endTime || 0))
+            duration: Math.max(...appState.currentTrack.map(note => note.endTime || note.startTime || 0)),
+            type: 'locked-theme' // Mark as theme-locked recording
         };
         
         appState.tracks.push(track);
@@ -1693,6 +1702,9 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTracksList();
         trackNameInput.value = '';
         if (saveRecordingBtn) saveRecordingBtn.disabled = true;
+        
+        // Clear current track
+        appState.currentTrack = [];
     }
     
     // Play all tracks
@@ -1700,12 +1712,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (appState.isPlaying) {
             stopPlayback();
         }
-        
-        if (!audioContext) {
-            initAudioContext();
-        }
-        
-        if (!audioContext) return; // Exit if audio context initialization failed
         
         if (appState.tracks.length === 0) {
             alert('No tracks to play. Record something first!');
@@ -1716,44 +1722,63 @@ document.addEventListener('DOMContentLoaded', function() {
         clearPlaybackTimeouts();
         
         appState.isPlaying = true;
-        const startTime = audioContext.currentTime;
+        let maxDuration = 0;
         
-        // Schedule all notes from all tracks
+        // Play all tracks simultaneously
         appState.tracks.forEach(track => {
-            const theme = track.theme || appState.soundTheme;
-            
-            track.notes.forEach(note => {
-                // Schedule note start
-                const noteStartTimeout = setTimeout(() => {
-                    if (!appState.isPlaying) return; // Check if playback was stopped
-                    
-                    // Play the note or drum
-                    if (note.note) {
-                        playNote(note.note);
-                    } else if (note.drum) {
-                        playDrum(note.drum);
-                    }
-                    
-                    // Schedule note end (for sustained notes)
-                    if (note.note && note.endTime) {
-                        const duration = note.endTime - note.startTime;
-                        const noteEndTimeout = setTimeout(() => {
-                            if (!appState.isPlaying) return;
-                            stopNote(note.note);
-                        }, duration * 1000);
-                        
-                        // Store the timeout for cleanup
-                        appState.playbackTimeouts.push(noteEndTimeout);
-                    }
-                }, note.startTime * 1000);
+            if (track.notes) {
+                // Use locked theme for theme-locked tracks, otherwise use current theme
+                const originalTheme = appState.soundTheme;
+                const trackTheme = track.type === 'locked-theme' ? track.theme : appState.soundTheme;
                 
-                // Store the timeout for cleanup
-                appState.playbackTimeouts.push(noteStartTimeout);
-            });
+                // Temporarily switch to track's theme if it's locked
+                if (track.type === 'locked-theme') {
+                    appState.soundTheme = trackTheme;
+                }
+                
+                track.notes.forEach(note => {
+                    // Schedule note start
+                    const noteStartTimeout = setTimeout(() => {
+                        if (!appState.isPlaying) return;
+                        
+                        // Use the track's individual note theme if available
+                        const noteTheme = note.theme || trackTheme;
+                        const currentTheme = appState.soundTheme;
+                        
+                        // Temporarily switch theme for this note
+                        appState.soundTheme = noteTheme;
+                        
+                        // Play the note or drum
+                        if (note.note) {
+                            playNote(note.note);
+                        } else if (note.drum) {
+                            playDrum(note.drum);
+                        }
+                        
+                        // Restore theme
+                        appState.soundTheme = currentTheme;
+                        
+                        // Schedule note end (for sustained notes)
+                        if (note.note && note.endTime) {
+                            const duration = note.endTime - note.startTime;
+                            const noteEndTimeout = setTimeout(() => {
+                                if (!appState.isPlaying) return;
+                                stopNote(note.note);
+                            }, duration * 1000);
+                            
+                            appState.playbackTimeouts.push(noteEndTimeout);
+                        }
+                    }, note.startTime * 1000);
+                    
+                    appState.playbackTimeouts.push(noteStartTimeout);
+                });
+                
+                // Restore original theme
+                appState.soundTheme = originalTheme;
+                
+                maxDuration = Math.max(maxDuration, track.duration || 0);
+            }
         });
-        
-        // Find the longest track duration
-        const maxDuration = Math.max(...appState.tracks.map(track => track.duration || 0));
         
         // Schedule playback end or loop
         const playbackEndTimeout = setTimeout(() => {
@@ -1763,9 +1788,8 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 stopPlayback();
             }
-        }, (maxDuration + 0.5) * 1000); // Add a small buffer
+        }, (maxDuration + 0.5) * 1000);
         
-        // Store the timeout for cleanup
         appState.playbackTimeouts.push(playbackEndTimeout);
         
         // Update UI
@@ -1786,47 +1810,75 @@ document.addEventListener('DOMContentLoaded', function() {
             stopPlayback();
         }
         
-        if (!audioContext) {
-            initAudioContext();
-        }
-        
-        if (!audioContext) return; // Exit if audio context initialization failed
-        
         const track = appState.tracks.find(t => t.id === trackId);
         if (!track) return;
         
         appState.isPlaying = true;
-        const startTime = audioContext.currentTime;
-        const theme = track.theme || appState.soundTheme;
         
-        // Schedule all notes
-        track.notes.forEach(note => {
-            // Schedule note start
-            setTimeout(() => {
-                if (!appState.isPlaying) return; // Check if playback was stopped
+        if (track.notes) {
+            if (!audioContext) {
+                initAudioContext();
+            }
+            
+            if (!audioContext) return;
+            
+            // Use locked theme for theme-locked tracks, otherwise use track's theme
+            const originalTheme = appState.soundTheme;
+            const trackTheme = track.type === 'locked-theme' ? track.theme : (track.theme || appState.soundTheme);
+            
+            // Temporarily switch to track's theme if it's locked
+            if (track.type === 'locked-theme') {
+                appState.soundTheme = trackTheme;
+            }
+            
+            // Schedule all notes
+            track.notes.forEach(note => {
+                // Schedule note start
+                const noteStartTimeout = setTimeout(() => {
+                    if (!appState.isPlaying) return;
+                    
+                    // Use the track's individual note theme if available
+                    const noteTheme = note.theme || trackTheme;
+                    const currentTheme = appState.soundTheme;
+                    
+                    // Temporarily switch theme for this note
+                    appState.soundTheme = noteTheme;
+                    
+                    // Play the note or drum
+                    if (note.note) {
+                        playNote(note.note);
+                    } else if (note.drum) {
+                        playDrum(note.drum);
+                    }
+                    
+                    // Restore theme
+                    appState.soundTheme = currentTheme;
+                    
+                    // Schedule note end (for sustained notes)
+                    if (note.note && note.endTime) {
+                        const duration = note.endTime - note.startTime;
+                        const noteEndTimeout = setTimeout(() => {
+                            if (!appState.isPlaying) return;
+                            stopNote(note.note);
+                        }, duration * 1000);
+                        
+                        appState.playbackTimeouts.push(noteEndTimeout);
+                    }
+                }, note.startTime * 1000);
                 
-                // Play the note or drum
-                if (note.note) {
-                    playNote(note.note);
-                } else if (note.drum) {
-                    playDrum(note.drum);
-                }
-                
-                // Schedule note end (for sustained notes)
-                if (note.note && note.endTime) {
-                    const duration = note.endTime - note.startTime;
-                    setTimeout(() => {
-                        if (!appState.isPlaying) return;
-                        stopNote(note.note);
-                    }, duration * 1000);
-                }
-            }, note.startTime * 1000);
-        });
-        
-        // Schedule playback end
-        setTimeout(() => {
-            stopPlayback();
-        }, (track.duration + 0.5) * 1000); // Add a small buffer
+                appState.playbackTimeouts.push(noteStartTimeout);
+            });
+            
+            // Restore original theme
+            appState.soundTheme = originalTheme;
+            
+            // Schedule playback end
+            const playbackEndTimeout = setTimeout(() => {
+                stopPlayback();
+            }, (track.duration + 0.5) * 1000);
+            
+            appState.playbackTimeouts.push(playbackEndTimeout);
+        }
         
         // Update UI
         if (playAllTracksBtn) playAllTracksBtn.disabled = true;
@@ -1839,6 +1891,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Stop all active notes
         stopAllNotes();
+        
+        // Stop all audio elements
+        appState.audioElements.forEach(audio => {
+            audio.pause();
+            audio.currentTime = 0;
+        });
+        appState.audioElements.clear();
         
         // Clear all playback timeouts
         clearPlaybackTimeouts();
@@ -1902,7 +1961,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const trackDetails = document.createElement('div');
             trackDetails.className = 'track-details';
-            trackDetails.textContent = `${track.notes.length} notes · ${track.duration.toFixed(1)}s · ${track.theme}`;
+            
+            if (track.type === 'locked-theme') {
+                trackDetails.textContent = `${track.notes?.length || 0} notes · ${track.duration.toFixed(1)}s · ${track.theme} (Locked)`;
+            } else {
+                trackDetails.textContent = `${track.notes?.length || 0} notes · ${track.duration.toFixed(1)}s · ${track.theme || 'Legacy'}`;
+            }
             
             trackInfo.appendChild(trackName);
             trackInfo.appendChild(trackDetails);
@@ -1911,13 +1975,13 @@ document.addEventListener('DOMContentLoaded', function() {
             trackActions.className = 'track-actions';
             
             const playBtn = document.createElement('button');
-            playBtn.className = 'btn';
+            playBtn.className = 'btn primary-btn';
             playBtn.innerHTML = '<i class="fas fa-play"></i>';
             playBtn.title = 'Play track';
             playBtn.addEventListener('click', () => playTrack(track.id));
             
             const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'btn';
+            deleteBtn.className = 'btn danger-btn';
             deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
             deleteBtn.title = 'Delete track';
             deleteBtn.addEventListener('click', () => {
