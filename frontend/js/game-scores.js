@@ -18,6 +18,35 @@
     // Main service object
     const gameScores = {
         /**
+         * Initialize high score displays immediately on page load
+         */
+        initializeHighScores: function() {
+            const games = ['snake', 'brickBreaker', 'memoryMatch'];
+            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+            
+            games.forEach(gameName => {
+                const elementId = `${gameName}-high-score`;
+                const element = document.getElementById(elementId);
+                
+                if (element) {
+                    if (isLoggedIn) {
+                        // Show cached server score immediately if available
+                        const cachedScore = localStorage.getItem(`${gameName}ServerHighScore`);
+                        if (cachedScore && !isNaN(cachedScore) && parseInt(cachedScore) > 0) {
+                            element.textContent = cachedScore;
+                        } else {
+                            // Show 0 while loading
+                            element.textContent = '0';
+                        }
+                    } else {
+                        // Show local high score for non-logged-in users
+                        const localScore = localStorage.getItem(`${gameName}HighScore`) || '0';
+                        element.textContent = localScore;
+                    }
+                }
+            });
+        },
+        /**
          * Submit a score to the server
          * @param {string} gameName - Name of the game (snake, brickBreaker, memoryMatch)
          * @param {number} score - The score achieved

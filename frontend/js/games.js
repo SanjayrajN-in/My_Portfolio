@@ -28,39 +28,20 @@ class GameTracker {
 // Global game tracker instance
 const gameTracker = new GameTracker();
 
-// Global function to update all high scores
+// Global function to update all high scores (using instant cache)
 async function updateAllHighScores(forceRefresh = false) {
-    const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
-    
-    if (!isLoggedIn) {
-        return;
-    }
-    
-    const games = [
-        { name: 'snake', elementId: 'snake-high-score' },
-        { name: 'brickBreaker', elementId: 'brick-high-score' },
-        { name: 'memoryMatch', elementId: 'memory-high-score' }
-    ];
-    
-    for (const game of games) {
-        const element = document.getElementById(game.elementId);
-        if (element && window.gameScores) {
-            try {
-                const userRank = await window.gameScores.getUserRank(game.name, forceRefresh);
-                const serverHighScore = userRank.score || 0;
-                
-                // Always show server score, even if it's 0 or lower than previous local score
-                element.textContent = serverHighScore;
-                
-                // Cache the server score for future reference
-                if (serverHighScore > 0) {
-                    localStorage.setItem(`${game.name}ServerHighScore`, serverHighScore.toString());
-                    localStorage.setItem(`${game.name}ServerHighScoreTimestamp`, Date.now().toString());
-                }
-            } catch (error) {
-                // Show 0 if we can't get server data
-                element.textContent = '0';
-            }
+    if (window.HighScoreCache) {
+        // Initialize immediately from cache
+        window.HighScoreCache.initializeAll();
+        
+        // If refresh requested and user is logged in, refresh from server
+        if (forceRefresh && localStorage.getItem('token')) {
+            const games = ['snake', 'brickBreaker', 'memoryMatch'];
+            games.forEach(gameName => {
+                setTimeout(() => {
+                    window.HighScoreCache.refreshFromServer(gameName);
+                }, 100);
+            });
         }
     }
 }
@@ -387,6 +368,20 @@ function initMemoryGame() {
         gameState.totalPairs = config.pairs;
         
         updateDisplay();
+        
+        // Ensure high score is properly displayed after reset - IMMEDIATE display
+        if (window.HighScoreCache) {
+            window.HighScoreCache.resetDisplay('memoryMatch');
+        } else {
+            // Fallback - manually restore cached high score
+            const highScoreElement = document.getElementById('memory-high-score');
+            if (highScoreElement) {
+                const localScore = localStorage.getItem('memoryMatchHighScore') || '0';
+                const serverScore = localStorage.getItem('memoryMatchServerHighScore') || '0';
+                const bestScore = Math.max(parseInt(localScore), parseInt(serverScore));
+                highScoreElement.textContent = bestScore;
+            }
+        }
     }
     
     function generateCards() {
@@ -852,39 +847,26 @@ function initMemoryGame() {
                 .then(response => {
                     console.log('Memory Match score submitted successfully:', response);
                     
-                    // Update high score display after successful submission
-                    const highScoreElement = document.getElementById('memory-high-score');
-                    if (highScoreElement) {
-                        // Always update with the current score if it's higher or if it's a new high score
-                        const currentDisplayScore = parseInt(highScoreElement.textContent.replace('--', '0')) || 0;
-                        const newHighScore = Math.max(gameState.score, currentDisplayScore);
-                        highScoreElement.textContent = newHighScore;
-                        
-                        // Cache the high score immediately
-                        localStorage.setItem('memoryMatchServerHighScore', newHighScore.toString());
-                        localStorage.setItem('memoryMatchServerHighScoreTimestamp', Date.now().toString());
-                        
-                        // Only update from server if the response indicates it wasn't a new high score
-                        // This prevents overriding a new high score with old server data
-                        if (response.isNewHighScore) {
-                            // New high score confirmed by server, no need to fetch again
-                            console.log('New Memory Match high score confirmed by server, keeping display as is');
-                        } else {
-                            // Not a new high score, update from server after delay
-                            setTimeout(() => {
-                                if (window.gameScores && typeof window.gameScores.getUserRank === 'function') {
-                                    window.gameScores.getUserRank('memoryMatch').then(userRank => {
-                                        const serverHighScore = userRank.score || newHighScore;
-                                        const finalScore = Math.max(serverHighScore, newHighScore);
-                                        highScoreElement.textContent = finalScore;
-                                        // Update cache
-                                        localStorage.setItem('memoryMatchServerHighScore', finalScore.toString());
-                                        localStorage.setItem('memoryMatchServerHighScoreTimestamp', Date.now().toString());
-                                    }).catch(err => {
-                                        console.warn('Could not fetch updated Memory Match high score:', err);
-                                    });
+                    // Update high score using instant cache - IMMEDIATE update
+                    if (window.HighScoreCache) {
+                        const isNewHighScore = window.HighScoreCache.updateScore('memoryMatch', gameState.score);
+                        if (isNewHighScore) {
+                            console.log('New Memory Match high score achieved:', gameState.score);
+                        }
+                    } else {
+                        // Fallback - direct update
+                        const highScoreElement = document.getElementById('memory-high-score');
+                        if (highScoreElement) {
+                            const currentScore = parseInt(highScoreElement.textContent) || 0;
+                            if (gameState.score > currentScore) {
+                                highScoreElement.textContent = gameState.score;
+                                if (localStorage.getItem('token')) {
+                                    localStorage.setItem('memoryMatchServerHighScore', gameState.score.toString());
+                                    localStorage.setItem('memoryMatchServerHighScoreTimestamp', Date.now().toString());
+                                } else {
+                                    localStorage.setItem('memoryMatchHighScore', gameState.score.toString());
                                 }
-                            }, 1000);
+                            }
                         }
                     }
                     
@@ -1293,27 +1275,26 @@ function initSnakeGame() {
                 .then(response => {
                     console.log('Score submitted successfully:', response);
                     
-                    // Update high score display after successful submission
-                    const highScoreElement = document.getElementById('snake-high-score');
-                    if (highScoreElement) {
-                        // Always update with the current score if it's higher or if it's a new high score
-                        const currentDisplayScore = parseInt(highScoreElement.textContent.replace('--', '0')) || 0;
-                        const newHighScore = Math.max(score, currentDisplayScore);
-                        highScoreElement.textContent = newHighScore;
-                        
-                        // Cache the high score immediately
-                        localStorage.setItem('snakeServerHighScore', newHighScore.toString());
-                        localStorage.setItem('snakeServerHighScoreTimestamp', Date.now().toString());
-                        
-                        // Only update from server if the response indicates it wasn't a new high score
-                        // This prevents overriding a new high score with old server data
-                        if (response.isNewHighScore) {
-                            // New high score confirmed by server, no need to fetch again
-                        } else {
-                            // Not a new high score, update from server after delay
-                            setTimeout(() => {
-                                updateServerHighScore(highScoreElement, true);
-                            }, 1000);
+                    // Update high score using instant cache - IMMEDIATE update
+                    if (window.HighScoreCache) {
+                        const isNewHighScore = window.HighScoreCache.updateScore('snake', score);
+                        if (isNewHighScore) {
+                            console.log('New Snake high score achieved:', score);
+                        }
+                    } else {
+                        // Fallback - direct update
+                        const highScoreElement = document.getElementById('snake-high-score');
+                        if (highScoreElement) {
+                            const currentScore = parseInt(highScoreElement.textContent) || 0;
+                            if (score > currentScore) {
+                                highScoreElement.textContent = score;
+                                if (localStorage.getItem('token')) {
+                                    localStorage.setItem('snakeServerHighScore', score.toString());
+                                    localStorage.setItem('snakeServerHighScoreTimestamp', Date.now().toString());
+                                } else {
+                                    localStorage.setItem('snakeHighScore', score.toString());
+                                }
+                            }
                         }
                     }
                     
@@ -1376,20 +1357,16 @@ function initSnakeGame() {
         const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
         
         if (isLoggedIn) {
-            // Check if we have a cached server high score that's not too old (less than 5 minutes)
+            // Always try server cache first, even if old - better than showing 0
             const cachedScore = localStorage.getItem('snakeServerHighScore');
-            const timestamp = localStorage.getItem('snakeServerHighScoreTimestamp');
-            
-            if (cachedScore && timestamp) {
-                const age = Date.now() - parseInt(timestamp);
-                if (age < 5 * 60 * 1000) { // 5 minutes
-                    return parseInt(cachedScore);
-                }
+    if (cachedScore && !isNaN(cachedScore) && parseInt(cachedScore) > 0) {
+                        return parseInt(cachedScore);
             }
         }
         
         // Fallback to local high score
-        return parseInt(localStorage.getItem('snakeHighScore') || '0');
+        const localScore = localStorage.getItem('snakeHighScore') || '0';
+        return parseInt(localScore);
     }
     
     function updateScoreboard() {
@@ -1412,19 +1389,17 @@ function initSnakeGame() {
             }
         }
         if (highScoreElement) {
-            // Check if user is logged in - if so, fetch server-side high score
-            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
-            
-            if (isLoggedIn) {
-                // Show cached high score immediately, then update from server
-                const cachedHighScore = getCachedHighScore();
-                highScoreElement.textContent = Math.max(cachedHighScore, score);
-                
-                // Server high score is updated only on game start/end, NOT in game loop
+            // Use instant high score cache for immediate, reliable display
+            if (window.HighScoreCache) {
+                const displayScore = window.HighScoreCache.getDisplayScore('snake', score);
+                highScoreElement.textContent = displayScore;
             } else {
-                // When not logged in, use local storage high score
-                const localHighScore = localStorage.getItem('snakeHighScore') || 0;
-                highScoreElement.textContent = Math.max(localHighScore, score);
+                // Ultimate fallback - should never be needed
+                const localScore = localStorage.getItem('snakeHighScore') || '0';
+                const serverScore = localStorage.getItem('snakeServerHighScore') || '0';
+                const bestScore = Math.max(parseInt(localScore), parseInt(serverScore));
+                const displayScore = Math.max(bestScore, score);
+                highScoreElement.textContent = displayScore;
             }
         }
     }
@@ -1835,6 +1810,20 @@ function initSnakeGame() {
         
         // Update scoreboard to reset values
         updateScoreboard();
+        
+        // Ensure high score is properly displayed after reset - IMMEDIATE display
+        if (window.HighScoreCache) {
+            window.HighScoreCache.resetDisplay('snake');
+        } else {
+            // Fallback - manually restore cached high score
+            const highScoreElement = document.getElementById('snake-high-score');
+            if (highScoreElement) {
+                const localScore = localStorage.getItem('snakeHighScore') || '0';
+                const serverScore = localStorage.getItem('snakeServerHighScore') || '0';
+                const bestScore = Math.max(parseInt(localScore), parseInt(serverScore));
+                highScoreElement.textContent = bestScore;
+            }
+        }
     }
     
     // Handle window resize
@@ -2982,6 +2971,20 @@ function initTetris() {
         // Update UI
         updateStartScreen();
         updateControlButtons();
+        
+        // Ensure high score is properly displayed after reset - IMMEDIATE display
+        if (window.HighScoreCache) {
+            window.HighScoreCache.resetDisplay('brickBreaker');
+        } else {
+            // Fallback - manually restore cached high score
+            const highScoreElement = document.getElementById('brick-high-score');
+            if (highScoreElement) {
+                const localScore = localStorage.getItem('brickBreakerHighScore') || '0';
+                const serverScore = localStorage.getItem('brickBreakerServerHighScore') || '0';
+                const bestScore = Math.max(parseInt(localScore), parseInt(serverScore));
+                highScoreElement.textContent = bestScore;
+            }
+        }
     }
     
     // Initialize villains based on level
@@ -4367,24 +4370,22 @@ function initTetris() {
         if (levelElement) levelElement.textContent = level;
         if (livesElement) livesElement.textContent = lives;
         if (highScoreElement) {
-            // Check if user is logged in - if so, fetch server-side high score
-            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
-            
-            if (isLoggedIn) {
-                // Show cached high score immediately, then update from server
-                const cachedHighScore = getBrickBreakerCachedHighScore();
-                highScoreElement.textContent = Math.max(cachedHighScore, score);
+            // Use instant high score cache for immediate, reliable display
+            if (window.HighScoreCache) {
+                const displayScore = window.HighScoreCache.getDisplayScore('brickBreaker', score);
+                highScoreElement.textContent = displayScore;
                 
-                // Server high score is updated only on game start/end, NOT in game loop
-            } else {
-                // When not logged in, use local storage high score
-                const currentHighScore = parseInt(localStorage.getItem('brickBreakerHighScore') || '0');
-                if (score > currentHighScore) {
+                // Update local high score if this is a new high score and user not logged in
+                if (!localStorage.getItem('token') && score > window.HighScoreCache.getScore('brickBreaker')) {
                     localStorage.setItem('brickBreakerHighScore', score.toString());
-                    highScoreElement.textContent = score;
-                } else {
-                    highScoreElement.textContent = currentHighScore;
                 }
+            } else {
+                // Ultimate fallback
+                const localScore = localStorage.getItem('brickBreakerHighScore') || '0';
+                const serverScore = localStorage.getItem('brickBreakerServerHighScore') || '0';
+                const bestScore = Math.max(parseInt(localScore), parseInt(serverScore));
+                const displayScore = Math.max(bestScore, score);
+                highScoreElement.textContent = displayScore;
             }
         }
         
