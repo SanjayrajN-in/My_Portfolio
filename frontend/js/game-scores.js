@@ -19,8 +19,16 @@
     const gameScores = {
         /**
          * Initialize high score displays immediately on page load
+         * Delegates to HighScoreCache for proper synchronization
          */
         initializeHighScores: function() {
+            // Use HighScoreCache for proper sync logic
+            if (window.HighScoreCache) {
+                window.HighScoreCache.initializeAll();
+                return;
+            }
+            
+            // Fallback if HighScoreCache is not available
             const games = ['snake', 'brickBreaker', 'memoryMatch'];
             const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
             
@@ -29,20 +37,22 @@
                 const element = document.getElementById(elementId);
                 
                 if (element) {
+                    let score = 0;
+                    
                     if (isLoggedIn) {
-                        // Show cached server score immediately if available
+                        // Try server cache first
                         const cachedScore = localStorage.getItem(`${gameName}ServerHighScore`);
                         if (cachedScore && !isNaN(cachedScore) && parseInt(cachedScore) > 0) {
-                            element.textContent = cachedScore;
-                        } else {
-                            // Show 0 while loading
-                            element.textContent = '0';
+                            score = parseInt(cachedScore);
                         }
-                    } else {
-                        // Show local high score for non-logged-in users
-                        const localScore = localStorage.getItem(`${gameName}HighScore`) || '0';
-                        element.textContent = localScore;
                     }
+                    
+                    // Always fallback to local score if no server score
+                    if (score === 0) {
+                        score = parseInt(localStorage.getItem(`${gameName}HighScore`) || '0');
+                    }
+                    
+                    element.textContent = score;
                 }
             });
         },
@@ -608,19 +618,19 @@
                 { name: 'brickBreaker', localKey: 'brickBreakerHighScore' }
             ];
             
-            // Clear all cached data first including local scores when logged in
+            // Only clear rankings cache, NOT high score caches!
             games.forEach(game => {
                 localStorage.removeItem(`${game.name}_user_rank_cache`);
                 localStorage.removeItem(`${game.name}_rankings_cache`);
-                localStorage.removeItem(`${game.name}ServerHighScore`);
-                localStorage.removeItem(`${game.name}ServerHighScoreTimestamp`);
                 
-                // Clear local high scores when user logs in to prevent conflicts
-                const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
-                if (isLoggedIn) {
-                    localStorage.removeItem(game.localKey);
-                }
+                // DON'T clear server high scores - they should persist!
+                // DON'T clear local high scores - they should persist!
             });
+
+            // Ensure HighScoreCache is initialized first
+            if (window.HighScoreCache) {
+                window.HighScoreCache.initializeAll();
+            }
 
             // Update all visible game containers
             for (const game of games) {
@@ -727,8 +737,16 @@
 
         /**
          * Initialize high score displays with immediate values
+         * Uses HighScoreCache for proper synchronization
          */
         initializeHighScoreDisplays: function() {
+            // Use HighScoreCache if available (it has proper sync logic)
+            if (window.HighScoreCache) {
+                window.HighScoreCache.initializeAll();
+                return;
+            }
+            
+            // Fallback logic if HighScoreCache is not available
             const games = [
                 { name: 'snake', elementId: 'snake-high-score', localKey: 'snakeHighScore' },
                 { name: 'brickBreaker', elementId: 'brick-high-score', localKey: 'brickBreakerHighScore' },
@@ -742,29 +760,19 @@
                     let initialScore = 0;
                     
                     if (isLoggedIn) {
-                        // Only try cached server score when logged in
+                        // Try server cache first
                         const cachedScore = localStorage.getItem(`${game.name}ServerHighScore`);
-                        const timestamp = localStorage.getItem(`${game.name}ServerHighScoreTimestamp`);
-                        
-                        if (cachedScore && timestamp) {
-                            const age = Date.now() - parseInt(timestamp);
-                            if (age < 5 * 60 * 1000) { // 5 minutes
-                                initialScore = parseInt(cachedScore);
-                            }
+                        if (cachedScore && !isNaN(cachedScore) && parseInt(cachedScore) > 0) {
+                            initialScore = parseInt(cachedScore);
                         }
-                        
-                        // DON'T fallback to local scores for logged-in users
-                        // Show placeholder until server data arrives
-                        if (initialScore === 0) {
-                            element.textContent = '--';
-                        } else {
-                            element.textContent = initialScore;
-                        }
-                    } else {
-                        // Use local score when not logged in
-                        initialScore = parseInt(localStorage.getItem(game.localKey) || '0');
-                        element.textContent = initialScore;
                     }
+                    
+                    // Always fallback to local score if no server score
+                    if (initialScore === 0) {
+                        initialScore = parseInt(localStorage.getItem(game.localKey) || '0');
+                    }
+                    
+                    element.textContent = initialScore;
                 }
             });
         },
@@ -773,8 +781,16 @@
 
         /**
          * Initialize local high scores for non-logged-in users
+         * Uses HighScoreCache for consistency
          */
         initializeLocalHighScores: function() {
+            // Use HighScoreCache if available (it has proper sync logic)
+            if (window.HighScoreCache) {
+                window.HighScoreCache.initializeAll();
+                return;
+            }
+            
+            // Fallback logic if HighScoreCache is not available
             const games = [
                 { elementId: 'snake-high-score', localKey: 'snakeHighScore' },
                 { elementId: 'brick-high-score', localKey: 'brickBreakerHighScore' },
@@ -794,21 +810,13 @@
     // Listen for auth state changes
     window.addEventListener('authStateChanged', function(event) {
         if (gameScores && typeof gameScores.forceRefreshAllGames === 'function') {
-            // Clear local scores immediately when user logs in
-            const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
-            if (isLoggedIn) {
-                // Clear local high scores immediately
-                localStorage.removeItem('snakeHighScore');
-                localStorage.removeItem('brickBreakerHighScore');
-                localStorage.removeItem('memoryMatchHighScore');
-                
-                // Update display to show server scores
-                setTimeout(() => {
-                    if (typeof updateAllHighScores === 'function') {
-                        updateAllHighScores(true); // Force refresh on login
-                    }
-                }, 500);
-            }
+            // Don't clear scores - let HighScoreCache handle sync properly
+            // Just refresh the display and rankings
+            setTimeout(() => {
+                if (window.HighScoreCache) {
+                    window.HighScoreCache.initializeAll();
+                }
+            }, 100);
             
             gameScores.forceRefreshAllGames();
         }
@@ -818,21 +826,11 @@
     window.addEventListener('storage', function(event) {
         if (event.key === 'token') {
             if (gameScores && typeof gameScores.forceRefreshAllGames === 'function') {
-                // Clear local scores when user logs in (detected via storage change)
-                if (event.newValue) { // Token was added (user logged in)
-                    localStorage.removeItem('snakeHighScore');
-                    localStorage.removeItem('brickBreakerHighScore');
-                    localStorage.removeItem('memoryMatchHighScore');
-                    
-                    // Update display with server scores
-                    setTimeout(() => {
-                        if (typeof updateAllHighScores === 'function') {
-                            updateAllHighScores(true); // Force refresh on login
-                        }
-                    }, 500);
-                }
-                
+                // Don't clear scores - let HighScoreCache handle sync properly
                 setTimeout(() => {
+                    if (window.HighScoreCache) {
+                        window.HighScoreCache.initializeAll();
+                    }
                     gameScores.forceRefreshAllGames();
                 }, 100);
             }
