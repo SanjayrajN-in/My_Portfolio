@@ -1,9 +1,6 @@
 // Contact page specific JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-fill email from logged-in user
-    autoFillUserEmail();
-    
     // Form submission handling
     const contactForm = document.getElementById('contactForm');
     
@@ -11,11 +8,51 @@ document.addEventListener('DOMContentLoaded', function() {
         contactForm.addEventListener('submit', handleFormSubmission);
     }
     
+    // Wait for auth system to be ready before auto-filling
+    waitForAuthThenAutoFill();
+    
+    // Function to wait for auth system and then auto-fill
+    function waitForAuthThenAutoFill() {
+        // Check if auth system is already ready
+        if (typeof authSystem !== 'undefined' && authSystem.initialized) {
+            // Auth system is ready, auto-fill immediately
+            autoFillUserEmail();
+            return;
+        }
+        
+        const maxRetries = 50; // Maximum 5 seconds wait (50 * 100ms)
+        let retryCount = 0;
+        
+        function checkAuth() {
+            if (typeof authSystem !== 'undefined' && authSystem.initialized) {
+                // Auth system is ready, auto-fill now
+                autoFillUserEmail();
+            } else if (retryCount < maxRetries) {
+                // Auth system not ready yet, wait and retry
+                retryCount++;
+                setTimeout(checkAuth, 100);
+            } else {
+                // Timeout reached, try auto-fill anyway (user might not be logged in)
+                console.log('Auth system timeout, attempting auto-fill anyway');
+                autoFillUserEmail();
+            }
+        }
+        
+        checkAuth();
+    }
+    
     // Function to auto-fill email from logged-in user
     function autoFillUserEmail() {
         const emailInput = document.getElementById('email');
         const nameInput = document.getElementById('name');
         const emailHint = document.querySelector('.email-hint');
+        
+        // Debug logging
+        console.log('Auto-fill attempt:', {
+            authSystemExists: typeof authSystem !== 'undefined',
+            authSystemInitialized: typeof authSystem !== 'undefined' ? authSystem.initialized : false,
+            currentUser: typeof authSystem !== 'undefined' ? authSystem.currentUser : null
+        });
         
         if (emailInput && typeof authSystem !== 'undefined' && authSystem.currentUser) {
             // Auto-fill email from logged-in user
@@ -39,13 +76,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Add event listener to hide hint when email is manually changed
-            emailInput.addEventListener('input', function() {
-                if (emailHint && this.value !== authSystem.currentUser.email) {
-                    emailHint.style.display = 'none';
-                } else if (emailHint && this.value === authSystem.currentUser.email) {
-                    emailHint.style.display = 'block';
-                }
-            });
+            // Remove existing listener first to avoid duplicates
+            emailInput.removeEventListener('input', handleEmailInputChange);
+            emailInput.addEventListener('input', handleEmailInputChange);
+            
+            console.log('✅ Email auto-filled successfully:', authSystem.currentUser.email);
+        } else {
+            console.log('❌ Auto-fill skipped - user not logged in or auth system not ready');
+        }
+    }
+    
+    // Separate function for email input change handler
+    function handleEmailInputChange() {
+        const emailHint = document.querySelector('.email-hint');
+        if (emailHint && typeof authSystem !== 'undefined' && authSystem.currentUser) {
+            if (this.value !== authSystem.currentUser.email) {
+                emailHint.style.display = 'none';
+            } else if (this.value === authSystem.currentUser.email) {
+                emailHint.style.display = 'block';
+            }
         }
     }
     
@@ -97,9 +146,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 contactForm.reset();
                 
                 // Re-fill email if user is logged in (since form was reset)
+                // Small delay to ensure form is reset before auto-filling
                 setTimeout(() => {
                     autoFillUserEmail();
-                }, 100);
+                }, 50);
             } else {
                 showFormMessage(result.message || 'Failed to send message. Please try again.', 'error');
             }

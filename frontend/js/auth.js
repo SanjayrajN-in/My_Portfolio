@@ -121,14 +121,23 @@ class AuthSystem {
 
         
         if (token) {
+            // Try to use cached user data first for faster load
+            const cachedUser = sessionStorage.getItem('currentUser');
+            if (cachedUser) {
+                try {
+                    this.currentUser = JSON.parse(cachedUser);
+                } catch (e) {
+                    // Invalid cached data, clear it
+                    sessionStorage.removeItem('currentUser');
+                }
+            }
+            
             try {
                 // Validate token with server using API config
-
                 const userData = await window.API.getProfile(token);
                 
                 if (userData && userData.user) {
                     this.currentUser = userData.user;
-
                     
                     // Store user data in sessionStorage for quick access
                     sessionStorage.setItem('currentUser', JSON.stringify(this.currentUser));
@@ -136,12 +145,10 @@ class AuthSystem {
                     throw new Error('Invalid user data received');
                 }
             } catch (error) {
-
                 // Token is invalid, clear all auth data
                 this.clearAuthData();
             }
         } else {
-
             this.clearAuthData();
         }
 
