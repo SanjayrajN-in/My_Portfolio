@@ -67,10 +67,38 @@
                 localStorage.removeItem(`${gameName}_user_rank_cache`);
                 localStorage.removeItem(`${gameName}_rankings_cache`);
                 
+                // Clear rate limiting to allow immediate rank refresh after score submission
+                const rateLimitKey = `getUserRank_${gameName}_lastCall`;
+                localStorage.removeItem(rateLimitKey);
+                
                 // If it's a new high score, immediately cache it
                 if (data.isNewHighScore && data.score && data.score.score) {
                     localStorage.setItem(`${gameName}ServerHighScore`, data.score.score.toString());
                     localStorage.setItem(`${gameName}ServerHighScoreTimestamp`, Date.now().toString());
+                }
+                
+                // Mark that we need to refresh ranking after score submission
+                localStorage.setItem(`${gameName}_processing_rank`, 'true');
+                
+                // Auto-refresh rankings UI if container exists
+                const containerId = `${gameName}-rankings-container`;
+                const container = document.getElementById(containerId);
+                if (container) {
+                    // Immediately update UI to show processing state
+                    this.updateRankingsUI(gameName, containerId, false, false);
+                    
+                    // Then retry with fresh data after server processes
+                    setTimeout(() => {
+                        this.updateRankingsUI(gameName, containerId, false, true);
+                    }, 2000); // Give server time to process
+                    
+                    // Another retry after more time if still processing
+                    setTimeout(() => {
+                        const stillProcessing = localStorage.getItem(`${gameName}_processing_rank`) === 'true';
+                        if (stillProcessing) {
+                            this.updateRankingsUI(gameName, containerId, false, true);
+                        }
+                    }, 5000);
                 }
                 
                 return data;
@@ -152,12 +180,15 @@
          * @returns {Promise} - Promise that resolves with the user's rank
          */
         getUserRank: async function(gameName, forceRefresh = false) {
-            // Rate limiting: Don't call more than once every 30 seconds per game (unless forced)
+            // Check if we're processing a rank after score submission
+            const isProcessingRank = localStorage.getItem(`${gameName}_processing_rank`) === 'true';
+            
+            // Rate limiting: Don't call more than once every 30 seconds per game (unless forced or processing)
             const rateLimitKey = `getUserRank_${gameName}_lastCall`;
             const lastCall = parseInt(localStorage.getItem(rateLimitKey) || '0');
             const now = Date.now();
             
-            if (!forceRefresh && now - lastCall < 30000) { // 30 seconds cooldown to prevent spam
+            if (!forceRefresh && !isProcessingRank && now - lastCall < 30000) { // 30 seconds cooldown to prevent spam
                 // Return cached data if available
                 const cachedRank = localStorage.getItem(`${gameName}_user_rank_cache`);
                 if (cachedRank) {
@@ -211,6 +242,11 @@
                 // Validate the data structure
                 if (!data || (data.rank === undefined && data.score === undefined)) {
                     return { rank: null, score: null };
+                }
+                
+                // Clear processing flag if we got valid rank data
+                if (data.rank && data.score !== undefined && data.score !== null) {
+                    localStorage.removeItem(`${gameName}_processing_rank`);
                 }
                 
                 // Cache the user rank
@@ -374,7 +410,7 @@
                 this.renderRankingsList(rankingsList, finalRankings, gameName);
                 
                 // Update user rank with better error handling
-                this.renderUserRank(userRankElement, userRank, finalRankings);
+                this.renderUserRank(userRankElement, userRank, finalRankings, gameName);
                 
             } catch (error) {
                 rankingsList.innerHTML = '<div class="rankings-error">Error loading rankings. Please try refreshing.</div>';
@@ -432,8 +468,13 @@
         /**
          * Render the user rank HTML
          */
-        renderUserRank: function(userRankElement, userRank, rankings) {
+        renderUserRank: function(userRankElement, userRank, rankings, gameName) {
+            const isProcessingRank = localStorage.getItem(`${gameName}_processing_rank`) === 'true';
+            
             if (userRank && userRank.rank && userRank.score !== undefined && userRank.score !== null) {
+                // Clear processing flag if we have valid rank data
+                localStorage.removeItem(`${gameName}_processing_rank`);
+                
                 userRankElement.innerHTML = `
                     <div class="user-rank-title">Your Rank</div>
                     <div class="user-rank-info">
@@ -441,6 +482,19 @@
                         <span class="user-rank-score">Score: ${userRank.score}</span>
                     </div>
                 `;
+            } else if (isProcessingRank) {
+                // Show processing state after score submission
+                userRankElement.innerHTML = `
+                    <div class="user-rank-title">Your Rank</div>
+                    <div class="user-rank-info">
+                        <span class="user-processing-rank">Processing rank...</span>
+                    </div>
+                `;
+                
+                // Clear processing flag after 30 seconds as fallback
+                setTimeout(() => {
+                    localStorage.removeItem(`${gameName}_processing_rank`);
+                }, 30000);
             } else {
                 // Show appropriate message based on whether there are rankings or not
                 const hasRankings = Array.isArray(rankings) && rankings.length > 0;
@@ -481,7 +535,7 @@
                 // Update rankings with fresh data
                 await this.updateRankingsUI(gameName, containerId);
             } catch (error) {
-                console.error('Error refreshing rankings:', error);
+                // Silent error handling
             } finally {
                 // Reset refresh button
                 if (refreshBtn) {
