@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(checkAuth, 100);
             } else {
                 // Timeout reached, try auto-fill anyway (user might not be logged in)
-                console.log('Auth system timeout, attempting auto-fill anyway');
                 autoFillUserEmail();
             }
         }
@@ -47,12 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const nameInput = document.getElementById('name');
         const emailHint = document.querySelector('.email-hint');
         
-        // Debug logging
-        console.log('Auto-fill attempt:', {
-            authSystemExists: typeof authSystem !== 'undefined',
-            authSystemInitialized: typeof authSystem !== 'undefined' ? authSystem.initialized : false,
-            currentUser: typeof authSystem !== 'undefined' ? authSystem.currentUser : null
-        });
+
         
         if (emailInput && typeof authSystem !== 'undefined' && authSystem.currentUser) {
             // Auto-fill email from logged-in user
@@ -79,10 +73,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Remove existing listener first to avoid duplicates
             emailInput.removeEventListener('input', handleEmailInputChange);
             emailInput.addEventListener('input', handleEmailInputChange);
-            
-            console.log('✅ Email auto-filled successfully:', authSystem.currentUser.email);
-        } else {
-            console.log('❌ Auto-fill skipped - user not logged in or auth system not ready');
         }
     }
     
@@ -155,7 +145,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
         } catch (error) {
-            console.error('Contact form error:', error);
             showFormMessage('An error occurred while sending your message. Please try again later.', 'error');
         } finally {
             // Reset button state
