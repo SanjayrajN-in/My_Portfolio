@@ -148,15 +148,16 @@
         /**
          * Get user's rank for a game with rate limiting
          * @param {string} gameName - Name of the game
+         * @param {boolean} forceRefresh - If true, bypasses rate limiting
          * @returns {Promise} - Promise that resolves with the user's rank
          */
-        getUserRank: async function(gameName) {
-            // Rate limiting: Don't call more than once every 30 seconds per game
+        getUserRank: async function(gameName, forceRefresh = false) {
+            // Rate limiting: Don't call more than once every 30 seconds per game (unless forced)
             const rateLimitKey = `getUserRank_${gameName}_lastCall`;
             const lastCall = parseInt(localStorage.getItem(rateLimitKey) || '0');
             const now = Date.now();
             
-            if (now - lastCall < 30000) { // 30 seconds cooldown to prevent spam
+            if (!forceRefresh && now - lastCall < 30000) { // 30 seconds cooldown to prevent spam
                 // Return cached data if available
                 const cachedRank = localStorage.getItem(`${gameName}_user_rank_cache`);
                 if (cachedRank) {
@@ -279,8 +280,9 @@
          * @param {string} gameName - Name of the game
          * @param {string} containerId - ID of the container element
          * @param {boolean} startPeriodicRefresh - Whether to start periodic refresh
+         * @param {boolean} forceRefresh - Whether to force refresh user rank bypassing rate limiting
          */
-        updateRankingsUI: async function(gameName, containerId, startPeriodicRefresh = false) {
+        updateRankingsUI: async function(gameName, containerId, startPeriodicRefresh = false, forceRefresh = false) {
             // Wait for DOM elements to exist with retry mechanism
             let retryCount = 0;
             const maxRetries = 10;
@@ -325,7 +327,7 @@
                     // Use Promise.allSettled with timeout handling
                     const results = await Promise.allSettled([
                         createTimeoutPromise(this.getRankings(gameName)),
-                        createTimeoutPromise(this.getUserRank(gameName))
+                        createTimeoutPromise(this.getUserRank(gameName, forceRefresh))
                     ]);
                     
                     // Process rankings result
@@ -544,7 +546,7 @@
                 
                 if (container) {
                     try {
-                        await this.updateRankingsUI(game.name, containerId, false);
+                        await this.updateRankingsUI(game.name, containerId, false, true); // Force refresh
                     } catch (error) {
                         // Silent error handling
                     }
@@ -720,7 +722,7 @@
                 // Update display to show server scores
                 setTimeout(() => {
                     if (typeof updateAllHighScores === 'function') {
-                        updateAllHighScores();
+                        updateAllHighScores(true); // Force refresh on login
                     }
                 }, 500);
             }
@@ -742,7 +744,7 @@
                     // Update display with server scores
                     setTimeout(() => {
                         if (typeof updateAllHighScores === 'function') {
-                            updateAllHighScores();
+                            updateAllHighScores(true); // Force refresh on login
                         }
                     }, 500);
                 }

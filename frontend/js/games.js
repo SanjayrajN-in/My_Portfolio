@@ -29,7 +29,7 @@ class GameTracker {
 const gameTracker = new GameTracker();
 
 // Global function to update all high scores
-async function updateAllHighScores() {
+async function updateAllHighScores(forceRefresh = false) {
     const isLoggedIn = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
     
     if (!isLoggedIn) {
@@ -46,7 +46,7 @@ async function updateAllHighScores() {
         const element = document.getElementById(game.elementId);
         if (element && window.gameScores) {
             try {
-                const userRank = await window.gameScores.getUserRank(game.name);
+                const userRank = await window.gameScores.getUserRank(game.name, forceRefresh);
                 const serverHighScore = userRank.score || 0;
                 
                 // Always show server score, even if it's 0 or lower than previous local score
