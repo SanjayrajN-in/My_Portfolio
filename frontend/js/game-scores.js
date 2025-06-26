@@ -392,7 +392,9 @@
             }
 
             let rankingsHTML = '';
-            rankings.forEach((rank, index) => {
+            // Only show top 3 players
+            const topRankings = rankings.slice(0, 3);
+            topRankings.forEach((rank, index) => {
                 if (rank && rank.username && rank.score !== undefined) {
                     rankingsHTML += `
                         <div class="ranking-item ${index === 0 ? 'first-place' : ''}">
@@ -415,7 +417,7 @@
          * Render the user rank HTML
          */
         renderUserRank: function(userRankElement, userRank, rankings) {
-            if (userRank && userRank.rank && userRank.score) {
+            if (userRank && userRank.rank && userRank.score !== undefined && userRank.score !== null) {
                 userRankElement.innerHTML = `
                     <div class="user-rank-title">Your Rank</div>
                     <div class="user-rank-info">
