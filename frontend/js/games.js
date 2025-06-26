@@ -2316,6 +2316,7 @@ function initTetris() {
     let villains = []; // Enemy villains that shoot at paddle
     let projectiles = []; // Projectiles shot by villains
     let lastVillainShot = 0; // Time tracking for villain shots
+    let lifeLost = false; // Track if a life was just lost
     
     // Paddle object with website theme styling
     const paddle = {
@@ -2901,6 +2902,7 @@ function initTetris() {
     // Start game
     function startGame() {
         gameState = 'playing';
+        lifeLost = false; // Reset life lost flag when game starts
         
         // Set ball speed based on current level
         const levelConfig = LEVEL_CONFIG[level] || LEVEL_CONFIG[5];
@@ -2956,6 +2958,7 @@ function initTetris() {
         villains = [];
         projectiles = [];
         scoreSubmitted = false; // Reset score submission status
+        lifeLost = false; // Reset life lost flag
         
         // Reset paddle
         paddle.x = CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2;
@@ -3425,7 +3428,11 @@ function initTetris() {
                 
                 initBricks();
                 createRandomObstacles();
-                resetBallPosition();
+                
+                // Reset ball position for new level (not a life loss)
+                gameState = 'waiting';
+                lifeLost = false; // This is a new level, not a life loss
+                initBalls();
                 
                 // Show level up message
                 createLevelUpParticles();
@@ -3438,6 +3445,7 @@ function initTetris() {
     
     function resetBallPosition() {
         gameState = 'waiting';
+        lifeLost = true; // Mark that a life was lost
         initBalls();
     }
     
@@ -4412,7 +4420,18 @@ function initTetris() {
                 ctx.fillText('Click or Press SPACE to Start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
                 ctx.font = '16px Arial';
                 ctx.fillText('Use mouse or arrow keys to move paddle', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
+            } else if (lifeLost) {
+                // Show life lost message
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fillText('You Lost 1 Life!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '18px Arial';
+                const livesText = lives === 1 ? '1 life remaining' : `${lives} lives remaining`;
+                ctx.fillText(`You still have: ${livesText}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
+                ctx.font = '16px Arial';
+                ctx.fillText('Click or Press SPACE to Continue', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
             } else {
+                // Show level ready message
                 ctx.fillText(`Level ${level} - Ready?`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
                 ctx.font = '16px Arial';
                 ctx.fillText('Click or Press SPACE to Continue', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
