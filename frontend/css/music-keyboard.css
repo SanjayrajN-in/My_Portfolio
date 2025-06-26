@@ -271,11 +271,13 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .keyboard-info {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
     margin-bottom: 15px;
     flex-wrap: wrap;
     gap: 15px;
+    text-align: center;
 }
 
 @media (min-width: 769px) {
@@ -288,7 +290,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
     display: flex;
     gap: 10px;
     align-items: center;
+    justify-content: center;
     flex-wrap: nowrap;
+    margin: 0 auto;
 }
 
 .keyboard-controls .btn {
@@ -313,6 +317,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
     font-size: 0.95rem;
     color: var(--text-secondary, #a0a0a0);
     font-family: 'Rajdhani', sans-serif;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 15px;
 }
 
 .piano-keyboard {
@@ -590,32 +597,40 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 /* Tracks Section */
-.tracks-container, .key-mapping-container, .instructions-container {
+.music-keyboard-container .tracks-container, 
+.music-keyboard-container .key-mapping-container, 
+.music-keyboard-container .instructions-container {
     margin-bottom: 50px;
     padding: 25px;
     background-color: rgba(20, 20, 30, 0.8);
     border-radius: 10px;
     box-shadow: 0 0 20px rgba(74, 111, 165, 0.3);
     border: 1px solid rgba(74, 111, 165, 0.4);
+    text-align: center;
 }
 
-.section-title {
+.music-keyboard-container h2.section-title {
     font-size: 2rem;
     margin-bottom: 5px;
     color: #fff;
     font-family: 'Orbitron', sans-serif;
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-align: center;
+    text-align: center !important;
     text-shadow: 0 0 10px rgba(74, 111, 165, 0.8);
+    display: block !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
-.section-line {
+.music-keyboard-container .section-line {
     width: 80px;
     height: 4px;
     background: #4a6fa5;
     margin: 0 auto 25px;
     border-radius: 2px;
+    display: block;
 }
 
 .tracks-controls {
@@ -638,8 +653,22 @@ input[type="range"]::-webkit-slider-thumb:hover {
     flex: 0 1 auto;
 }
 
+.export-info {
+    background: rgba(0, 168, 255, 0.1);
+    border: 1px solid rgba(0, 168, 255, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px auto;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    text-align: center;
+    max-width: 900px;
+}
+
 .tracks-list {
     min-height: 100px;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .track-item {
@@ -752,25 +781,30 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .mapping-instructions {
-    margin-bottom: 20px;
+    margin: 0 auto 20px;
     padding: 15px;
     background-color: rgba(74, 111, 165, 0.1);
     border-radius: 8px;
     border-left: 4px solid #4a6fa5;
     text-align: center;
+    max-width: 800px;
 }
 
 .mapping-help {
     color: var(--text-color, #e0e0e0);
     font-size: 1rem;
     line-height: 1.5;
-    margin: 0;
+    margin: 0 auto;
+    text-align: center;
+    max-width: 800px;
 }
 
 .key-mapping-display {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 15px;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .key-map-item {
