@@ -11,16 +11,22 @@
     backdrop-filter: blur(10px);
 }
 
-.game-rankings h3 {
-    text-align: center;
-    color: var(--primary-color);
-    margin-top: 0;
+.rankings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 15px;
+}
+
+.game-rankings h3 {
+    color: var(--primary-color);
+    margin: 0;
     font-family: 'Orbitron', sans-serif;
     font-size: 1.2rem;
     letter-spacing: 1px;
     text-transform: uppercase;
     position: relative;
+    flex: 1;
 }
 
 .game-rankings h3::after {
@@ -33,6 +39,39 @@
     height: 2px;
     background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
     border-radius: 2px;
+}
+
+.refresh-rankings-btn {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.refresh-rankings-btn:hover {
+    background: var(--primary-color);
+    color: var(--bg-color-dark);
+    transform: scale(1.05);
+}
+
+.refresh-rankings-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.refresh-rankings-btn:disabled:hover {
+    background: transparent;
+    color: var(--primary-color);
 }
 
 .rankings-list {
@@ -151,6 +190,21 @@
     .game-rankings {
         max-width: 250px;
         padding: 10px;
+    }
+    
+    .rankings-header {
+        margin-bottom: 10px;
+    }
+    
+    .game-rankings h3 {
+        font-size: 1rem;
+    }
+    
+    .refresh-rankings-btn {
+        padding: 4px 6px;
+        font-size: 0.8rem;
+        min-width: 28px;
+        height: 28px;
     }
     
     .ranking-item {

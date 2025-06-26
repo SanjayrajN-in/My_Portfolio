@@ -248,13 +248,27 @@
             // Create the rankings container
             container.innerHTML = `
                 <div class="game-rankings">
-                    <h3>Top Players</h3>
+                    <div class="rankings-header">
+                        <h3>Top Players</h3>
+                        <button class="refresh-rankings-btn" id="${gameName}-refresh-btn" title="Refresh Rankings">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                     <div class="rankings-list" id="${gameName}-rankings-list">
                         <div class="loading-rankings">Loading rankings...</div>
                     </div>
                     <div class="user-rank" id="${gameName}-user-rank"></div>
                 </div>
             `;
+
+            // Add event listener for refresh button
+            const refreshBtn = document.getElementById(`${gameName}-refresh-btn`);
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.refreshRankings(gameName, containerId);
+                });
+            }
 
             // Update the rankings
             this.updateRankingsUI(gameName, containerId);
@@ -436,6 +450,42 @@
                         <span class="user-not-ranked">${message}</span>
                     </div>
                 `;
+            }
+        },
+
+        /**
+         * Refresh rankings manually (triggered by refresh button)
+         * @param {string} gameName - Name of the game
+         * @param {string} containerId - ID of the container element
+         */
+        refreshRankings: async function(gameName, containerId) {
+            const refreshBtn = document.getElementById(`${gameName}-refresh-btn`);
+            
+            // Add loading state to refresh button
+            if (refreshBtn) {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
+            }
+            
+            // Clear cached data to force fresh fetch
+            localStorage.removeItem(`${gameName}_user_rank_cache`);
+            localStorage.removeItem(`${gameName}_rankings_cache`);
+            
+            // Clear rate limiting to allow immediate refresh
+            const rateLimitKey = `getUserRank_${gameName}_lastCall`;
+            localStorage.removeItem(rateLimitKey);
+            
+            try {
+                // Update rankings with fresh data
+                await this.updateRankingsUI(gameName, containerId);
+            } catch (error) {
+                console.error('Error refreshing rankings:', error);
+            } finally {
+                // Reset refresh button
+                if (refreshBtn) {
+                    refreshBtn.disabled = false;
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+                }
             }
         },
 
