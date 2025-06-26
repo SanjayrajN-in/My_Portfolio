@@ -1,9 +1,10 @@
-// Music Keyboard App - Main JavaScript
+﻿// Music Keyboard App - Main JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     // Audio Context
     let audioContext;
     let masterGainNode;
+    let trackGainNode; // Separate gain node for track playback
     
     // Detect low-end devices
     const isLowEndDevice = () => {
@@ -24,10 +25,12 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // App State
+    // Create app state and expose it globally for debugging
     const appState = {
         isRecording: false,
         isPlaying: false,
         isLooping: false, // Track if loop mode is enabled
+        overdubMode: false, // For overdub recording with existing tracks
         currentTrack: null,
         tracks: [],
         recordingStartTime: 0,
@@ -35,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showKeyLabels: true,
         editingKeyMap: false,
         activeNotes: new Map(), // For tracking currently playing notes
+        trackNotes: new Map(), // Separate tracking for track playback notes
         keyMappingMode: false,
         pressedKeys: new Set(), // Track currently pressed keys to prevent stuck notes
         drumSamples: {}, // Store loaded drum samples
@@ -45,11 +49,20 @@ document.addEventListener('DOMContentLoaded', function() {
         audioNodesRegistry: new Set(), // Registry of all created audio nodes for global cleanup
         playbackTimeouts: [], // Store timeouts for track playback to support looping
         keyboardEnabled: true, // Track if PC keyboard input is enabled
+        playbackStartTime: 0, // When current track playback started (for overdub sync)
         // Audio recording related
         currentTrack: [],
         recordingStartTime: 0,
-        audioElements: new Map() // Store audio elements for playback
+        audioElements: new Map(), // Store audio elements for playback
+        // Audio recording for MP3 export
+        mediaRecorder: null,
+        recordedChunks: [],
+        audioDestination: null,
+        isAudioRecording: false
     };
+    
+    // Expose appState globally for debugging
+    window.appState = appState;
     
     // DOM Elements
     const pianoKeyboard = document.getElementById('piano-keyboard');
@@ -362,26 +375,32 @@ document.addEventListener('DOMContentLoaded', function() {
             appState.activeNotes.clear();
             appState.pressedKeys.clear();
             
-            // If all else fails, recreate the audio context
+            // Instead of recreating the audio context (which can cause issues),
+            // just suspend and resume it to clear any stuck audio
             if (audioContext) {
                 try {
-                    const oldContext = audioContext;
-                    audioContext = null;
-                    masterGainNode = null;
-                    
-                    // Try to close the old context
-                    if (oldContext.state !== 'closed') {
-                        oldContext.close().catch(() => {
-                            // Context close failed, but we'll continue
+                    if (audioContext.state === 'running') {
+                        audioContext.suspend().then(() => {
+                            setTimeout(() => {
+                                audioContext.resume().catch(() => {
+                                    // Resume failed, but we'll continue
+                                });
+                            }, 100);
+                        }).catch(() => {
+                            // Suspend failed, but we'll continue
                         });
                     }
                     
-                    // Create a new context
-                    setTimeout(() => {
-                        initAudioContext();
-                    }, 300);
+                    // Reset gain nodes but keep the audio context
+                    if (masterGainNode) {
+                        masterGainNode.gain.value = volumeSlider ? (volumeSlider.value / 100) : 0.7;
+                    }
+                    
+                    if (trackGainNode) {
+                        trackGainNode.gain.value = masterGainNode ? masterGainNode.gain.value : 0.7;
+                    }
                 } catch (e) {
-                    // Audio context recreation failed
+                    // Audio context operation failed
                 }
             }
             
@@ -516,9 +535,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     return null;
                 }
                 
-                // Create audio context with lower latency settings for better performance
+                // Create audio context with consistent settings for reliable sound
                 const contextOptions = {
-                    latencyHint: 'interactive',
+                    latencyHint: 'playback', // Use 'playback' for more stable audio processing
                     sampleRate: 44100
                 };
                 
@@ -528,21 +547,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 masterGainNode = audioContext.createGain();
                 masterGainNode.gain.value = volumeSlider ? (volumeSlider.value / 100) : 0.7;
                 
+                // Create separate gain node for track playback with same volume as master
+                trackGainNode = audioContext.createGain();
+                trackGainNode.gain.value = masterGainNode.gain.value; // Use same volume for consistent playback
+                
                 // Create a compressor to prevent clipping when multiple notes play
                 const compressor = audioContext.createDynamicsCompressor();
-                compressor.threshold.value = -24;
-                compressor.knee.value = 30;
-                compressor.ratio.value = 12;
-                compressor.attack.value = 0.003;
-                compressor.release.value = 0.25;
+                compressor.threshold.value = -24;  // Lower threshold for more consistent compression
+                compressor.knee.value = 20;        // Gentler knee for smoother sound
+                compressor.ratio.value = 4;        // Gentler ratio for more natural sound
+                compressor.attack.value = 0.005;   // Slightly slower attack to preserve transients
+                compressor.release.value = 0.1;    // Faster release for cleaner transitions
                 
-                // Connect the audio chain
+                // Add a limiter for additional safety
+                const limiter = audioContext.createDynamicsCompressor();
+                limiter.threshold.value = -3;      // Higher threshold for less coloration
+                limiter.knee.value = 0;            // Hard knee
+                limiter.ratio.value = 12;          // Less aggressive limiting for cleaner sound
+                limiter.attack.value = 0.002;      // Slightly slower attack to preserve transients
+                limiter.release.value = 0.03;      // Slightly longer release for smoother sound
+                
+                // Create audio destination for recording
+                appState.audioDestination = audioContext.createMediaStreamDestination();
+                
+                // Connect the audio chain with limiter
                 masterGainNode.connect(compressor);
-                compressor.connect(audioContext.destination);
+                // trackGainNode will connect to masterGainNode for consistent sound
+                compressor.connect(limiter);
+                limiter.connect(audioContext.destination);
+                
+                // Also connect to recording destination
+                limiter.connect(appState.audioDestination);
                 
                 // Register for cleanup
                 appState.audioNodesRegistry.add(compressor);
+                appState.audioNodesRegistry.add(limiter);
                 appState.audioNodesRegistry.add(masterGainNode);
+                appState.audioNodesRegistry.add(trackGainNode);
+                appState.audioNodesRegistry.add(appState.audioDestination);
                 
                 // Create drum samples
                 createDrumSamples();
@@ -804,10 +846,36 @@ document.addEventListener('DOMContentLoaded', function() {
         // Volume control
         if (volumeSlider) {
             volumeSlider.addEventListener('input', () => {
+                const volumeValue = volumeSlider.value / 100;
+                
+                // Update both gain nodes to keep volumes in sync
                 if (masterGainNode) {
-                    masterGainNode.gain.value = volumeSlider.value / 100;
+                    masterGainNode.gain.value = volumeValue;
+                }
+                
+                if (trackGainNode) {
+                    trackGainNode.gain.value = volumeValue;
+                }
+                
+                // Save the volume setting to localStorage
+                try {
+                    localStorage.setItem('musicKeyboardVolume', volumeValue);
+                } catch (e) {
+                    // Ignore storage errors
                 }
             });
+            
+            // Load saved volume if available
+            try {
+                const savedVolume = localStorage.getItem('musicKeyboardVolume');
+                if (savedVolume !== null) {
+                    volumeSlider.value = Math.round(parseFloat(savedVolume) * 100);
+                    // Trigger the input event to apply the volume
+                    volumeSlider.dispatchEvent(new Event('input'));
+                }
+            } catch (e) {
+                // Ignore storage errors
+            }
         }
         
         // Recording controls
@@ -838,7 +906,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Export/Import
         if (exportTracksBtn) {
-            exportTracksBtn.addEventListener('click', exportTracks);
+            exportTracksBtn.addEventListener('click', function() {
+                showExportDialog();
+            });
+        } else {
+            console.error('Export button not found in the DOM');
         }
         
         if (importTracksBtn) {
@@ -911,12 +983,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle keyboard key press
     function handleKeyDown(e) {
-        // Debug logging
-        
-        
         // Ignore if keyboard is disabled, key is already pressed, or if we're in an input field
         if (!appState.keyboardEnabled || e.repeat || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-            
             return;
         }
         
@@ -988,10 +1056,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Check if the key is mapped to a drum
             for (const [drumKey, drumData] of Object.entries(drumKitMap)) {
                 if (drumKey === key) {
+                    // Play the drum sound
                     playDrum(drumData.name);
+                    
+                    // Update keyboard status
+                    if (keyboardStatus) {
+                        keyboardStatus.textContent = `Drum: ${drumData.name}`;
+                        keyboardStatus.style.backgroundColor = 'rgba(231, 76, 60, 0.2)';
+                        keyboardStatus.style.color = '#e74c3c';
+                        keyboardStatus.style.borderColor = '#e74c3c';
+                    }
                     return;
                 }
             }
+            
             // If no drum mapping found but we're in drum mode, check if it's a piano key
             // This allows piano keys to trigger drums as well
             if (keyMap[key]) {
@@ -999,7 +1077,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const drumKeys = Object.keys(drumKitMap);
                 const drumIndex = Math.abs(keyMap[key].note.charCodeAt(0)) % drumKeys.length;
                 const drumKey = drumKeys[drumIndex];
-                playDrum(drumKitMap[drumKey].name);
+                const drumName = drumKitMap[drumKey].name;
+                
+                // Play the drum sound
+                playDrum(drumName);
+                
+                // Update keyboard status
+                if (keyboardStatus) {
+                    keyboardStatus.textContent = `Drum: ${drumName}`;
+                    keyboardStatus.style.backgroundColor = 'rgba(231, 76, 60, 0.2)';
+                    keyboardStatus.style.color = '#e74c3c';
+                    keyboardStatus.style.borderColor = '#e74c3c';
+                }
                 return;
             }
         } else {
@@ -1066,250 +1155,49 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 150);
         }
         
-        // Synthesize drum sounds
-        let oscillator, gainNode, filterNode;
-        
-        // Create gain node for all drum types
-        gainNode = audioContext.createGain();
-        gainNode.connect(masterGainNode);
-        
-        // Configure based on drum type
-        switch (drumName) {
-            case 'kick':
-                // Create oscillator for kick
-                oscillator = audioContext.createOscillator();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(40, audioContext.currentTime + 0.1);
-                
-                // Set gain envelope
-                gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-                
-                // Connect and start
-                oscillator.connect(gainNode);
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.3);
-                break;
-                
-            case 'snare':
-                // Create oscillator component
-                oscillator = audioContext.createOscillator();
-                oscillator.type = 'triangle';
-                oscillator.frequency.setValueAtTime(250, audioContext.currentTime);
-                
-                // Create filter for oscillator
-                filterNode = audioContext.createBiquadFilter();
-                filterNode.type = 'highpass';
-                filterNode.frequency.value = 1000;
-                
-                // Connect oscillator through filter to gain
-                oscillator.connect(filterNode);
-                filterNode.connect(gainNode);
-                
-                // Set gain envelope for oscillator
-                gainNode.gain.setValueAtTime(0.7, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-                
-                // Start oscillator
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.2);
-                
-                // Add noise for snare
-                let noiseNode = audioContext.createBufferSource();
-                let noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.2, audioContext.sampleRate);
-                let noiseData = noiseBuffer.getChannelData(0);
-                for (let i = 0; i < noiseBuffer.length; i++) {
-                    noiseData[i] = Math.random() * 2 - 1;
-                }
-                noiseNode.buffer = noiseBuffer;
-                
-                // Create noise filter
-                let noiseFilter = audioContext.createBiquadFilter();
-                noiseFilter.type = 'highpass';
-                noiseFilter.frequency.value = 1000;
-                
-                // Create noise gain
-                let noiseGain = audioContext.createGain();
-                noiseGain.gain.setValueAtTime(0.8, audioContext.currentTime);
-                noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-                
-                // Connect noise components
-                noiseNode.connect(noiseFilter);
-                noiseFilter.connect(noiseGain);
-                noiseGain.connect(masterGainNode);
-                
-                // Start noise
-                noiseNode.start();
-                noiseNode.stop(audioContext.currentTime + 0.2);
-                break;
-                
-            case 'hihat':
-                // Create noise for hi-hat
-                let hihatBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.1, audioContext.sampleRate);
-                let hihatData = hihatBuffer.getChannelData(0);
-                for (let i = 0; i < hihatBuffer.length; i++) {
-                    hihatData[i] = Math.random() * 2 - 1;
-                }
-                
-                // Create source
-                let hihatSource = audioContext.createBufferSource();
-                hihatSource.buffer = hihatBuffer;
-                
-                // Create filter
-                let hihatFilter = audioContext.createBiquadFilter();
-                hihatFilter.type = 'highpass';
-                hihatFilter.frequency.value = 7000;
-                
-                // Set gain envelope
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-                
-                // Connect components
-                hihatSource.connect(hihatFilter);
-                hihatFilter.connect(gainNode);
-                
-                // Start source
-                hihatSource.start();
-                hihatSource.stop(audioContext.currentTime + 0.1);
-                break;
-                
-            case 'clap':
-                // Create noise for clap
-                let clapBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.1, audioContext.sampleRate);
-                let clapData = clapBuffer.getChannelData(0);
-                for (let i = 0; i < clapBuffer.length; i++) {
-                    clapData[i] = Math.random() * 2 - 1;
-                }
-                
-                // Create source
-                let clapSource = audioContext.createBufferSource();
-                clapSource.buffer = clapBuffer;
-                
-                // Create filter
-                let clapFilter = audioContext.createBiquadFilter();
-                clapFilter.type = 'bandpass';
-                clapFilter.frequency.value = 1500;
-                clapFilter.Q.value = 2;
-                
-                // Set gain envelope
-                gainNode.gain.setValueAtTime(0.7, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-                
-                // Connect components
-                clapSource.connect(clapFilter);
-                clapFilter.connect(gainNode);
-                
-                // Start source
-                clapSource.start();
-                clapSource.stop(audioContext.currentTime + 0.2);
-                break;
-                
-            case 'tom':
-                // Create oscillator for tom
-                oscillator = audioContext.createOscillator();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(180, audioContext.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(80, audioContext.currentTime + 0.2);
-                
-                // Set gain envelope
-                gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-                
-                // Connect and start
-                oscillator.connect(gainNode);
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.3);
-                break;
-                
-            case 'crash':
-                // Create noise for crash
-                let crashBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.5, audioContext.sampleRate);
-                let crashData = crashBuffer.getChannelData(0);
-                for (let i = 0; i < crashBuffer.length; i++) {
-                    crashData[i] = Math.random() * 2 - 1;
-                }
-                
-                // Create source
-                let crashSource = audioContext.createBufferSource();
-                crashSource.buffer = crashBuffer;
-                
-                // Create filter
-                let crashFilter = audioContext.createBiquadFilter();
-                crashFilter.type = 'highpass';
-                crashFilter.frequency.value = 5000;
-                
-                // Set gain envelope
-                gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
-                
-                // Connect components
-                crashSource.connect(crashFilter);
-                crashFilter.connect(gainNode);
-                
-                // Start source
-                crashSource.start();
-                crashSource.stop(audioContext.currentTime + 0.5);
-                break;
-                
-            case 'ride':
-                // Create oscillator for ride
-                oscillator = audioContext.createOscillator();
-                oscillator.type = 'triangle';
-                oscillator.frequency.setValueAtTime(2000, audioContext.currentTime);
-                
-                // Create filter
-                filterNode = audioContext.createBiquadFilter();
-                filterNode.type = 'highpass';
-                filterNode.frequency.value = 8000;
-                
-                // Set gain envelope
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-                
-                // Connect components
-                oscillator.connect(filterNode);
-                filterNode.connect(gainNode);
-                
-                // Start oscillator
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.3);
-                break;
-                
-            case 'rim':
-                // Create oscillator for rim
-                oscillator = audioContext.createOscillator();
-                oscillator.type = 'square';
-                oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
-                
-                // Create filter
-                filterNode = audioContext.createBiquadFilter();
-                filterNode.type = 'bandpass';
-                filterNode.frequency.value = 3000;
-                filterNode.Q.value = 10;
-                
-                // Set gain envelope
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-                
-                // Connect components
-                oscillator.connect(filterNode);
-                filterNode.connect(gainNode);
-                
-                // Start oscillator
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.1);
-                break;
-        }
+        // Use the same synthetic drum function for consistency
+        playTrackSyntheticDrum(drumName, 'live');
         
         // Record the drum hit if recording
         if (appState.isRecording) {
+            // Calculate duration based on drum type
+            let duration = 0.1; // Default duration
+            switch (drumName) {
+                case 'kick': duration = 0.3; break;
+                case 'snare': duration = 0.2; break;
+                case 'hihat': duration = 0.1; break;
+                case 'clap': duration = 0.2; break;
+                case 'tom': duration = 0.3; break;
+                case 'crash': duration = 0.5; break;
+                case 'ride': duration = 0.3; break;
+                case 'rim': duration = 0.1; break;
+            }
+            
+            // Save the current theme
+            const currentTheme = appState.soundTheme;
+            
+            // Record the drum with explicit drums theme
             appState.currentTrack.push({
                 drum: drumName,
                 startTime: audioContext.currentTime - appState.recordingStartTime,
-                endTime: audioContext.currentTime - appState.recordingStartTime + 0.1,
-                theme: appState.soundTheme // Lock in the current theme
+                endTime: audioContext.currentTime - appState.recordingStartTime + duration,
+                theme: 'drums', // Always use drums theme for drum sounds
+                duration: duration, // Store the exact duration for consistent playback
+                type: 'drum' // Explicitly mark as drum type
             });
+            
+            // If we're in overdub mode, also play the drum through the track system
+            // so it's immediately audible alongside other tracks
+            if (appState.overdubMode && appState.tracks.length > 0) {
+                // Temporarily switch to drums theme
+                appState.soundTheme = 'drums';
+                
+                // Play through track system for consistent sound
+                playTrackSyntheticDrum(drumName, 'recording');
+                
+                // Restore theme
+                appState.soundTheme = currentTheme;
+            }
         }
     }
     
@@ -1323,12 +1211,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // If the note is already playing, don't restart it (prevents glitching with multiple keys)
         if (appState.activeNotes.has(note)) {
+            // Update the UI to ensure it shows as active
+            updateKeyUI(note, true);
             return;
         }
         
-        // Limit the number of simultaneous notes to prevent audio glitching
-        if (appState.activeNotes.size >= 6) {
-            
+        // Check for stuck notes with the same name in track notes (can happen during overdub)
+        if (appState.overdubMode) {
+            appState.trackNotes.forEach((data, key) => {
+                if (key.includes(note) && audioContext.currentTime - data.startTime > 5) {
+                    // This is likely a stuck note, stop it
+                    stopTrackNote(note, key.split('_')[1]);
+                }
+            });
+        }
+        
+        // Increase note limit during track playback and recording to prevent notes from being dropped
+        const maxNotes = (appState.isPlaying || appState.isRecording) ? 12 : 8;
+        if (appState.activeNotes.size >= maxNotes) {
             // Find the oldest note and stop it
             let oldestNote = null;
             let oldestTime = Infinity;
@@ -1345,13 +1245,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Get the sound theme configuration
-        const theme = soundThemes[appState.soundTheme];
+        // Get the sound theme configuration with fallback to piano
+        const theme = soundThemes[appState.soundTheme] || soundThemes['piano'];
         
         try {
             // Create oscillator with ultra-simplified settings
             const oscillator = audioContext.createOscillator();
-            oscillator.type = theme.oscillatorType;
+            oscillator.type = theme && theme.oscillatorType ? theme.oscillatorType : 'sine';
             oscillator.frequency.value = getNoteFrequency(note);
             
             // Register the oscillator for global cleanup
@@ -1412,7 +1312,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     note,
                     startTime: audioContext.currentTime - appState.recordingStartTime,
                     endTime: null,
-                    theme: appState.soundTheme // Lock in the current theme
+                    theme: appState.soundTheme, // Lock in the current theme
+                    frequency: getNoteFrequency(note) // Store the exact frequency for consistent playback
                 });
             }
             
@@ -1457,7 +1358,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // Get the sound theme configuration for proper release time
-            const theme = soundThemes[appState.soundTheme];
+            const theme = soundThemes[appState.soundTheme] || soundThemes['piano'];
             const release = theme ? (theme.release || 0.02) : 0.02;
             
             // Apply release envelope
@@ -1543,6 +1444,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             appState.noteTimeouts.clear();
             
+            // Also clear all playback timeouts to prevent stuck notes during overdub
+            clearPlaybackTimeouts();
+            
             // Stop all oscillators
             appState.activeNotes.forEach((data, note) => {
                 try {
@@ -1554,8 +1458,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
+            // Also stop all track notes to prevent conflicts
+            appState.trackNotes.forEach((data, noteKey) => {
+                try {
+                    if (data.oscillator) {
+                        data.oscillator.stop(0);
+                    }
+                } catch (e) {
+                    // Ignore errors
+                }
+            });
+            
             // Clear active notes
             appState.activeNotes.clear();
+            
+            // Clear track notes
+            appState.trackNotes.clear();
             
             // Clear pressed keys
             appState.pressedKeys.clear();
@@ -1582,11 +1500,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             audioContext.close().then(() => {
                                 audioContext = null;
                                 masterGainNode = null;
+                                trackGainNode = null;
                                 initAudioContext();
                             }).catch(() => {
                                 // If close fails, force new context
                                 audioContext = null;
                                 masterGainNode = null;
+                                trackGainNode = null;
                                 initAudioContext();
                             });
                         }
@@ -1594,6 +1514,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Last resort: force new context
                         audioContext = null;
                         masterGainNode = null;
+                        trackGainNode = null;
                         initAudioContext();
                     }
                 }
@@ -1606,6 +1527,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 audioContext = null;
                 masterGainNode = null;
+                trackGainNode = null;
                 setTimeout(initAudioContext, 100);
             } catch (e2) {
                 
@@ -1613,15 +1535,560 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Update key UI state
+    // Update key UI state with reference counting for multiple tracks
+    const activeKeyReferences = new Map(); // Track how many sources are activating each key
+    
     function updateKeyUI(note, isActive) {
         const keyElement = document.querySelector(`.piano-key[data-note="${note}"]`);
-        if (keyElement) {
-            if (isActive) {
-                keyElement.classList.add('active');
-            } else {
+        if (!keyElement) return;
+        
+        // Get current reference count or initialize to 0
+        const currentCount = activeKeyReferences.get(note) || 0;
+        
+        if (isActive) {
+            // Increment reference count
+            activeKeyReferences.set(note, currentCount + 1);
+            keyElement.classList.add('active');
+        } else {
+            // Decrement reference count, but don't go below 0
+            const newCount = Math.max(0, currentCount - 1);
+            activeKeyReferences.set(note, newCount);
+            
+            // Only remove active class if no references remain
+            if (newCount === 0) {
                 keyElement.classList.remove('active');
             }
+        }
+    }
+    
+    // Dedicated track playback functions (separate from keyboard input)
+    function playTrackNote(note, trackId = null) {
+        // Make sure we have a valid audio context
+        if (!audioContext) {
+            initAudioContext();
+        }
+        
+        if (!audioContext || !masterGainNode) return;
+        
+        // Ensure trackGainNode exists and is properly connected
+        if (!trackGainNode) {
+            trackGainNode = audioContext.createGain();
+            trackGainNode.gain.value = masterGainNode.gain.value;
+            trackGainNode.connect(masterGainNode);
+            appState.audioNodesRegistry.add(trackGainNode);
+        } else if (!trackGainNode.context) {
+            // If trackGainNode exists but is not connected to a context, recreate it
+            trackGainNode = audioContext.createGain();
+            trackGainNode.gain.value = masterGainNode.gain.value;
+            trackGainNode.connect(masterGainNode);
+            appState.audioNodesRegistry.add(trackGainNode);
+        }
+        
+        // Create unique key for track notes to allow same notes from different tracks
+        const noteKey = trackId ? `${note}_${trackId}` : note;
+        
+        // Don't interfere with existing track notes, but allow same note from different tracks
+        if (appState.trackNotes.has(noteKey)) {
+            // If the note is already playing for this track, stop it first to prevent conflicts
+            stopTrackNote(note, trackId);
+        }
+        
+        // Clean up any stuck notes with the same base note but different track IDs
+        // This helps prevent conflicts in overdub mode
+        appState.trackNotes.forEach((data, key) => {
+            if (key.startsWith(note + '_') && key !== noteKey) {
+                // Only clean up notes that have been playing for a while (to avoid cutting off legitimate notes)
+                if (audioContext.currentTime - data.startTime > 5) {
+                    stopTrackNote(note, key.split('_')[1]);
+                }
+            }
+        });
+        
+        const frequency = getNoteFrequency(note);
+        
+        // Find the track this note belongs to for proper theme
+        let noteTheme = appState.soundTheme;
+        
+        // Ensure trackId is a string before using string methods
+        const trackIdStr = trackId ? String(trackId) : '';
+        
+        if (trackIdStr && trackIdStr.startsWith('track_')) {
+            const trackIdNum = trackIdStr.replace('track_', '');
+            const track = appState.tracks.find(t => String(t.id) === trackIdNum);
+            if (track && track.theme) {
+                noteTheme = track.theme;
+            }
+        }
+        
+        // Use the correct theme for this note, with fallback to piano if theme not found
+        const theme = soundThemes[noteTheme] || soundThemes['piano'];
+        
+        try {
+            // Create oscillator and gain nodes
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            // Use the exact same oscillator type as in playNote for consistency
+            // Ensure we have a valid oscillator type (default to 'sine' if undefined)
+            oscillator.type = theme && theme.oscillatorType ? theme.oscillatorType : 'sine';
+            oscillator.frequency.value = frequency;
+            
+            // Connect the nodes - use trackGainNode for track playback
+            oscillator.connect(gainNode);
+            gainNode.connect(trackGainNode);
+            
+            // Track the node
+            appState.audioNodesRegistry.add(oscillator);
+            appState.audioNodesRegistry.add(gainNode);
+            
+            // ADSR envelope - use same values as regular playNote for consistent sound
+            const now = audioContext.currentTime;
+            const attack = theme.attack || 0.01;
+            const decay = theme.decay || 0.1;
+            const sustain = theme.sustain || 0.7;
+            const sustainValue = sustain * 0.8; // Use same sustain level as regular notes
+            
+            // Use the exact same envelope settings as in playNote
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.8, now + attack);
+            gainNode.gain.linearRampToValueAtTime(sustainValue, now + attack + decay);
+            
+            // Start the oscillator
+            oscillator.start();
+            
+            // Store the track note with unique key
+            appState.trackNotes.set(noteKey, {
+                oscillator,
+                gainNode,
+                startTime: now,
+                originalNote: note,
+                trackId: trackId,
+                theme: noteTheme // Store the theme used for this note
+            });
+            
+        } catch (e) {
+            // Silent error handling to avoid console logs
+        }
+    }
+    
+    function stopTrackNote(note, trackId = null) {
+        if (!audioContext) return; // Can't stop notes without audio context
+        
+        // Ensure trackId is a string if provided
+        const trackIdStr = trackId ? String(trackId) : null;
+        
+        const noteKey = trackIdStr ? `${note}_${trackIdStr}` : note;
+        const trackNote = appState.trackNotes.get(noteKey);
+        
+        // If we can't find the exact note, try some fallback approaches
+        if (!trackNote) {
+            // 1. Try without trackId (backward compatibility)
+            if (trackId && appState.trackNotes.has(note)) {
+                const fallbackTrackNote = appState.trackNotes.get(note);
+                if (fallbackTrackNote) {
+                    appState.trackNotes.delete(note);
+                    if (fallbackTrackNote.gainNode && fallbackTrackNote.oscillator) {
+                        try {
+                            // Use the same release method as regular notes
+                            const now = audioContext.currentTime;
+                            // Use the note's theme if available, otherwise use current theme
+                            const noteTheme = fallbackTrackNote.theme || appState.soundTheme;
+                            const theme = soundThemes[noteTheme] || soundThemes['piano'];
+                            const release = theme ? (theme.release || 0.3) : 0.3;
+                            
+                            fallbackTrackNote.gainNode.gain.cancelScheduledValues(now);
+                            fallbackTrackNote.gainNode.gain.setValueAtTime(fallbackTrackNote.gainNode.gain.value, now);
+                            fallbackTrackNote.gainNode.gain.linearRampToValueAtTime(0, now + release);
+                            
+                            setTimeout(() => {
+                                try {
+                                    fallbackTrackNote.oscillator.stop();
+                                    fallbackTrackNote.oscillator.disconnect();
+                                    fallbackTrackNote.gainNode.disconnect();
+                                    appState.audioNodesRegistry.delete(fallbackTrackNote.oscillator);
+                                    appState.audioNodesRegistry.delete(fallbackTrackNote.gainNode);
+                                } catch (e) {
+                                    // Silent cleanup
+                                }
+                            }, release * 1000 + 10);
+                        } catch (e) {
+                            // Emergency cleanup
+                            try {
+                                fallbackTrackNote.oscillator.stop();
+                                fallbackTrackNote.oscillator.disconnect();
+                                fallbackTrackNote.gainNode.disconnect();
+                            } catch (err) {
+                                // Silent error
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 2. Try to find any notes that match this note regardless of track ID
+            // This helps with cleaning up stuck notes in overdub mode
+            appState.trackNotes.forEach((data, key) => {
+                // If the key starts with the note name (e.g., "C4_track1")
+                if (key.startsWith(note + '_')) {
+                    try {
+                        if (data.gainNode && data.oscillator) {
+                            // Use the same release method as regular notes
+                            const now = audioContext.currentTime;
+                            // Use the note's theme if available, otherwise use current theme
+                            const noteTheme = data.theme || appState.soundTheme;
+                            const theme = soundThemes[noteTheme] || soundThemes['piano'];
+                            const release = theme ? (theme.release || 0.3) : 0.3;
+                            
+                            data.gainNode.gain.cancelScheduledValues(now);
+                            data.gainNode.gain.setValueAtTime(data.gainNode.gain.value, now);
+                            data.gainNode.gain.linearRampToValueAtTime(0, now + release);
+                            
+                            setTimeout(() => {
+                                try {
+                                    data.oscillator.stop();
+                                    data.oscillator.disconnect();
+                                    data.gainNode.disconnect();
+                                    appState.audioNodesRegistry.delete(data.oscillator);
+                                    appState.audioNodesRegistry.delete(data.gainNode);
+                                } catch (e) {
+                                    // Silent cleanup
+                                }
+                                appState.trackNotes.delete(key);
+                            }, release * 1000 + 10);
+                        } else {
+                            appState.trackNotes.delete(key);
+                        }
+                    } catch (e) {
+                        // Emergency cleanup
+                        appState.trackNotes.delete(key);
+                    }
+                }
+            });
+            
+            return; // We've handled all possible cleanup
+        }
+        
+        try {
+            const now = audioContext.currentTime;
+            // Use the note's theme if available, otherwise use current theme
+            const noteTheme = trackNote.theme || appState.soundTheme;
+            const theme = soundThemes[noteTheme] || soundThemes['piano'];
+            const release = theme ? (theme.release || 0.3) : 0.3;
+            
+            // Use the same release time as regular notes for consistent sound
+            trackNote.gainNode.gain.cancelScheduledValues(now);
+            trackNote.gainNode.gain.setValueAtTime(trackNote.gainNode.gain.value, now);
+            trackNote.gainNode.gain.linearRampToValueAtTime(0, now + release);
+            
+            // Stop and cleanup
+            setTimeout(() => {
+                try {
+                    trackNote.oscillator.stop();
+                    trackNote.oscillator.disconnect();
+                    trackNote.gainNode.disconnect();
+                    appState.audioNodesRegistry.delete(trackNote.oscillator);
+                    appState.audioNodesRegistry.delete(trackNote.gainNode);
+                } catch (e) {
+                    // Silent cleanup
+                }
+                appState.trackNotes.delete(noteKey);
+            }, release * 1000 + 10);
+            
+        } catch (e) {
+            // Emergency cleanup
+            appState.trackNotes.delete(noteKey);
+            try {
+                if (trackNote && trackNote.oscillator) {
+                    trackNote.oscillator.stop();
+                    trackNote.oscillator.disconnect();
+                }
+                if (trackNote && trackNote.gainNode) {
+                    trackNote.gainNode.disconnect();
+                }
+            } catch (err) {
+                // Silent error
+            }
+        }
+    }
+    
+    function playTrackDrum(drumName, trackId = null) {
+        // Make sure we have a valid audio context
+        if (!audioContext) {
+            initAudioContext();
+        }
+        
+        if (!audioContext || !masterGainNode) return;
+        
+        // Ensure trackGainNode exists and is properly connected
+        if (!trackGainNode) {
+            trackGainNode = audioContext.createGain();
+            trackGainNode.gain.value = 0.8; // Higher gain for drums to be more audible
+            trackGainNode.connect(masterGainNode);
+            appState.audioNodesRegistry.add(trackGainNode);
+        } else if (!trackGainNode.context) {
+            // If trackGainNode exists but is not connected to a context, recreate it
+            trackGainNode = audioContext.createGain();
+            trackGainNode.gain.value = 0.8; // Higher gain for drums to be more audible
+            trackGainNode.connect(masterGainNode);
+            appState.audioNodesRegistry.add(trackGainNode);
+        }
+        
+        // Create unique key for track drums to allow same drums from different tracks
+        const drumKey = trackId ? `${drumName}_${trackId}` : drumName;
+        
+        // Always use synthetic drums for consistent playback
+        playTrackSyntheticDrum(drumName, trackId);
+        
+        // Show visual feedback for the drum pad
+        const drumPad = document.querySelector(`.drum-pad[data-drum="${drumName}"]`);
+        if (drumPad) {
+            drumPad.classList.add('active');
+            setTimeout(() => {
+                drumPad.classList.remove('active');
+            }, 150);
+        }
+    }
+    
+    // Synthetic drum sounds for track playback
+    function playTrackSyntheticDrum(drumName, trackId = null) {
+        // Make sure we have a valid audio context
+        if (!audioContext) {
+            initAudioContext();
+        }
+        
+        if (!audioContext || !masterGainNode) return;
+        
+        // Create unique key for track drums
+        const drumKey = trackId ? `${drumName}_${trackId}` : drumName;
+        
+        try {
+            // Create main oscillator
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const now = audioContext.currentTime;
+            
+            // Create a simple but effective drum sound based on type
+            switch (drumName) {
+                case 'kick':
+                    // Kick drum - simple low frequency sine wave with pitch drop
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(150, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+                    gainNode.gain.setValueAtTime(1.0, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    break;
+                    
+                case 'snare':
+                    // Snare - simple noise burst
+                    createNoiseHit(0.2, 1000, 0.7, 0.2);
+                    
+                    // Add a bit of tone
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(200, now);
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    break;
+                    
+                case 'hihat':
+                    // Hi-hat - filtered noise burst
+                    createNoiseHit(0.1, 8000, 0.4, 0.1);
+                    
+                    // Add a bit of tone
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(8000, now);
+                    gainNode.gain.setValueAtTime(0.2, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    break;
+                    
+                case 'clap':
+                    // Clap - filtered noise burst
+                    createNoiseHit(0.2, 2000, 0.8, 0.15);
+                    
+                    // Add a bit of tone
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(1200, now);
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    break;
+                    
+                case 'tom':
+                    // Tom - mid-low frequency with decay
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(180, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+                    gainNode.gain.setValueAtTime(0.9, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    break;
+                    
+                case 'crash':
+                    // Crash - high frequency noise with longer decay
+                    createNoiseHit(0.5, 6000, 0.6, 0.4);
+                    
+                    // Add a bit of tone
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(4000, now);
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    break;
+                    
+                case 'ride':
+                    // Ride - high frequency with metallic character
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(2000, now);
+                    gainNode.gain.setValueAtTime(0.5, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    
+                    // Add a second oscillator for more metallic character
+                    try {
+                        const osc2 = audioContext.createOscillator();
+                        const gain2 = audioContext.createGain();
+                        
+                        osc2.type = 'triangle';
+                        osc2.frequency.setValueAtTime(4000, now);
+                        gain2.gain.setValueAtTime(0.2, now);
+                        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                        
+                        osc2.connect(gain2);
+                        gain2.connect(masterGainNode);
+                        
+                        osc2.start(now);
+                        osc2.stop(now + 0.3);
+                        
+                        // Register for cleanup
+                        appState.audioNodesRegistry.add(osc2);
+                        appState.audioNodesRegistry.add(gain2);
+                        
+                        // Auto-cleanup
+                        setTimeout(() => {
+                            try {
+                                osc2.disconnect();
+                                gain2.disconnect();
+                                appState.audioNodesRegistry.delete(osc2);
+                                appState.audioNodesRegistry.delete(gain2);
+                            } catch (e) {
+                                // Silent cleanup
+                            }
+                        }, 400);
+                    } catch (e) {
+                        // Silent error handling
+                    }
+                    break;
+                    
+                case 'rim':
+                    // Rim shot - short, high-pitched click
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(1000, now);
+                    gainNode.gain.setValueAtTime(0.6, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    break;
+                    
+                default:
+                    // Default drum sound - simple tone
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(300, now);
+                    gainNode.gain.setValueAtTime(0.7, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            }
+            
+            // Helper function to create noise-based drum sounds
+            function createNoiseHit(duration, filterFreq, volume, decayTime) {
+                try {
+                    // Create noise buffer
+                    const bufferSize = audioContext.sampleRate * duration;
+                    const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                    const data = noiseBuffer.getChannelData(0);
+                    
+                    // Fill with random values (white noise)
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                    
+                    // Create source and connect through filter
+                    const noise = audioContext.createBufferSource();
+                    noise.buffer = noiseBuffer;
+                    
+                    // Create filter
+                    const filter = audioContext.createBiquadFilter();
+                    filter.type = 'highpass';
+                    filter.frequency.value = filterFreq;
+                    
+                    // Create gain node
+                    const noiseGain = audioContext.createGain();
+                    noiseGain.gain.setValueAtTime(volume, now);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + decayTime);
+                    
+                    // Connect everything
+                    noise.connect(filter);
+                    filter.connect(noiseGain);
+                    noiseGain.connect(masterGainNode);
+                    
+                    // Start the noise
+                    noise.start(now);
+                    
+                    // Register for cleanup
+                    appState.audioNodesRegistry.add(noise);
+                    appState.audioNodesRegistry.add(filter);
+                    appState.audioNodesRegistry.add(noiseGain);
+                    
+                    // Auto-cleanup
+                    setTimeout(() => {
+                        try {
+                            noise.disconnect();
+                            filter.disconnect();
+                            noiseGain.disconnect();
+                            appState.audioNodesRegistry.delete(noise);
+                            appState.audioNodesRegistry.delete(filter);
+                            appState.audioNodesRegistry.delete(noiseGain);
+                        } catch (e) {
+                            // Silent cleanup
+                        }
+                    }, duration * 1000 + 100);
+                } catch (e) {
+                    // Silent error handling
+                }
+            }
+            
+            // Connect oscillator to gain to master
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGainNode);
+            
+            // Register for cleanup
+            appState.audioNodesRegistry.add(oscillator);
+            appState.audioNodesRegistry.add(gainNode);
+            
+            // Start the oscillator
+            oscillator.start(now);
+            
+            // Calculate duration based on drum type
+            let duration = 0.2; // Default duration
+            switch (drumName) {
+                case 'kick': duration = 0.3; break;
+                case 'snare': duration = 0.2; break;
+                case 'hihat': duration = 0.1; break;
+                case 'clap': duration = 0.2; break;
+                case 'tom': duration = 0.3; break;
+                case 'crash': duration = 0.5; break;
+                case 'ride': duration = 0.3; break;
+                case 'rim': duration = 0.1; break;
+            }
+            
+            // Stop the oscillator after the appropriate duration
+            oscillator.stop(now + duration);
+            
+            // Auto-cleanup
+            setTimeout(() => {
+                try {
+                    oscillator.disconnect();
+                    gainNode.disconnect();
+                    appState.audioNodesRegistry.delete(oscillator);
+                    appState.audioNodesRegistry.delete(gainNode);
+                } catch (e) {
+                    // Silent cleanup
+                }
+            }, duration * 1000 + 100); // Safe cleanup after duration
+            
+        } catch (e) {
+            // Silent error handling to avoid console logs
         }
     }
     
@@ -1649,21 +2116,214 @@ document.addEventListener('DOMContentLoaded', function() {
         return 440 * Math.pow(2, semitones / 12);
     }
     
+    // Start overdub playback (play existing tracks while recording)
+    function startOverdubPlayback() {
+        if (appState.tracks.length === 0) return;
+        
+        // Clear any existing playback timeouts
+        clearPlaybackTimeouts();
+        
+        // Clear any existing track notes to prevent conflicts
+        appState.trackNotes.clear();
+        
+        appState.isPlaying = true;
+        appState.playbackStartTime = audioContext.currentTime;
+        let maxDuration = 0;
+        
+        // Reduce the volume of track playback during overdub
+        if (trackGainNode) {
+            trackGainNode.gain.value = 0.2; // Lower volume for clearer recording
+        }
+        
+        // Play all existing tracks simultaneously for overdub
+        appState.tracks.forEach((track, trackIndex) => {
+            if (track.notes && track.notes.length > 0) {
+                // Ensure track has a valid ID
+                if (!track.id) {
+                    track.id = String(trackIndex + 1); // Simple numeric ID
+                }
+                
+                // Use a simple track ID that's consistent
+                const trackId = `track_${track.id}`;
+                
+                track.notes.forEach(note => {
+                    // Schedule note start
+                    const noteStartTimeout = setTimeout(() => {
+                        if (!appState.isPlaying || !appState.overdubMode) return;
+                        
+                        // Use the track's theme for this note
+                        const noteTheme = note.theme || track.theme || appState.soundTheme;
+                        
+                        // Store the current theme to restore later
+                        const currentTheme = appState.soundTheme;
+                        
+                        // Temporarily set the app state theme for UI updates
+                        appState.soundTheme = noteTheme;
+                        
+                        // Play the note or drum
+                        if (note.note) {
+                            // The playTrackNote function will use the correct theme from the track
+                            // Ensure trackId is converted to a string
+                            const trackIdStr = trackId ? String(trackId) : null;
+                            playTrackNote(note.note, trackIdStr);
+                            
+                            // Also update the UI to show the key being played
+                            updateKeyUI(note.note, true);
+                        } else if (note.drum) {
+                            // For drums, always use the drums theme
+                            const originalTheme = appState.soundTheme;
+                            appState.soundTheme = 'drums';
+                            
+                            // Play the drum sound directly with synthetic drum for better audibility
+                            playTrackSyntheticDrum(note.drum, trackId);
+                            
+                            // Show visual feedback for the drum pad
+                            const drumPad = document.querySelector(`.drum-pad[data-drum="${note.drum}"]`);
+                            if (drumPad) {
+                                drumPad.classList.add('active');
+                                setTimeout(() => {
+                                    drumPad.classList.remove('active');
+                                }, 150);
+                            }
+                            
+                            // Restore the original theme
+                            appState.soundTheme = originalTheme;
+                        }
+                        
+                        // Restore theme
+                        appState.soundTheme = currentTheme;
+                        
+                        // Schedule note end (for sustained notes)
+                        if (note.note && note.endTime) {
+                            const duration = note.endTime - note.startTime;
+                            const noteEndTimeout = setTimeout(() => {
+                                if (!appState.isPlaying || !appState.overdubMode) return;
+                                stopTrackNote(note.note, trackId);
+                                
+                                // Update UI to show the key being released
+                                updateKeyUI(note.note, false);
+                            }, duration * 1000);
+                            
+                            appState.playbackTimeouts.push(noteEndTimeout);
+                        }
+                    }, note.startTime * 1000);
+                    
+                    appState.playbackTimeouts.push(noteStartTimeout);
+                });
+                
+                maxDuration = Math.max(maxDuration, track.duration || 0);
+            }
+        });
+        
+        // Set up continuous looping for overdub
+        if (maxDuration > 0) {
+            // Use exact track duration with a small standard buffer for consistent timing
+            // This buffer should match the one used in playAllTracks
+            const standardBuffer = 0.1; // 100ms standard buffer
+            const loopDuration = maxDuration + standardBuffer;
+            
+            const loopTimeout = setTimeout(() => {
+                if (appState.overdubMode && appState.isRecording) {
+                    // Stop all currently playing notes with a quick fade out
+                    appState.trackNotes.forEach((trackNote, noteKey) => {
+                        if (trackNote.gainNode) {
+                            try {
+                                // Quick fade out to prevent clicks
+                                trackNote.gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+                                trackNote.gainNode.gain.setValueAtTime(trackNote.gainNode.gain.value, audioContext.currentTime);
+                                trackNote.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.05);
+                                
+                                // Schedule oscillator stop
+                                setTimeout(() => {
+                                    try {
+                                        if (trackNote.oscillator) {
+                                            trackNote.oscillator.stop();
+                                        }
+                                    } catch (e) {
+                                        // Ignore errors during cleanup
+                                    }
+                                }, 60);
+                            } catch (e) {
+                                // Ignore errors during cleanup
+                            }
+                        }
+                    });
+                    
+                    // Clear and restart with a small standard delay to prevent audio glitches
+                    setTimeout(() => {
+                        // Force clear all track notes
+                        appState.trackNotes.clear();
+                        
+                        // Only restart if still in overdub mode
+                        if (appState.overdubMode && appState.isRecording) {
+                            startOverdubPlayback();
+                        }
+                    }, 50); // Small 50ms delay before restarting
+                }
+            }, loopDuration * 1000);
+            
+            appState.playbackTimeouts.push(loopTimeout);
+        }
+    }
+    
     // Start recording
     function startRecording() {
         if (!audioContext) {
             initAudioContext();
         }
         
-        if (!audioContext) return;
+        if (!audioContext) {
+            alert("Audio context failed to initialize. Please refresh and try again.");
+            return;
+        }
+        
+        // Stop any existing playback first
+        if (appState.isPlaying) {
+            stopPlayback();
+        }
         
         // Reset recording data
         appState.currentTrack = [];
         appState.isRecording = true;
+        appState.overdubMode = true; // Enable overdub mode
+        
+        // Make sure all notes are stopped before starting
+        stopAllNotes();
+        
+        // Clear any existing track notes to prevent conflicts
+        appState.trackNotes.clear();
+        
+        // Initialize or reset track gain node for consistent playback
+        if (!trackGainNode || !trackGainNode.context) {
+            trackGainNode = audioContext.createGain();
+            trackGainNode.gain.value = 0.2; // Lower volume for clearer recording
+            trackGainNode.connect(masterGainNode);
+            appState.audioNodesRegistry.add(trackGainNode);
+        } else {
+            // Ensure proper connection
+            trackGainNode.disconnect();
+            trackGainNode.connect(masterGainNode);
+            trackGainNode.gain.value = 0.2; // Lower volume for clearer recording
+        }
+        
         appState.recordingStartTime = audioContext.currentTime;
         
+        // Start existing tracks for overdub if any exist
+        if (appState.tracks.length > 0) {
+            // Start playback of existing tracks for overdub at lower volume
+            startOverdubPlayback();
+        }
+        
+        // Start audio recording for MP3 export
+        startAudioRecording();
+        
         // Update UI
-        if (startRecordingBtn) startRecordingBtn.disabled = true;
+        if (startRecordingBtn) {
+            startRecordingBtn.disabled = true;
+            if (appState.tracks.length > 0) {
+                startRecordingBtn.textContent = 'Recording (Overdub)...';
+            }
+        }
         if (stopRecordingBtn) stopRecordingBtn.disabled = false;
         if (saveRecordingBtn) saveRecordingBtn.disabled = true;
     }
@@ -1671,9 +2331,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Stop recording
     function stopRecording() {
         appState.isRecording = false;
+        appState.overdubMode = false; // Disable overdub mode
+        
+        // Stop audio recording
+        stopAudioRecording();
+        
+        // Stop overdub playback
+        if (appState.isPlaying) {
+            stopPlayback();
+        }
+        
+        // Make sure all notes are properly released
+        stopAllNotes();
+        
+        // Clear any stuck track notes
+        appState.trackNotes.clear();
+        
+        // Reset track gain to normal
+        if (trackGainNode) {
+            trackGainNode.gain.value = 0.3;
+        }
         
         // Update UI
-        if (startRecordingBtn) startRecordingBtn.disabled = false;
+        if (startRecordingBtn) {
+            startRecordingBtn.disabled = false;
+            startRecordingBtn.textContent = 'Start Recording'; // Reset text
+        }
         if (stopRecordingBtn) stopRecordingBtn.disabled = true;
         if (saveRecordingBtn) saveRecordingBtn.disabled = false;
     }
@@ -1684,13 +2367,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const trackName = trackNameInput.value.trim() || `Track ${appState.tracks.length + 1}`;
         
+        // Calculate proper duration for overdub recordings
+        let trackDuration = 0;
+        if (appState.currentTrack.length > 0) {
+            trackDuration = Math.max(...appState.currentTrack.map(note => note.endTime || note.startTime || 0));
+        }
+        
         const track = {
             id: Date.now(),
             name: trackName,
             notes: appState.currentTrack,
             theme: appState.soundTheme,
-            duration: Math.max(...appState.currentTrack.map(note => note.endTime || note.startTime || 0)),
-            type: 'locked-theme' // Mark as theme-locked recording
+            duration: trackDuration,
+            type: 'locked-theme', // Mark as theme-locked recording
+            audioData: appState.recordedChunks.length > 0 ? appState.recordedChunks : null // Store audio data
         };
         
         appState.tracks.push(track);
@@ -1703,8 +2393,9 @@ document.addEventListener('DOMContentLoaded', function() {
         trackNameInput.value = '';
         if (saveRecordingBtn) saveRecordingBtn.disabled = true;
         
-        // Clear current track
+        // Clear current track and audio data
         appState.currentTrack = [];
+        appState.recordedChunks = [];
     }
     
     // Play all tracks
@@ -1721,74 +2412,204 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear any existing playback timeouts
         clearPlaybackTimeouts();
         
-        appState.isPlaying = true;
-        let maxDuration = 0;
+        // Initialize audio context if not already initialized
+        if (!audioContext) {
+            initAudioContext();
+        }
         
-        // Play all tracks simultaneously
+        if (!audioContext) {
+            alert("Audio context failed to initialize. Please refresh and try again.");
+            return;
+        }
+        
+        // Ensure all previous notes are stopped and cleared
+        stopAllNotes();
+        appState.trackNotes.clear();
+        
+        // Set up the gain nodes
+        if (!masterGainNode) {
+            masterGainNode = audioContext.createGain();
+            masterGainNode.gain.value = volumeSlider ? (volumeSlider.value / 100) : 0.7;
+            
+            // Connect to destination
+            masterGainNode.connect(audioContext.destination);
+            
+            // Register for cleanup
+            appState.audioNodesRegistry.add(masterGainNode);
+        }
+        
+        if (!trackGainNode) {
+            trackGainNode = audioContext.createGain();
+            // Use the same gain value as masterGainNode for consistent sound
+            trackGainNode.gain.value = masterGainNode.gain.value;
+            
+            // Connect trackGainNode to masterGainNode for consistent sound
+            trackGainNode.connect(masterGainNode);
+            
+            // Register for cleanup
+            appState.audioNodesRegistry.add(trackGainNode);
+        } else {
+            // Ensure proper volume - match master gain for consistent sound
+            trackGainNode.gain.value = masterGainNode.gain.value;
+            
+            // Ensure proper connection
+            trackGainNode.disconnect();
+            trackGainNode.connect(masterGainNode);
+        }
+        
+        // Stop all notes and clear any existing track notes
+        stopAllNotes();
+        appState.trackNotes.clear();
+        
+        appState.isPlaying = true;
+        appState.playbackStartTime = audioContext.currentTime;
+        
+        // Find the maximum duration among all tracks
+        let maxDuration = 0;
         appState.tracks.forEach(track => {
-            if (track.notes) {
-                // Use locked theme for theme-locked tracks, otherwise use current theme
-                const originalTheme = appState.soundTheme;
-                const trackTheme = track.type === 'locked-theme' ? track.theme : appState.soundTheme;
-                
-                // Temporarily switch to track's theme if it's locked
-                if (track.type === 'locked-theme') {
-                    appState.soundTheme = trackTheme;
-                }
-                
+            if (track.notes && track.notes.length > 0) {
+                // Calculate the track duration based on the last note's end time
+                let trackEndTime = 0;
                 track.notes.forEach(note => {
-                    // Schedule note start
-                    const noteStartTimeout = setTimeout(() => {
-                        if (!appState.isPlaying) return;
-                        
-                        // Use the track's individual note theme if available
-                        const noteTheme = note.theme || trackTheme;
-                        const currentTheme = appState.soundTheme;
-                        
-                        // Temporarily switch theme for this note
-                        appState.soundTheme = noteTheme;
-                        
-                        // Play the note or drum
-                        if (note.note) {
-                            playNote(note.note);
-                        } else if (note.drum) {
-                            playDrum(note.drum);
-                        }
-                        
-                        // Restore theme
-                        appState.soundTheme = currentTheme;
-                        
-                        // Schedule note end (for sustained notes)
-                        if (note.note && note.endTime) {
-                            const duration = note.endTime - note.startTime;
-                            const noteEndTimeout = setTimeout(() => {
-                                if (!appState.isPlaying) return;
-                                stopNote(note.note);
-                            }, duration * 1000);
-                            
-                            appState.playbackTimeouts.push(noteEndTimeout);
-                        }
-                    }, note.startTime * 1000);
-                    
-                    appState.playbackTimeouts.push(noteStartTimeout);
+                    // For each note, find when it ends
+                    const noteEndTime = note.endTime || (note.startTime + (note.duration || 0.5));
+                    trackEndTime = Math.max(trackEndTime, noteEndTime);
                 });
                 
-                // Restore original theme
-                appState.soundTheme = originalTheme;
+                // Store the calculated duration in the track object for future reference
+                track.duration = trackEndTime;
                 
-                maxDuration = Math.max(maxDuration, track.duration || 0);
+                // Update the max duration
+                maxDuration = Math.max(maxDuration, trackEndTime);
+            }
+        });
+        
+        // Play all tracks simultaneously
+        appState.tracks.forEach((track, trackIndex) => {
+            if (track.notes && track.notes.length > 0) {
+                // Ensure track has a valid ID
+                if (!track.id) {
+                    track.id = String(trackIndex + 1); // Assign sequential ID if missing
+                }
+                
+                // Calculate how many times this track needs to loop to match the longest track
+                const trackDuration = track.duration || 0;
+                const loopCount = trackDuration > 0 ? Math.ceil(maxDuration / trackDuration) : 1;
+                
+                // Play the track for each loop iteration
+                for (let loop = 0; loop < loopCount; loop++) {
+                    const loopOffset = loop * trackDuration;
+                    
+                    track.notes.forEach(note => {
+                        // Schedule note start with loop offset
+                        const noteStartTime = note.startTime + loopOffset;
+                        
+                        // Don't schedule notes beyond the max duration
+                        if (noteStartTime >= maxDuration) return;
+                        
+                        const noteStartTimeout = setTimeout(() => {
+                            if (!appState.isPlaying) return;
+                            
+                            // Use the track's theme for this note
+                            const noteTheme = note.theme || track.theme || appState.soundTheme;
+                            
+                            // Temporarily switch theme for this note
+                            const currentTheme = appState.soundTheme;
+                            appState.soundTheme = noteTheme;
+                            
+                            // Create a unique ID for this note in this loop iteration
+                            const loopTrackId = `${track.id}_loop${loop}`;
+                            
+                            // Play the note or drum using dedicated track playback functions
+                            if (note.note) {
+                                // Play immediately without delay to maintain timing accuracy
+                                // The playTrackNote function will use the correct theme from the track
+                                // Ensure loopTrackId is converted to a string
+                                const loopTrackIdStr = loopTrackId ? String(loopTrackId) : null;
+                                playTrackNote(note.note, loopTrackIdStr);
+                                // Also update the UI to show the key being played
+                                updateKeyUI(note.note, true);
+                            } else if (note.drum) {
+                                // For drums, always use the drums theme
+                                const originalTheme = appState.soundTheme;
+                                appState.soundTheme = 'drums';
+                                
+                                // Play the drum sound directly with synthetic drum for better audibility
+                                playTrackSyntheticDrum(note.drum, loopTrackId);
+                                
+                                // Show visual feedback for the drum pad
+                                const drumPad = document.querySelector(`.drum-pad[data-drum="${note.drum}"]`);
+                                if (drumPad) {
+                                    drumPad.classList.add('active');
+                                    setTimeout(() => {
+                                        drumPad.classList.remove('active');
+                                    }, 150);
+                                }
+                                
+                                // Restore the original theme
+                                appState.soundTheme = originalTheme;
+                            }
+                            
+                            // Restore theme immediately after playing
+                            appState.soundTheme = currentTheme;
+                            
+                            // Schedule note end (for sustained notes)
+                            if (note.note && note.endTime) {
+                                const duration = note.endTime - note.startTime;
+                                const noteEndTimeout = setTimeout(() => {
+                                    if (!appState.isPlaying) return;
+                                    stopTrackNote(note.note, loopTrackId);
+                                    // Update UI to show the key being released
+                                    updateKeyUI(note.note, false);
+                                }, duration * 1000);
+                                
+                                appState.playbackTimeouts.push(noteEndTimeout);
+                            }
+                        }, noteStartTime * 1000);
+                        
+                        appState.playbackTimeouts.push(noteStartTimeout);
+                    });
+                }
             }
         });
         
         // Schedule playback end or loop
         const playbackEndTimeout = setTimeout(() => {
             if (appState.isLooping) {
-                // If looping is enabled, restart playback
-                playAllTracks();
+                // Clear track notes before looping
+                appState.trackNotes.forEach((trackNote, noteKey) => {
+                    try {
+                        // Extract note and trackId from the key
+                        if (trackNote.originalNote && trackNote.trackId) {
+                            stopTrackNote(trackNote.originalNote, trackNote.trackId);
+                        } else {
+                            // Fallback for old format
+                            stopTrackNote(noteKey);
+                        }
+                    } catch (e) {
+                        // Ignore errors during cleanup
+                    }
+                });
+                
+                // Clear all track notes
+                appState.trackNotes.clear();
+                
+                // Reset all UI elements
+                document.querySelectorAll('.piano-key.active, .drum-pad.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                // Small standard delay before restarting to prevent audio glitches
+                // This delay should match the one used in startOverdubPlayback
+                setTimeout(() => {
+                    if (appState.isLooping) { // Check again in case user stopped during delay
+                        playAllTracks();
+                    }
+                }, 50); // Small 50ms delay before restarting
             } else {
                 stopPlayback();
             }
-        }, (maxDuration + 0.5) * 1000);
+        }, (maxDuration + 0.1) * 1000); // Add 100ms standard buffer to match overdub mode
         
         appState.playbackTimeouts.push(playbackEndTimeout);
         
@@ -1813,72 +2634,148 @@ document.addEventListener('DOMContentLoaded', function() {
         const track = appState.tracks.find(t => t.id === trackId);
         if (!track) return;
         
-        appState.isPlaying = true;
+        // Ensure all previous notes are stopped and cleared
+        stopAllNotes();
+        appState.trackNotes.clear();
         
-        if (track.notes) {
-            if (!audioContext) {
-                initAudioContext();
+        // Initialize audio context if not already initialized
+        if (!audioContext) {
+            initAudioContext();
+        }
+        
+        if (!audioContext) {
+            alert("Audio context failed to initialize. Please refresh and try again.");
+            return;
+        }
+        
+        // Set up the gain nodes
+        if (!masterGainNode) {
+            masterGainNode = audioContext.createGain();
+            masterGainNode.gain.value = volumeSlider ? (volumeSlider.value / 100) : 0.7;
+            
+            // Connect to destination
+            masterGainNode.connect(audioContext.destination);
+            
+            // Register for cleanup
+            appState.audioNodesRegistry.add(masterGainNode);
+        }
+        
+        // Always recreate trackGainNode for each track playback to ensure clean audio
+        if (trackGainNode) {
+            try {
+                trackGainNode.disconnect();
+                appState.audioNodesRegistry.delete(trackGainNode);
+            } catch (e) {
+                // Silent cleanup
             }
-            
-            if (!audioContext) return;
-            
-            // Use locked theme for theme-locked tracks, otherwise use track's theme
-            const originalTheme = appState.soundTheme;
-            const trackTheme = track.type === 'locked-theme' ? track.theme : (track.theme || appState.soundTheme);
-            
-            // Temporarily switch to track's theme if it's locked
-            if (track.type === 'locked-theme') {
-                appState.soundTheme = trackTheme;
-            }
-            
-            // Schedule all notes
-            track.notes.forEach(note => {
-                // Schedule note start
-                const noteStartTimeout = setTimeout(() => {
-                    if (!appState.isPlaying) return;
+        }
+        
+        trackGainNode = audioContext.createGain();
+        // Use the same gain value as masterGainNode for consistent sound
+        trackGainNode.gain.value = masterGainNode.gain.value;
+        
+        // Connect trackGainNode to masterGainNode for consistent sound
+        trackGainNode.connect(masterGainNode);
+        
+        // Register for cleanup
+        appState.audioNodesRegistry.add(trackGainNode);
+        
+        appState.isPlaying = true;
+        appState.playbackStartTime = audioContext.currentTime;
+        
+        // Use locked theme for theme-locked tracks, otherwise use track's theme
+        const originalTheme = appState.soundTheme;
+        const trackTheme = track.type === 'locked-theme' ? track.theme : (track.theme || appState.soundTheme);
+        
+        // Temporarily switch to track's theme if it's locked
+        if (track.type === 'locked-theme') {
+            appState.soundTheme = trackTheme;
+        }
+        
+        // Schedule all notes
+        track.notes.forEach(note => {
+            // Schedule note start
+            const noteStartTimeout = setTimeout(() => {
+                if (!appState.isPlaying) return;
+                
+                // Use the track's individual note theme if available
+                const noteTheme = note.theme || trackTheme;
+                const currentTheme = appState.soundTheme;
+                
+                // Temporarily switch theme for this note
+                appState.soundTheme = noteTheme;
+                
+                // Play the note or drum using dedicated track playback functions
+                if (note.note) {
+                    // Ensure track.id is converted to a string
+                    const trackIdStr = track.id ? String(track.id) : null;
+                    playTrackNote(note.note, trackIdStr);
                     
-                    // Use the track's individual note theme if available
-                    const noteTheme = note.theme || trackTheme;
-                    const currentTheme = appState.soundTheme;
+                    // Also update the UI to show the key being played
+                    updateKeyUI(note.note, true);
+                } else if (note.drum) {
+                    // For drums, always use the drums theme
+                    const drumTheme = appState.soundTheme;
+                    appState.soundTheme = 'drums';
                     
-                    // Temporarily switch theme for this note
-                    appState.soundTheme = noteTheme;
+                    // Play the drum sound directly with synthetic drum for better audibility
+                    playTrackSyntheticDrum(note.drum, track.id);
                     
-                    // Play the note or drum
-                    if (note.note) {
-                        playNote(note.note);
-                    } else if (note.drum) {
-                        playDrum(note.drum);
+                    // Show visual feedback for the drum pad
+                    const drumPad = document.querySelector(`.drum-pad[data-drum="${note.drum}"]`);
+                    if (drumPad) {
+                        drumPad.classList.add('active');
+                        setTimeout(() => {
+                            drumPad.classList.remove('active');
+                        }, 150);
                     }
                     
-                    // Restore theme
-                    appState.soundTheme = currentTheme;
+                    // Restore the original theme
+                    appState.soundTheme = drumTheme;
+                }
+                
+                // Restore theme
+                appState.soundTheme = currentTheme;
+                
+                // Schedule note end (for sustained notes)
+                if (note.note && note.endTime) {
+                    const duration = note.endTime - note.startTime;
+                    const noteEndTimeout = setTimeout(() => {
+                        if (!appState.isPlaying) return;
+                        stopTrackNote(note.note, track.id);
+                    }, duration * 1000);
                     
-                    // Schedule note end (for sustained notes)
-                    if (note.note && note.endTime) {
-                        const duration = note.endTime - note.startTime;
-                        const noteEndTimeout = setTimeout(() => {
-                            if (!appState.isPlaying) return;
-                            stopNote(note.note);
-                        }, duration * 1000);
-                        
-                        appState.playbackTimeouts.push(noteEndTimeout);
-                    }
-                }, note.startTime * 1000);
+                    appState.playbackTimeouts.push(noteEndTimeout);
+                }
+            }, note.startTime * 1000);
                 
                 appState.playbackTimeouts.push(noteStartTimeout);
             });
-            
-            // Restore original theme
-            appState.soundTheme = originalTheme;
-            
-            // Schedule playback end
-            const playbackEndTimeout = setTimeout(() => {
+        
+        // Restore original theme
+        appState.soundTheme = originalTheme;
+        
+        // Schedule playback end or loop
+        const playbackEndTimeout = setTimeout(() => {
+            if (appState.isLooping) {
+                // Clear track notes before looping
+                appState.trackNotes.forEach((trackNote, note) => {
+                    stopTrackNote(note);
+                });
+                appState.trackNotes.clear();
+                
+                // Small delay before restarting to prevent audio glitches
+                setTimeout(() => {
+                    if (appState.isLooping) { // Check again in case user stopped during delay
+                        playTrack(trackId);
+                    }
+                }, 100);
+            } else {
                 stopPlayback();
-            }, (track.duration + 0.5) * 1000);
-            
-            appState.playbackTimeouts.push(playbackEndTimeout);
-        }
+            }
+        }, (track.duration + 0.5) * 1000);
+        
+        appState.playbackTimeouts.push(playbackEndTimeout);
         
         // Update UI
         if (playAllTracksBtn) playAllTracksBtn.disabled = true;
@@ -1888,6 +2785,57 @@ document.addEventListener('DOMContentLoaded', function() {
     // Stop playback
     function stopPlayback() {
         appState.isPlaying = false;
+        appState.playbackStartTime = 0;
+        
+        // Clear all playback timeouts first
+        clearPlaybackTimeouts();
+        
+        // Stop all track notes separately from keyboard notes
+        // Create a copy of the keys to avoid modification during iteration
+        const trackNoteKeys = Array.from(appState.trackNotes.keys());
+        
+        // First try to stop notes with their track IDs
+        trackNoteKeys.forEach(noteKey => {
+            const trackNote = appState.trackNotes.get(noteKey);
+            if (trackNote && trackNote.originalNote && trackNote.trackId) {
+                stopTrackNote(trackNote.originalNote, trackNote.trackId);
+            } else {
+                // Fallback for notes without track info
+                stopTrackNote(noteKey);
+            }
+        });
+        
+        // Force cleanup of any remaining track notes
+        appState.trackNotes.forEach((trackNote, noteKey) => {
+            if (trackNote.gainNode) {
+                try {
+                    trackNote.gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+                    trackNote.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                } catch (e) {
+                    // Ignore errors during cleanup
+                }
+            }
+            if (trackNote.oscillator) {
+                try {
+                    trackNote.oscillator.stop(audioContext.currentTime);
+                } catch (e) {
+                    // Ignore errors during cleanup
+                }
+            }
+        });
+        
+        appState.trackNotes.clear(); // Clear all track notes
+        
+        // Clean up trackGainNode to prevent issues with subsequent playbacks
+        if (trackGainNode) {
+            try {
+                trackGainNode.disconnect();
+                appState.audioNodesRegistry.delete(trackGainNode);
+                trackGainNode = null;
+            } catch (e) {
+                // Silent cleanup
+            }
+        }
         
         // Stop all active notes
         stopAllNotes();
@@ -1902,7 +2850,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear all playback timeouts
         clearPlaybackTimeouts();
         
-        // Update UI
+        // Reset recording state if it was corrupted during playback
+        const recordButton = document.getElementById('record-btn');
+        if (appState.isRecording && recordButton && !recordButton.classList.contains('recording')) {
+            appState.isRecording = false;
+            appState.currentTrack = [];
+        }
+        
+        // Reset all UI key states
+        const activeKeys = document.querySelectorAll('.piano-key.active, .drum-pad.active');
+        activeKeys.forEach(key => {
+            key.classList.remove('active');
+        });
+        
+        // Reset the reference counter for active keys
+        activeKeyReferences.clear();
+        
+        // Update UI buttons
         if (playAllTracksBtn) playAllTracksBtn.disabled = false;
         if (stopPlaybackBtn) stopPlaybackBtn.disabled = true;
     }
@@ -1963,9 +2927,9 @@ document.addEventListener('DOMContentLoaded', function() {
             trackDetails.className = 'track-details';
             
             if (track.type === 'locked-theme') {
-                trackDetails.textContent = `${track.notes?.length || 0} notes · ${track.duration.toFixed(1)}s · ${track.theme} (Locked)`;
+                trackDetails.textContent = `${track.notes?.length || 0} notes Â· ${track.duration.toFixed(1)}s Â· ${track.theme} (Locked)`;
             } else {
-                trackDetails.textContent = `${track.notes?.length || 0} notes · ${track.duration.toFixed(1)}s · ${track.theme || 'Legacy'}`;
+                trackDetails.textContent = `${track.notes?.length || 0} notes Â· ${track.duration.toFixed(1)}s Â· ${track.theme || 'Legacy'}`;
             }
             
             trackInfo.appendChild(trackName);
@@ -2259,7 +3223,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Save tracks to localStorage
     function saveTracks() {
         try {
-            localStorage.setItem('musicKeyboardTracks', JSON.stringify(appState.tracks));
+            // Create a version without audio data for localStorage (to avoid size limits)
+            const tracksForStorage = appState.tracks.map(track => ({
+                ...track,
+                audioData: null // Don't save audio data to localStorage due to size constraints
+            }));
+            
+            localStorage.setItem('musicKeyboardTracks', JSON.stringify(tracksForStorage));
         } catch (e) {
             
             alert('Failed to save tracks. Local storage may be full or disabled.');
@@ -2281,32 +3251,750 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Export tracks to JSON file
-    function exportTracks() {
-        if (appState.tracks.length === 0) {
+    // Start audio recording for MP3 export
+    function startAudioRecording() {
+        if (!audioContext) {
+            // Create audio context if it doesn't exist
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                setupAudioNodes();
+            } catch (e) {
+                alert('Web Audio API is not supported in this browser. Audio recording will not work.');
+                return;
+            }
+        }
+        
+        if (!appState.audioDestination) {
+            try {
+                // Create audio destination if it doesn't exist
+                appState.audioDestination = audioContext.createMediaStreamDestination();
+                
+                // Connect master gain to the destination
+                if (masterGainNode) {
+                    masterGainNode.connect(appState.audioDestination);
+                }
+                
+                // Connect track gain to the destination
+                if (trackGainNode) {
+                    trackGainNode.connect(appState.audioDestination);
+                }
+            } catch (e) {
+                alert('Could not create audio recording destination. Audio recording will not work.');
+                return;
+            }
+        }
+        
+        try {
+            // Reset recorded chunks
+            appState.recordedChunks = [];
+            
+            // Create MediaRecorder from the audio destination stream
+            const stream = appState.audioDestination.stream;
+            
+            // Determine the best available format for the browser
+            let mimeType = '';
+            
+            // Check for supported formats in order of preference
+            const formats = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/ogg;codecs=opus',
+                'audio/ogg',
+                'audio/wav',
+                'audio/mp4'
+            ];
+            
+            for (const format of formats) {
+                try {
+                    if (MediaRecorder.isTypeSupported(format)) {
+                        mimeType = format;
+                        break;
+                    }
+                } catch (e) {
+                    // Ignore errors and continue with the next format
+                }
+            }
+            
+            // Create MediaRecorder with the best supported format
+            const options = {
+                audioBitsPerSecond: 128000 // Higher bitrate for better quality
+            };
+            
+            if (mimeType) {
+                options.mimeType = mimeType;
+            }
+            
+            appState.mediaRecorder = new MediaRecorder(stream, options);
+            
+            // Handle data available event
+            appState.mediaRecorder.ondataavailable = function(event) {
+                if (event.data.size > 0) {
+                    appState.recordedChunks.push(event.data);
+                }
+            };
+            
+            // Handle recording stop event
+            appState.mediaRecorder.onstop = function() {
+                appState.isAudioRecording = false;
+            };
+            
+            // Start recording
+            appState.mediaRecorder.start(100); // Collect data every 100ms
+            appState.isAudioRecording = true;
+            
+        } catch (error) {
+            alert('Audio recording failed to start. Your browser may not support this feature.');
+            appState.isAudioRecording = false;
+        }
+    }
+    
+    // Stop audio recording
+    function stopAudioRecording() {
+        if (appState.mediaRecorder && appState.isAudioRecording) {
+            try {
+                appState.mediaRecorder.stop();
+            } catch (error) {
+                console.warn('Error stopping audio recording:', error);
+            }
+        }
+        appState.isAudioRecording = false;
+    }
+    
+    // Convert recorded audio to MP3-compatible format
+    async function convertAudioToMP3(chunks) {
+        if (!chunks || chunks.length === 0) {
+            return null;
+        }
+        
+        try {
+            // Create a blob from the recorded chunks with the original format
+            const originalBlob = new Blob(chunks, { type: chunks[0].type || 'audio/webm' });
+            
+            // Create a more compatible audio format
+            // WebM is widely supported, but we'll ensure it has the right extension
+            // First, determine the actual format based on the MIME type
+            const mimeType = originalBlob.type;
+            let fileExtension = 'mp3';
+            let outputType = 'audio/mpeg';
+            
+            if (mimeType.includes('webm')) {
+                fileExtension = 'webm';
+                outputType = 'audio/webm';
+            } else if (mimeType.includes('ogg')) {
+                fileExtension = 'ogg';
+                outputType = 'audio/ogg';
+            } else if (mimeType.includes('wav')) {
+                fileExtension = 'wav';
+                outputType = 'audio/wav';
+            }
+            
+            // Create a new blob with the correct MIME type
+            // This ensures the browser treats it as the right format when downloaded
+            const processedBlob = new Blob([originalBlob], { type: outputType });
+            
+            // Add metadata to help identify the format
+            const blobWithMetadata = {
+                blob: processedBlob,
+                extension: fileExtension,
+                mimeType: outputType
+            };
+            
+            return processedBlob;
+        } catch (error) {
+            // Fallback: just return the original chunks with audio MIME type
+            return new Blob(chunks, { type: 'audio/webm' });
+        }
+    }
+    
+    // Generate audio for a track by playing it back
+    async function generateTrackAudio(track) {
+        if (!audioContext || !track.notes || track.notes.length === 0) {
+            return null;
+        }
+        
+        return new Promise((resolve) => {
+            // Start a new recording session for this track
+            const originalRecordedChunks = [...appState.recordedChunks];
+            appState.recordedChunks = [];
+            
+            // Start audio recording
+            startAudioRecording();
+            
+            // Play the track
+            let noteTimeouts = [];
+            const startTime = audioContext.currentTime;
+            
+            track.notes.forEach(note => {
+                // Schedule note start
+                const startTimeout = setTimeout(() => {
+                    playNote(note.note || note.frequency, note.theme || track.theme);
+                }, (note.startTime || 0) * 1000);
+                
+                noteTimeouts.push(startTimeout);
+                
+                // Schedule note end if duration is specified
+                if (note.endTime || note.duration) {
+                    const endTime = note.endTime || ((note.startTime || 0) + (note.duration || 0));
+                    const endTimeout = setTimeout(() => {
+                        stopNote(note.note || note.frequency);
+                    }, endTime * 1000);
+                    
+                    noteTimeouts.push(endTimeout);
+                }
+            });
+            
+            // Stop recording after track duration + buffer time
+            const trackDuration = Math.max(...track.notes.map(note => note.endTime || note.startTime || 0)) * 1000;
+            setTimeout(() => {
+                stopAudioRecording();
+                
+                // Wait a bit more for the recording to finalize
+                setTimeout(async () => {
+                    const audioBlob = await convertAudioToMP3(appState.recordedChunks);
+                    
+                    // Restore original recorded chunks
+                    appState.recordedChunks = originalRecordedChunks;
+                    
+                    // Clear timeouts
+                    noteTimeouts.forEach(timeout => clearTimeout(timeout));
+                    
+                    resolve(audioBlob);
+                }, 500);
+                
+            }, trackDuration + 1000); // Add 1 second buffer
+        });
+    }
+    
+    // Generate combined audio from multiple tracks
+    // Expose this function globally so it can be called from HTML
+    window.generateCombinedAudio = async function(tracks) {
+        console.log('generateCombinedAudio called with', tracks ? tracks.length : 0, 'tracks');
+        
+        if (!audioContext || !tracks || tracks.length === 0) {
+            console.log('No tracks or audio context');
+            return null;
+        }
+        
+        return new Promise((resolve) => {
+            // Stop any existing playback
+            if (appState.isPlaying) {
+                stopPlayback();
+            }
+            
+            // Make sure all notes are stopped
+            stopAllNotes();
+            
+            // Reset all UI key states
+            const activeKeys = document.querySelectorAll('.piano-key.active, .drum-pad.active');
+            activeKeys.forEach(key => {
+                key.classList.remove('active');
+            });
+            activeKeyReferences.clear();
+            
+            // Ensure audio context is running
+            if (audioContext.state !== 'running') {
+                audioContext.resume().catch(e => {
+                    console.warn('Could not resume audio context:', e);
+                });
+            }
+            
+            // Temporarily boost the gain for recording
+            const originalMasterGain = masterGainNode ? masterGainNode.gain.value : 0.7;
+            const originalTrackGain = trackGainNode ? trackGainNode.gain.value : 0.7;
+            
+            // Set optimal gain for recording (slightly higher to ensure good quality)
+            if (masterGainNode) masterGainNode.gain.value = 0.85;
+            if (trackGainNode) trackGainNode.gain.value = 0.85;
+            
+            // Start a new recording session
+            const originalRecordedChunks = [...appState.recordedChunks];
+            appState.recordedChunks = [];
+            
+            // Start audio recording with a small delay to ensure everything is ready
+            setTimeout(() => {
+                startAudioRecording();
+            
+            // Find the maximum duration among all tracks
+            let maxDuration = 0;
+            tracks.forEach(track => {
+                if (track.notes && track.notes.length > 0) {
+                    // Calculate the track duration based on the last note's end time
+                    let trackEndTime = 0;
+                    track.notes.forEach(note => {
+                        // For each note, find when it ends
+                        const noteEndTime = note.endTime || (note.startTime + (note.duration || 0.5));
+                        trackEndTime = Math.max(trackEndTime, noteEndTime);
+                    });
+                    
+                    // Store the calculated duration in the track object for future reference
+                    track.duration = trackEndTime;
+                    
+                    // Update the max duration
+                    maxDuration = Math.max(maxDuration, trackEndTime);
+                }
+            });
+            
+            // Add a small buffer to ensure all notes finish playing
+            maxDuration += 0.5;
+            
+            // Play all tracks simultaneously (similar to playAllTracks but for recording)
+            const noteTimeouts = [];
+            
+            tracks.forEach((track, trackIndex) => {
+                if (track.notes && track.notes.length > 0) {
+                    // Calculate how many times this track needs to loop to match the longest track
+                    const trackDuration = track.duration || 0;
+                    const loopCount = trackDuration > 0 ? Math.ceil(maxDuration / trackDuration) : 1;
+                    
+                    // Play the track for each loop iteration
+                    for (let loop = 0; loop < loopCount; loop++) {
+                        const loopOffset = loop * trackDuration;
+                        
+                        track.notes.forEach(note => {
+                            // Schedule note start with loop offset
+                            const noteStartTime = note.startTime + loopOffset;
+                            
+                            // Don't schedule notes beyond the max duration
+                            if (noteStartTime >= maxDuration) return;
+                            
+                            const startTimeout = setTimeout(() => {
+                                // Use the track's theme for this note
+                                const noteTheme = note.theme || track.theme || appState.soundTheme;
+                                const currentTheme = appState.soundTheme;
+                                appState.soundTheme = noteTheme;
+                                
+                                // Play the note
+                                if (note.note) {
+                                    playNote(note.note);
+                                } else if (note.drum) {
+                                    playDrum(note.drum);
+                                }
+                                
+                                // Restore theme
+                                appState.soundTheme = currentTheme;
+                            }, noteStartTime * 1000);
+                            
+                            noteTimeouts.push(startTimeout);
+                            
+                            // Schedule note end if duration is specified
+                            if (note.note && note.endTime) {
+                                const duration = note.endTime - note.startTime;
+                                const endTime = noteStartTime + duration;
+                                
+                                // Don't schedule note ends beyond the max duration
+                                if (endTime <= maxDuration) {
+                                    const endTimeout = setTimeout(() => {
+                                        stopNote(note.note);
+                                    }, endTime * 1000);
+                                    
+                                    noteTimeouts.push(endTimeout);
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+            
+            // Stop recording after the maximum duration + buffer
+            setTimeout(() => {
+                // Make sure all notes are stopped before stopping recording
+                stopAllNotes();
+                
+                // Add a small delay to ensure all audio has been captured
+                setTimeout(() => {
+                    stopAudioRecording();
+                    
+                    // Wait a bit more for the recording to finalize
+                    setTimeout(async () => {
+                        try {
+                            // Convert the recorded audio to MP3
+                            const audioBlob = await convertAudioToMP3(appState.recordedChunks);
+                            
+                            // Restore original recorded chunks
+                            appState.recordedChunks = originalRecordedChunks;
+                            
+                            // Clear timeouts
+                            noteTimeouts.forEach(timeout => clearTimeout(timeout));
+                            
+                            // Reset UI
+                            const activeKeys = document.querySelectorAll('.piano-key.active, .drum-pad.active');
+                            activeKeys.forEach(key => {
+                                key.classList.remove('active');
+                            });
+                            activeKeyReferences.clear();
+                            
+                            // Restore original gain values
+                            if (masterGainNode) masterGainNode.gain.value = originalMasterGain;
+                            if (trackGainNode) trackGainNode.gain.value = originalTrackGain;
+                            
+                            resolve(audioBlob);
+                        } catch (error) {
+                            console.error('Error finalizing audio recording:', error);
+                            appState.recordedChunks = originalRecordedChunks;
+                            
+                            // Restore original gain values even on error
+                            if (masterGainNode) masterGainNode.gain.value = originalMasterGain;
+                            if (trackGainNode) trackGainNode.gain.value = originalTrackGain;
+                            
+                            resolve(null);
+                        }
+                    }, 800); // Longer delay for more reliable finalization
+                }, 500);
+                
+            }, maxDuration * 1000 + 1500); // Add 1.5 second buffer for more reliable recording
+            }, 100); // Small delay before starting recording to ensure everything is ready
+        });
+    }
+    
+    // Show export options dialog
+    // Expose this function globally so it can be called from HTML
+    window.showExportDialog = function() {
+        if (!appState.tracks || appState.tracks.length === 0) {
             alert('No tracks to export. Record something first!');
             return;
         }
         
+        // Create modal dialog
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 10000; display: flex; 
+            align-items: center; justify-content: center;
+        `;
+        
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: white; padding: 30px; border-radius: 10px; 
+            max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;
+            font-family: 'Rajdhani', sans-serif; color: #333;
+        `;
+        
+        dialog.innerHTML = `
+            <h2 style="color: #333; font-family: 'Orbitron', sans-serif; margin-bottom: 15px;">🎵 Export Options</h2>
+            <p style="color: #555; font-family: 'Rajdhani', sans-serif; margin-bottom: 20px;">Select which tracks to export:</p>
+            
+            <div style="margin: 20px 0;">
+                <label style="display: block; margin: 10px 0; color: #333; font-family: 'Rajdhani', sans-serif;">
+                    <input type="checkbox" id="export-all" style="margin-right: 10px;">
+                    <strong>Export All Tracks (${appState.tracks.length} tracks)</strong>
+                </label>
+                
+                <div id="individual-tracks" style="margin-left: 20px;">
+                    ${appState.tracks.map((track, index) => `
+                        <label style="display: block; margin: 8px 0; color: #333; font-family: 'Rajdhani', sans-serif;">
+                            <input type="checkbox" class="track-checkbox" data-track-id="${track.id}" style="margin-right: 10px;">
+                            ${track.name} (${track.notes ? track.notes.length : 0} notes)
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div style="margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 5px;">
+                <h4 style="color: #333; font-family: 'Rajdhani', sans-serif; margin-bottom: 10px;">Export Format:</h4>
+                <label style="display: block; margin: 5px 0; color: #333; font-family: 'Rajdhani', sans-serif;">
+                    <input type="checkbox" id="export-json" checked style="margin-right: 10px;">
+                    JSON Data (track structure & notes)
+                </label>
+                <label style="display: block; margin: 5px 0; color: #333; font-family: 'Rajdhani', sans-serif;">
+                    <input type="checkbox" id="export-audio" checked style="margin-right: 10px;">
+                    Combined MP3 Audio File (all selected tracks merged)
+                </label>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="start-export" style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px; cursor: pointer; font-family: 'Rajdhani', sans-serif; font-weight: 600;">
+                    Start Export
+                </button>
+                <button id="cancel-export" style="background: #f44336; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Rajdhani', sans-serif; font-weight: 600;">
+                    Cancel
+                </button>
+            </div>
+        `;
+        
+        modal.appendChild(dialog);
+        document.body.appendChild(modal);
+        
+        // Handle export all checkbox
+        const exportAllCheckbox = dialog.querySelector('#export-all');
+        const trackCheckboxes = dialog.querySelectorAll('.track-checkbox');
+        
+        exportAllCheckbox.addEventListener('change', () => {
+            trackCheckboxes.forEach(cb => cb.checked = exportAllCheckbox.checked);
+        });
+        
+        // Handle individual track checkboxes
+        trackCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                const allChecked = Array.from(trackCheckboxes).every(tcb => tcb.checked);
+                const noneChecked = Array.from(trackCheckboxes).every(tcb => !tcb.checked);
+                exportAllCheckbox.checked = allChecked;
+                exportAllCheckbox.indeterminate = !allChecked && !noneChecked;
+            });
+        });
+        
+        // Handle buttons
+        dialog.querySelector('#start-export').addEventListener('click', () => {
+            const selectedTrackIds = Array.from(trackCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.dataset.trackId);
+            
+            const exportJson = dialog.querySelector('#export-json').checked;
+            const exportAudio = dialog.querySelector('#export-audio').checked;
+            
+            if (selectedTrackIds.length === 0) {
+                alert('Please select at least one track to export.');
+                return;
+            }
+            
+            if (!exportJson && !exportAudio) {
+                alert('Please select at least one export format.');
+                return;
+            }
+            
+            document.body.removeChild(modal);
+            exportSelectedTracks(selectedTrackIds, exportJson, exportAudio);
+        });
+        
+        dialog.querySelector('#cancel-export').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        // Close on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+    
+    // Show styled notification
+    function showNotification(type, title, messages) {
+        // Remove any existing notifications
+        const existingNotifications = document.querySelectorAll('.keyboard-notification');
+        existingNotifications.forEach(notification => {
+            document.body.removeChild(notification);
+        });
+        
+        // Create styles based on type
+        let bgColor, textColor;
+        if (type === 'success') {
+            bgColor = '#d4edda';
+            textColor = '#155724';
+        } else if (type === 'error') {
+            bgColor = '#f8d7da';
+            textColor = '#721c24';
+        } else if (type === 'warning') {
+            bgColor = '#fff3cd';
+            textColor = '#856404';
+        } else {
+            bgColor = '#d1ecf1';
+            textColor = '#0c5460';
+        }
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'keyboard-notification';
+        notification.style.cssText = `
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: ${bgColor}; color: ${textColor}; padding: 15px 20px;
+            border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-family: 'Rajdhani', sans-serif; z-index: 10001;
+            max-width: 80%; text-align: center;
+        `;
+        
+        // Create content
+        let content = `<h3 style="margin: 0 0 10px 0;">${title}</h3>`;
+        
+        if (Array.isArray(messages) && messages.length > 0) {
+            content += '<ul style="margin: 0; padding-left: 20px; text-align: left;">';
+            messages.forEach(msg => {
+                content += `<li>${msg}</li>`;
+            });
+            content += '</ul>';
+        } else if (typeof messages === 'string') {
+            content += `<p style="margin: 0;">${messages}</p>`;
+        }
+        
+        notification.innerHTML = content;
+        document.body.appendChild(notification);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 5000);
+    }
+    
+    // Export selected tracks
+    // Expose this function globally so it can be called from HTML
+    window.exportSelectedTracks = async function(selectedTrackIds, exportJson, exportAudio) {
+        const selectedTracks = appState.tracks.filter(track => 
+            selectedTrackIds.includes(track.id.toString())
+        );
+        
+        // Show progress indicator
+        const originalButtonText = exportTracksBtn ? exportTracksBtn.textContent : '';
+        
         try {
-            const tracksData = JSON.stringify(appState.tracks, null, 2);
-            const blob = new Blob([tracksData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
+            if (exportTracksBtn) {
+                exportTracksBtn.textContent = 'Exporting...';
+                exportTracksBtn.disabled = true;
+            }
             
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'music-keyboard-tracks.json';
-            document.body.appendChild(a);
-            a.click();
+            // 1. Export JSON file if requested
+            if (exportJson) {
+                const tracksDataForJSON = selectedTracks.map(track => ({
+                    ...track,
+                    audioData: undefined // Remove audio data from JSON export to keep it lightweight
+                }));
+                
+                const tracksData = JSON.stringify(tracksDataForJSON, null, 2);
+                const jsonBlob = new Blob([tracksData], { type: 'application/json' });
+                const jsonUrl = URL.createObjectURL(jsonBlob);
+                
+                const jsonLink = document.createElement('a');
+                jsonLink.href = jsonUrl;
+                jsonLink.download = `music-keyboard-tracks-${selectedTracks.length}-tracks.json`;
+                document.body.appendChild(jsonLink);
+                jsonLink.click();
+                
+                // Clean up JSON download
+                setTimeout(() => {
+                    document.body.removeChild(jsonLink);
+                    URL.revokeObjectURL(jsonUrl);
+                }, 100);
+            }
             
-            // Clean up
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
-        } catch (e) {
+            // 2. Export combined audio file if requested
+            let combinedAudioExported = false;
             
-            alert('Failed to export tracks: ' + e.message);
+            if (exportAudio && selectedTracks.length > 0) {
+                if (exportTracksBtn) {
+                    exportTracksBtn.textContent = `Creating combined audio...`;
+                }
+                
+                try {
+                    // Check if any of the selected tracks have notes
+                    const hasNotes = selectedTracks.some(track => 
+                        track.notes && track.notes.length > 0
+                    );
+                    
+                    if (!hasNotes) {
+                        // Show a clear error message if no notes are found
+                        const errorMessage = document.createElement('div');
+                        errorMessage.style.cssText = `
+                            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                            background: #f8d7da; color: #721c24; padding: 15px 20px;
+                            border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                            font-family: 'Rajdhani', sans-serif; z-index: 10001;
+                            max-width: 80%; text-align: center;
+                        `;
+                        errorMessage.innerHTML = `
+                            <h3 style="margin: 0 0 10px 0;">Audio Export Failed</h3>
+                            <p style="margin: 0;">No playable notes found in the selected tracks. Please record new tracks with notes to export audio.</p>
+                        `;
+                        document.body.appendChild(errorMessage);
+                        
+                        // Remove the message after 5 seconds
+                        setTimeout(() => {
+                            document.body.removeChild(errorMessage);
+                        }, 5000);
+                        
+                        return;
+                    }
+                    
+                    // Generate combined audio from all selected tracks
+                    const combinedBlob = await generateCombinedAudio(selectedTracks);
+                    
+                    if (combinedBlob) {
+                        // Create download link for the combined audio
+                        const audioUrl = URL.createObjectURL(combinedBlob);
+                        const audioLink = document.createElement('a');
+                        audioLink.href = audioUrl;
+                        
+                        // Create a descriptive filename
+                        const timestamp = new Date().toISOString().slice(0, 10);
+                        const trackCount = selectedTracks.length;
+                        
+                        // Determine the file extension based on the blob type
+                        let fileExtension = 'webm'; // Default to webm as it's most widely supported
+                        if (combinedBlob.type.includes('webm')) {
+                            fileExtension = 'webm';
+                        } else if (combinedBlob.type.includes('ogg')) {
+                            fileExtension = 'ogg';
+                        } else if (combinedBlob.type.includes('wav')) {
+                            fileExtension = 'wav';
+                        } else if (combinedBlob.type.includes('mpeg') || combinedBlob.type.includes('mp3')) {
+                            fileExtension = 'mp3';
+                        }
+                        
+                        audioLink.download = `Combined_${trackCount}_Tracks_${timestamp}.${fileExtension}`;
+                        
+                        document.body.appendChild(audioLink);
+                        audioLink.click();
+                        
+                        // Clean up audio download
+                        setTimeout(() => {
+                            document.body.removeChild(audioLink);
+                            URL.revokeObjectURL(audioUrl);
+                        }, 100);
+                        
+                        combinedAudioExported = true;
+                    } else {
+                        throw new Error("Failed to generate audio file");
+                    }
+                } catch (error) {
+                    // Create a styled error notification instead of using alert
+                    const errorMessage = document.createElement('div');
+                    errorMessage.style.cssText = `
+                        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                        background: #f8d7da; color: #721c24; padding: 15px 20px;
+                        border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                        font-family: 'Rajdhani', sans-serif; z-index: 10001;
+                        max-width: 80%; text-align: center;
+                    `;
+                    errorMessage.innerHTML = `
+                        <h3 style="margin: 0 0 10px 0;">Audio Export Failed</h3>
+                        <p style="margin: 0;">Your browser may not support this feature. Try using Chrome or Edge for best results.</p>
+                    `;
+                    document.body.appendChild(errorMessage);
+                    
+                    // Remove the message after 5 seconds
+                    setTimeout(() => {
+                        document.body.removeChild(errorMessage);
+                    }, 5000);
+                }
+            }
+            
+            // Show completion message
+            let message = '🎉 Export completed!\n\n';
+            
+            if (exportJson) {
+                message += `✅ JSON file exported (${selectedTracks.length} tracks)\n`;
+            }
+            
+            if (exportAudio) {
+                if (combinedAudioExported) {
+                    message += `✅ Combined MP3 audio file exported (${selectedTracks.length} tracks merged)\n`;
+                    message += "\nðŸ“ Note: Audio file is exported in MP3 format for compatibility with most media players and devices.";
+                } else {
+                    message += `âŒ Failed to export combined audio file\n`;
+                    message += "\nðŸ’¡ Tip: Make sure your tracks have notes recorded. The audio export feature works best with recently recorded tracks.";
+                }
+            }
+            
+            alert(message);
+            
+        } catch (error) {
+            console.error('Export error:', error);
+            alert('Failed to export tracks: ' + error.message);
+        } finally {
+            // Restore button state
+            if (exportTracksBtn) {
+                exportTracksBtn.textContent = originalButtonText || 'Export Tracks';
+                exportTracksBtn.disabled = false;
+            }
         }
     }
     
@@ -2341,3 +4029,4 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the app
     init();
 });
+
