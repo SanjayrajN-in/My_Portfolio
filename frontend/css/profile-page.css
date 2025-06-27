@@ -421,6 +421,32 @@
     font-size: 0.9rem;
 }
 
+.security-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.security-actions .btn {
+    white-space: nowrap;
+}
+
+.tertiary-btn {
+    background: transparent;
+    color: var(--text-color-light);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.tertiary-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-color);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
 /* Session Items */
 .session-item {
     display: flex;
@@ -684,6 +710,17 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
+    }
+    
+    .security-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+    }
+    
+    .security-actions .btn {
+        width: 100%;
+        justify-content: center;
     }
     
     .modal-content {

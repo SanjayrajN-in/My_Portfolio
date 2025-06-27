@@ -68,6 +68,11 @@ class ProfilePageManager {
         window.location.href = 'login.html';
     }
 
+    redirectToForgotPassword() {
+        // Redirect to login page with forgot password parameter
+        window.location.href = 'login.html?forgot=true';
+    }
+
     clearAuthDataAndRedirect() {
         localStorage.clear();
         sessionStorage.clear();
@@ -120,6 +125,11 @@ class ProfilePageManager {
         // Change password modal
         document.getElementById('changePasswordBtn').addEventListener('click', () => {
             this.showChangePasswordModal();
+        });
+
+        // Forgot password redirect
+        document.getElementById('forgotPasswordBtn').addEventListener('click', () => {
+            this.redirectToForgotPassword();
         });
 
         document.getElementById('closePasswordModal').addEventListener('click', () => {

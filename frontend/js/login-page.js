@@ -16,6 +16,9 @@ class LoginPageManager {
         this.setupOTPInput();
         this.cleanupPendingCredentials();
         
+        // Check URL parameters for forgot password redirect
+        this.checkURLParameters();
+        
         // Delay auth state check to ensure API is loaded
         setTimeout(() => {
             this.checkAuthState();
@@ -42,6 +45,23 @@ class LoginPageManager {
         } else if (pendingCredential) {
             // No timestamp, assume it's stale
             sessionStorage.removeItem('pendingGoogleCredential');
+        }
+    }
+
+    checkURLParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check if user came from profile page wanting to reset password
+        if (urlParams.has('forgot') && urlParams.get('forgot') === 'true') {
+            // Switch to forgot password form
+            setTimeout(() => {
+                this.switchTab('forgot-password');
+                this.showNotification('Enter your email address to reset your password', 'info');
+                
+                // Clean up URL
+                const cleanUrl = window.location.href.split('?')[0];
+                window.history.replaceState({}, document.title, cleanUrl);
+            }, 500);
         }
     }
     
