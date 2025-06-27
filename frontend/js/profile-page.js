@@ -143,7 +143,27 @@ class ProfilePageManager {
         });
 
         document.getElementById('changePasswordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
             this.handlePasswordChangeWithOTP(e);
+        });
+
+        // Add input validation for OTP field
+        document.getElementById('otpCode').addEventListener('input', (e) => {
+            const value = e.target.value;
+            // Only allow digits and limit to 6 characters
+            e.target.value = value.replace(/\D/g, '').slice(0, 6);
+        });
+
+        // Prevent form submission with Enter key if OTP section is not visible
+        document.getElementById('changePasswordForm').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const otpSection = document.getElementById('otpSection');
+                if (otpSection.style.display === 'none') {
+                    e.preventDefault();
+                    this.showNotification('Please send OTP first before updating password', 'error');
+                    return false;
+                }
+            }
         });
 
         // Password toggles
@@ -369,8 +389,10 @@ class ProfilePageManager {
         document.getElementById('sendOtpBtn').style.display = 'inline-block';
         document.getElementById('updatePasswordBtn').style.display = 'none';
         
-        // Reset OTP input
+        // Reset all form inputs
         document.getElementById('otpCode').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmNewPassword').value = '';
         
         // Reset resend button
         const resendBtn = document.getElementById('resendOtpBtn');
@@ -383,6 +405,10 @@ class ProfilePageManager {
             clearInterval(this.resendTimer);
             this.resendTimer = null;
         }
+        
+        // Reset button states
+        document.getElementById('sendOtpBtn').disabled = false;
+        document.getElementById('updatePasswordBtn').disabled = false;
     }
 
     async sendOTPForPasswordChange() {
@@ -427,6 +453,9 @@ class ProfilePageManager {
                 document.getElementById('otpSection').style.display = 'block';
                 document.getElementById('sendOtpBtn').style.display = 'none';
                 document.getElementById('updatePasswordBtn').style.display = 'inline-block';
+                
+                // Enable the update password button now that OTP is requested
+                document.getElementById('updatePasswordBtn').disabled = false;
                 
                 // Start resend timer
                 this.startResendTimer();
@@ -477,6 +506,13 @@ class ProfilePageManager {
         const submitBtn = document.getElementById('updatePasswordBtn');
         if (submitBtn.disabled) return;
         
+        // Check if OTP section is visible - if not, user hasn't requested OTP yet
+        const otpSection = document.getElementById('otpSection');
+        if (otpSection.style.display === 'none') {
+            this.showNotification('Please send OTP first before updating password', 'error');
+            return;
+        }
+        
         submitBtn.disabled = true;
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
@@ -487,9 +523,17 @@ class ProfilePageManager {
         const confirmNewPassword = formData.get('confirmNewPassword');
 
         // Validate inputs
-        if (!otp || otp.length !== 6) {
+        if (!otp || otp.trim() === '') {
+            this.showNotification('Please enter the OTP sent to your email', 'error');
+            this.resetSubmitButton(submitBtn, originalText);
+            document.getElementById('otpCode').focus();
+            return;
+        }
+
+        if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
             this.showNotification('Please enter a valid 6-digit OTP', 'error');
             this.resetSubmitButton(submitBtn, originalText);
+            document.getElementById('otpCode').focus();
             return;
         }
 
