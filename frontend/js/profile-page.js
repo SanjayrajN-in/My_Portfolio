@@ -344,12 +344,31 @@ class ProfilePageManager {
             modal.style.display = 'none';
         }, 300);
         
-        // Clear form
-        document.getElementById('changePasswordForm').reset();
+        // Clear form and reset button state
+        const form = document.getElementById('changePasswordForm');
+        form.reset();
+        
+        // Reset submit button if it's in loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn && submitBtn.disabled) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Update Password';
+        }
     }
 
     async handlePasswordChange(e) {
         e.preventDefault();
+        
+        // Get the submit button and prevent multiple clicks
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        if (submitBtn.disabled) {
+            return; // Already processing
+        }
+        
+        // Disable button and show loading state
+        submitBtn.disabled = true;
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
         
         const formData = new FormData(e.target);
         const currentPassword = formData.get('currentPassword');
@@ -359,11 +378,13 @@ class ProfilePageManager {
         // Validate passwords
         if (newPassword !== confirmNewPassword) {
             this.showNotification('New passwords do not match', 'error');
+            this.resetSubmitButton(submitBtn, originalText);
             return;
         }
 
         if (newPassword.length < 8) {
             this.showNotification('New password must be at least 8 characters long', 'error');
+            this.resetSubmitButton(submitBtn, originalText);
             return;
         }
 
@@ -391,8 +412,17 @@ class ProfilePageManager {
                 this.showNotification(data.message || 'Failed to change password', 'error');
             }
         } catch (error) {
-            
             this.showNotification('Network error. Please try again.', 'error');
+        } finally {
+            // Always reset button state
+            this.resetSubmitButton(submitBtn, originalText);
+        }
+    }
+
+    resetSubmitButton(button, originalText) {
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = originalText;
         }
     }
 
