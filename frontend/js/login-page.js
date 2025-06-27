@@ -741,8 +741,28 @@ class LoginPageManager {
 
             if (data && data.success) {
                 this.showNotification('Password reset successful! You can now login.', 'success');
+                
+                // Store email before clearing pending data
+                const resetEmail = this.pendingData.email;
+                
+                // Clear pending data and reset forms
+                this.pendingData = null;
+                this.clearErrors();
+                
+                // Reset all form fields
+                document.getElementById('resetPasswordFormElement').reset();
+                document.getElementById('forgotPasswordFormElement').reset();
+                document.getElementById('otpFormElement').reset();
+                
                 setTimeout(() => {
-                    this.switchTab('login');
+                    // Show login form and focus on email field
+                    this.showForm('login');
+                    
+                    // Pre-fill the email field with the reset email for convenience
+                    const emailField = document.getElementById('loginEmail');
+                    if (emailField && resetEmail) {
+                        emailField.value = resetEmail;
+                    }
                 }, 2000);
             } else {
                 this.showNotification(data.message || 'Password reset failed', 'error');
