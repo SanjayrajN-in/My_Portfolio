@@ -95,10 +95,10 @@ class APIConfig {
         });
     }
 
-    async resetPassword(email, otp, newPassword) {
+    async resetPassword(email, otp, password) {
         return this.makeRequest('/auth/reset-password', {
             method: 'POST',
-            body: JSON.stringify({ email, otp, newPassword })
+            body: JSON.stringify({ email, otp, password })
         });
     }
 

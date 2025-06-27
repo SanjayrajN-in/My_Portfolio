@@ -318,18 +318,12 @@
                         <div class="reset-header">
                             <i class="fas fa-lock"></i>
                             <h3>Create New Password</h3>
-                            <p>Enter the code we sent to your email and create a new password</p>
+                            <p>Please create a new secure password for your account</p>
                         </div>
 
                         <form id="resetPasswordFormElement" novalidate>
-                            <div class="form-group">
-                                <label for="resetCode">
-                                    <i class="fas fa-key"></i>
-                                    Reset Code
-                                </label>
-                                <input type="text" id="resetCode" name="code" required>
-                                <div class="form-error" id="resetCodeError"></div>
-                            </div>
+                            <!-- Reset code is now hidden and will be populated automatically -->
+                            <input type="hidden" id="resetCode" name="code">
 
                             <div class="form-group">
                                 <label for="newPassword">

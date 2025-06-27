@@ -397,6 +397,15 @@ class LoginPageManager {
         const targetForm = document.getElementById(formName + 'Form');
         if (targetForm) {
             targetForm.style.display = 'block';
+            
+            // Add a small delay to ensure the form is visible before focusing
+            setTimeout(() => {
+                // Focus on the first input field in the form
+                const firstInput = targetForm.querySelector('input:not([type="hidden"])');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }, 100);
             targetForm.classList.add('active');
         }
 
@@ -590,7 +599,19 @@ class LoginPageManager {
             } else if (this.pendingData.type === 'login_verification') {
                 await this.completeLoginVerification(otp);
             } else if (this.pendingData.type === 'forgot-password') {
-                this.showResetPasswordForm(otp);
+                // Verify OTP first
+                const data = await window.API.verifyOTP(this.pendingData.email, otp, 'forgot-password');
+                if (data && data.success) {
+                    this.showNotification('Email verified! Please set your new password.', 'success');
+                    // Store the verified OTP for the reset password form
+                    this.pendingData.verifiedOtp = otp;
+                    // Set the hidden reset code field value
+                    document.getElementById('resetCode').value = otp;
+                    this.showResetPasswordForm();
+                } else {
+                    this.showError('otpError', data.message || 'Invalid verification code');
+                    return;
+                }
             }
         } catch (error) {
             
@@ -690,28 +711,35 @@ class LoginPageManager {
         }
     }
 
-    showResetPasswordForm(otp) {
-        this.pendingData.otp = otp;
+    showResetPasswordForm() {
+        // Show the reset password form
         this.showForm('resetPassword');
+        
+        // Focus on the new password field
+        setTimeout(() => {
+            document.getElementById('newPassword').focus();
+        }, 100);
     }
 
     async handleResetPassword(e) {
         e.preventDefault();
         
         const formData = new FormData(e.target);
-        const otp = formData.get('otp');
         const password = formData.get('password');
         const confirmPassword = formData.get('confirmPassword');
+        
+        // Use the stored OTP from the verification step
+        const resetCode = this.pendingData.verifiedOtp;
 
-        if (!this.validateResetForm(otp, password, confirmPassword)) return;
+        if (!this.validateResetPasswordForm(password, confirmPassword)) return;
 
         const submitBtn = document.getElementById('resetSubmitBtn');
         this.setLoading(submitBtn, true);
 
         try {
-            const data = await window.API.resetPassword(this.pendingData.email, otp, password);
+            const data = await window.API.resetPassword(this.pendingData.email, resetCode, password);
 
-            if (data) {
+            if (data && data.success) {
                 this.showNotification('Password reset successful! You can now login.', 'success');
                 setTimeout(() => {
                     this.switchTab('login');
@@ -720,8 +748,7 @@ class LoginPageManager {
                 this.showNotification(data.message || 'Password reset failed', 'error');
             }
         } catch (error) {
-            
-            this.showNotification('Network error. Please try again.', 'error');
+            this.showNotification('Password reset failed. Please try again.', 'error');
         } finally {
             this.setLoading(submitBtn, false);
         }
@@ -1023,15 +1050,8 @@ class LoginPageManager {
         return isValid;
     }
 
-    validateResetForm(otp, password, confirmPassword) {
+    validateResetPasswordForm(password, confirmPassword) {
         let isValid = true;
-
-        if (!otp || otp.length !== 6) {
-            this.showError('resetOtpError', 'Please enter the 6-digit reset code');
-            isValid = false;
-        } else {
-            this.clearError('resetOtpError');
-        }
 
         if (!this.validatePassword(password, 'new')) {
             this.showError('newPasswordError', 'Password does not meet requirements');

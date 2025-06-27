@@ -555,62 +555,7 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
     }
 });
 
-// @route   POST /api/auth/reset-password
-// @desc    Reset password with OTP
-// @access  Public
-router.post('/reset-password', authLimiter, async (req, res) => {
-    try {
-        const { email, otp, newPassword, confirmPassword } = req.body;
-
-        if (!email || !otp || !newPassword || !confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'Please provide all required fields'
-            });
-        }
-
-        if (newPassword !== confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'Passwords do not match'
-            });
-        }
-
-        const passwordValidation = validatePassword(newPassword);
-        if (!passwordValidation.isValid) {
-            return res.status(400).json({
-                success: false,
-                message: 'Password requirements not met',
-                errors: passwordValidation.errors
-            });
-        }
-
-        const user = await User.findOne({ email: email.toLowerCase() });
-
-        if (!user || !user.verifyPasswordResetOTP(otp)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid or expired OTP'
-            });
-        }
-
-        user.password = newPassword;
-        user.passwordResetOTP = undefined;
-        await user.save();
-
-        res.json({
-            success: true,
-            message: 'Password reset successfully'
-        });
-
-    } catch (error) {
-        console.error('Reset password error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error. Please try again later.'
-        });
-    }
-});
+// This duplicate route has been removed
 
 // Google OAuth routes
 // @route   GET /api/auth/google/init
