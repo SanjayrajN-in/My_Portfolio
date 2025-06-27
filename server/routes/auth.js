@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const validator = require('validator');
+const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const { auth, generateToken } = require('../middleware/auth');
@@ -60,10 +61,44 @@ const validatePassword = (password) => {
 
 // @route   POST /api/auth/send-otp
 // @desc    Send OTP for email verification or password reset
-// @access  Public
+// @access  Public (except for change-password type)
 router.post('/send-otp', otpLimiter, async (req, res) => {
     try {
         const { email, type } = req.body;
+
+        // For change-password type, require authentication
+        if (type === 'change-password') {
+            const token = req.header('Authorization')?.replace('Bearer ', '');
+            if (!token) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Access denied. No token provided.'
+                });
+            }
+
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                const user = await User.findById(decoded.id);
+                if (!user) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'Invalid token'
+                    });
+                }
+                // Ensure the email matches the authenticated user
+                if (user.email !== email.toLowerCase()) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'You can only request OTP for your own email'
+                    });
+                }
+            } catch (error) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid token'
+                });
+            }
+        }
 
         if (!email || !validator.isEmail(email)) {
             return res.status(400).json({
@@ -72,7 +107,7 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
             });
         }
 
-        if (!type || !['register', 'forgot-password', 'login_verification'].includes(type)) {
+        if (!type || !['register', 'forgot-password', 'login_verification', 'change-password'].includes(type)) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid OTP type'
@@ -109,6 +144,13 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
                     message: 'Account is already verified. Please try logging in normally.'
                 });
             }
+        } else if (type === 'change-password') {
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No account found with this email address'
+                });
+            }
         }
 
         // Generate and send OTP
@@ -134,6 +176,9 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
             await user.save();
         } else if (type === 'login_verification') {
             otpCode = user.setEmailVerificationOTP();
+            await user.save();
+        } else if (type === 'change-password') {
+            otpCode = user.setPasswordResetOTP();
             await user.save();
         }
 
@@ -1270,6 +1315,64 @@ router.post('/change-password', auth, async (req, res) => {
 
     } catch (error) {
         console.error('Change password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.'
+        });
+    }
+});
+
+// @route   POST /api/auth/change-password-otp
+// @desc    Change user password with OTP verification
+// @access  Private
+router.post('/change-password-otp', auth, async (req, res) => {
+    try {
+        const { otp, newPassword } = req.body;
+
+        if (!otp || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide OTP and new password'
+            });
+        }
+
+        const passwordValidation = validatePassword(newPassword);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password requirements not met',
+                errors: passwordValidation.errors
+            });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Verify OTP
+        if (!user.verifyPasswordResetOTP(otp)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired OTP'
+            });
+        }
+
+        // Update password
+        user.password = newPassword;
+        user.passwordResetOTP = undefined;
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+
+    } catch (error) {
+        console.error('Change password with OTP error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error. Please try again later.'

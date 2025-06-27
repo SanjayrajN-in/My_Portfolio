@@ -68,10 +68,7 @@ class ProfilePageManager {
         window.location.href = 'login.html';
     }
 
-    redirectToForgotPassword() {
-        // Redirect to login page with forgot password parameter
-        window.location.href = 'login.html?forgot=true';
-    }
+
 
     clearAuthDataAndRedirect() {
         localStorage.clear();
@@ -127,11 +124,6 @@ class ProfilePageManager {
             this.showChangePasswordModal();
         });
 
-        // Forgot password redirect
-        document.getElementById('forgotPasswordBtn').addEventListener('click', () => {
-            this.redirectToForgotPassword();
-        });
-
         document.getElementById('closePasswordModal').addEventListener('click', () => {
             this.hideChangePasswordModal();
         });
@@ -140,8 +132,18 @@ class ProfilePageManager {
             this.hideChangePasswordModal();
         });
 
+        // Send OTP button
+        document.getElementById('sendOtpBtn').addEventListener('click', () => {
+            this.sendOTPForPasswordChange();
+        });
+
+        // Resend OTP button
+        document.getElementById('resendOtpBtn').addEventListener('click', () => {
+            this.sendOTPForPasswordChange();
+        });
+
         document.getElementById('changePasswordForm').addEventListener('submit', (e) => {
-            this.handlePasswordChange(e);
+            this.handlePasswordChangeWithOTP(e);
         });
 
         // Password toggles
@@ -331,9 +333,12 @@ class ProfilePageManager {
         modal.classList.add('show');
         modal.style.display = 'flex';
         
+        // Reset modal state
+        this.resetPasswordModalState();
+        
         // Focus first input
         setTimeout(() => {
-            document.getElementById('currentPassword').focus();
+            document.getElementById('newPassword').focus();
         }, 100);
     }
 
@@ -344,38 +349,156 @@ class ProfilePageManager {
             modal.style.display = 'none';
         }, 300);
         
-        // Clear form and reset button state
+        // Clear form and reset modal state
         const form = document.getElementById('changePasswordForm');
         form.reset();
+        this.resetPasswordModalState();
         
-        // Reset submit button if it's in loading state
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn && submitBtn.disabled) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Update Password';
+        // Clear any timers
+        if (this.resendTimer) {
+            clearInterval(this.resendTimer);
+            this.resendTimer = null;
         }
     }
 
-    async handlePasswordChange(e) {
+    resetPasswordModalState() {
+        // Hide OTP section initially
+        document.getElementById('otpSection').style.display = 'none';
+        
+        // Show Send OTP button, hide Update Password button
+        document.getElementById('sendOtpBtn').style.display = 'inline-block';
+        document.getElementById('updatePasswordBtn').style.display = 'none';
+        
+        // Reset OTP input
+        document.getElementById('otpCode').value = '';
+        
+        // Reset resend button
+        const resendBtn = document.getElementById('resendOtpBtn');
+        resendBtn.disabled = false;
+        document.getElementById('resendText').style.display = 'inline';
+        document.getElementById('resendTimer').style.display = 'none';
+        
+        // Clear any existing timers
+        if (this.resendTimer) {
+            clearInterval(this.resendTimer);
+            this.resendTimer = null;
+        }
+    }
+
+    async sendOTPForPasswordChange() {
+        if (!this.currentUser || !this.currentUser.email) {
+            this.showNotification('User email not found', 'error');
+            return;
+        }
+
+        const sendBtn = document.getElementById('sendOtpBtn');
+        const resendBtn = document.getElementById('resendOtpBtn');
+        const activeBtn = sendBtn.style.display !== 'none' ? sendBtn : resendBtn;
+        
+        // Prevent multiple clicks
+        if (activeBtn.disabled) return;
+        
+        activeBtn.disabled = true;
+        const originalText = activeBtn.innerHTML;
+        activeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const apiBaseURL = this.getAPIBaseURL();
+            
+            const response = await fetch(`${apiBaseURL}/api/auth/send-otp`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: this.currentUser.email,
+                    type: 'change-password'
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showNotification('OTP sent to your email', 'success');
+                
+                // Show OTP section and hide Send OTP button
+                document.getElementById('otpSection').style.display = 'block';
+                document.getElementById('sendOtpBtn').style.display = 'none';
+                document.getElementById('updatePasswordBtn').style.display = 'inline-block';
+                
+                // Start resend timer
+                this.startResendTimer();
+                
+                // Focus OTP input
+                setTimeout(() => {
+                    document.getElementById('otpCode').focus();
+                }, 100);
+                
+            } else {
+                this.showNotification(data.message || 'Failed to send OTP', 'error');
+            }
+        } catch (error) {
+            this.showNotification('Network error. Please try again.', 'error');
+        } finally {
+            activeBtn.disabled = false;
+            activeBtn.innerHTML = originalText;
+        }
+    }
+
+    startResendTimer() {
+        let timeLeft = 60; // 60 seconds
+        const resendBtn = document.getElementById('resendOtpBtn');
+        const resendText = document.getElementById('resendText');
+        const resendTimer = document.getElementById('resendTimer');
+        
+        resendBtn.disabled = true;
+        resendText.style.display = 'none';
+        resendTimer.style.display = 'inline';
+        
+        this.resendTimer = setInterval(() => {
+            resendTimer.textContent = `Resend in ${timeLeft}s`;
+            timeLeft--;
+            
+            if (timeLeft < 0) {
+                clearInterval(this.resendTimer);
+                this.resendTimer = null;
+                resendBtn.disabled = false;
+                resendText.style.display = 'inline';
+                resendTimer.style.display = 'none';
+            }
+        }, 1000);
+    }
+
+    async handlePasswordChangeWithOTP(e) {
         e.preventDefault();
         
-        // Get the submit button and prevent multiple clicks
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        if (submitBtn.disabled) {
-            return; // Already processing
-        }
+        const submitBtn = document.getElementById('updatePasswordBtn');
+        if (submitBtn.disabled) return;
         
-        // Disable button and show loading state
         submitBtn.disabled = true;
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
         
         const formData = new FormData(e.target);
-        const currentPassword = formData.get('currentPassword');
+        const otp = formData.get('otpCode') || document.getElementById('otpCode').value;
         const newPassword = formData.get('newPassword');
         const confirmNewPassword = formData.get('confirmNewPassword');
 
-        // Validate passwords
+        // Validate inputs
+        if (!otp || otp.length !== 6) {
+            this.showNotification('Please enter a valid 6-digit OTP', 'error');
+            this.resetSubmitButton(submitBtn, originalText);
+            return;
+        }
+
+        if (!newPassword || !confirmNewPassword) {
+            this.showNotification('Please fill in all password fields', 'error');
+            this.resetSubmitButton(submitBtn, originalText);
+            return;
+        }
+
         if (newPassword !== confirmNewPassword) {
             this.showNotification('New passwords do not match', 'error');
             this.resetSubmitButton(submitBtn, originalText);
@@ -391,21 +514,22 @@ class ProfilePageManager {
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             const apiBaseURL = this.getAPIBaseURL();
-            const response = await fetch(`${apiBaseURL}/api/auth/change-password`, {
+            
+            const response = await fetch(`${apiBaseURL}/api/auth/change-password-otp`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    currentPassword,
-                    newPassword
+                    otp: otp,
+                    newPassword: newPassword
                 })
             });
 
             const data = await response.json();
 
-            if (response.ok) {
+            if (data.success) {
                 this.showNotification('Password changed successfully!', 'success');
                 this.hideChangePasswordModal();
             } else {
@@ -414,17 +538,16 @@ class ProfilePageManager {
         } catch (error) {
             this.showNotification('Network error. Please try again.', 'error');
         } finally {
-            // Always reset button state
             this.resetSubmitButton(submitBtn, originalText);
         }
     }
 
     resetSubmitButton(button, originalText) {
-        if (button) {
-            button.disabled = false;
-            button.innerHTML = originalText;
-        }
+        button.disabled = false;
+        button.innerHTML = originalText;
     }
+
+
 
     togglePassword(e) {
         const button = e.target.closest('.password-toggle');

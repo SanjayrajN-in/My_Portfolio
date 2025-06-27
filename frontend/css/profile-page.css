@@ -657,6 +657,35 @@
     color: var(--primary-color);
 }
 
+/* OTP Section Styles */
+.otp-input-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.otp-input-container input {
+    flex: 1;
+    text-align: center;
+    font-size: 1.2rem;
+    letter-spacing: 0.2em;
+    font-weight: 600;
+}
+
+.otp-input-container input:focus {
+    letter-spacing: 0.2em;
+}
+
+.password-requirements {
+    margin-top: 0.5rem;
+}
+
+.password-requirements small {
+    color: var(--text-color-muted);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
 .modal-actions {
     display: flex;
     gap: 1rem;
