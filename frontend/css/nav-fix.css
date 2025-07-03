@@ -130,7 +130,7 @@
 
 /* Force consistent sizing for all pages */
 :root {
-    --header-height: 70px !important;
+    --header-height: 80px !important;
 }
 
 /* Ensure consistent header height and styling */

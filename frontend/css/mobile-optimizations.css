@@ -70,9 +70,10 @@
     }
     
     /* Ensure transitions are smooth on mobile */
-    * {
+    .btn, .card-3d, .tilt-effect {
         -webkit-backface-visibility: hidden !important;
         backface-visibility: hidden !important;
+        transform: translateZ(0) !important;
     }
     
     /* Fix for button ripple effect on mobile - Exclude track action buttons */

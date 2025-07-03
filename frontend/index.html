@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -139,15 +139,57 @@
         background: var(--primary-color);
         color: var(--text-color);
     }
+    
+    /* Critical mobile styles inline */
+    @media (max-width: 768px) {
+        body {
+            padding-top: var(--header-height);
+        }
+        
+        .hero {
+            min-height: calc(100vh - var(--header-height));
+            padding: 20px 0;
+        }
+        
+        .hero-content {
+            padding: 20px;
+        }
+        
+        .glitch-container {
+            margin-bottom: 30px;
+        }
+        
+        .cta-buttons {
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .btn {
+            width: 100%;
+            max-width: 280px;
+        }
+        
+        /* Hide AOS elements initially to prevent flash */
+        [data-aos] {
+            visibility: hidden;
+        }
+        
+        .aos-init[data-aos] {
+            visibility: visible;
+        }
+    }
     </style>
     
-    <!-- Non-critical CSS loaded asynchronously -->
+    <!-- Critical CSS loaded first -->
     <link rel="stylesheet" href="css/critical.css">
+    <link rel="stylesheet" href="css/nav-fix.css?v=6.0">
+    <link rel="stylesheet" href="css/mobile-optimizations.css?v=1.0">
+    
+    <!-- Non-critical CSS loaded after critical styles -->
     <link rel="stylesheet" href="css/styles.css?v=3.0">
     <link rel="stylesheet" href="css/fix-logo.css">
     <link rel="stylesheet" href="css/fix-styles.css">
-    <link rel="stylesheet" href="css/nav-fix.css?v=6.0">
-    <link rel="stylesheet" href="css/mobile-optimizations.css?v=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -195,21 +237,25 @@
             google: {
                 families: ['Orbitron:400,500,700,900', 'Rajdhani:300,400,500,600,700']
             },
-            timeout: 2000, // Set timeout to 2 seconds
+            timeout: 3000, // Increase timeout to 3 seconds
             loading: function() {
-
+                // Keep elements stable during font loading
+                document.body.style.visibility = 'visible';
+                document.body.style.opacity = '1';
             },
             active: function() {
                 // Fonts have loaded successfully
                 document.documentElement.classList.remove('wf-loading');
                 document.documentElement.classList.add('wf-active');
-
+                // Force layout recalculation after fonts load
+                document.body.style.fontFamily = "'Rajdhani', sans-serif";
             },
             inactive: function() {
                 // Fallback if fonts fail to load
                 document.documentElement.classList.remove('wf-loading');
                 document.documentElement.classList.add('wf-inactive');
-
+                // Ensure fallback fonts are applied
+                document.body.style.fontFamily = "system-ui, -apple-system, sans-serif";
             }
         };
         
@@ -276,14 +322,12 @@
         (function() {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (token) {
-
                 // Wait for DOM to be ready
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', function() {
                         const resumeBtn = document.getElementById('resume-download');
                         if (resumeBtn && resumeBtn.classList.contains('locked')) {
                             resumeBtn.classList.remove('locked');
-
                         }
                     });
                 } else {
@@ -291,10 +335,25 @@
                     const resumeBtn = document.getElementById('resume-download');
                     if (resumeBtn && resumeBtn.classList.contains('locked')) {
                         resumeBtn.classList.remove('locked');
-
                     }
                 }
             }
+        })();
+        
+        // Initial layout stabilization
+        (function() {
+            // Force immediate layout calculation
+            document.documentElement.style.visibility = 'visible';
+            document.body.style.visibility = 'visible';
+            
+            // Prevent layout shifts by setting initial dimensions
+            const style = document.createElement('style');
+            style.textContent = `
+                body { min-height: 100vh; }
+                .hero { min-height: calc(100vh - var(--header-height)); }
+                header { height: var(--header-height); }
+            `;
+            document.head.appendChild(style);
         })();
         
         // Ensure smooth font transition
@@ -775,6 +834,38 @@
     <script src="js/page-transition.js"></script>
     <script src="js/notification-fix.js"></script>
     
+    <!-- AOS Initialization Fix -->
+    <script>
+        // Initialize AOS with proper timing and mobile optimization
+        function initializeAOS() {
+            if (typeof AOS !== 'undefined') {
+                AOS.init({
+                    duration: 800,
+                    easing: 'ease-in-out',
+                    once: true,
+                    mirror: false,
+                    disable: false,
+                    startEvent: 'load',
+                    offset: 50,
+                    delay: 0,
+                    anchorPlacement: 'top-bottom'
+                });
+                
+                // Refresh AOS after fonts load and layout stabilizes
+                setTimeout(() => {
+                    AOS.refresh();
+                }, 100);
+            }
+        }
+        
+        // Initialize AOS when everything is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAOS);
+        } else {
+            initializeAOS();
+        }
+    </script>
+    
 
     
     <!-- Final Google Auth Cleanup -->
@@ -871,8 +962,8 @@
             removeGoogleAuthElements();
         }
         
-        // Run cleanup periodically to catch dynamically added elements
-        setInterval(removeGoogleAuthElements, 1000);
+        // Run cleanup periodically to catch dynamically added elements (reduced frequency)
+        setInterval(removeGoogleAuthElements, 5000);
         
         // Override Google's global functions if they exist
         if (typeof window.google !== 'undefined') {
@@ -887,23 +978,86 @@
     
     <!-- FOUC Prevention Script -->
     <script>
-        window.addEventListener('load', function() {
-            // Remove the FOUC overlay after a short delay to ensure all CSS is applied
-            setTimeout(function() {
-                var overlay = document.getElementById('fouc-overlay');
+        // Enhanced FOUC prevention with proper timing
+        (function() {
+            let fontsLoaded = false;
+            let domReady = false;
+            let cssLoaded = false;
+            
+            // Check if fonts are loaded
+            function checkFontsLoaded() {
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(() => {
+                        fontsLoaded = true;
+                        checkAllLoaded();
+                    });
+                } else {
+                    // Fallback for browsers without Font Loading API
+                    setTimeout(() => {
+                        fontsLoaded = true;
+                        checkAllLoaded();
+                    }, 2000);
+                }
+            }
+            
+            // Check if critical CSS is loaded
+            function checkCSSLoaded() {
+                const testElement = document.createElement('div');
+                testElement.style.cssText = 'position: absolute; visibility: hidden;';
+                testElement.className = 'nav-links';
+                document.body.appendChild(testElement);
+                
+                const hasStyles = window.getComputedStyle(testElement).display !== 'inline';
+                document.body.removeChild(testElement);
+                
+                if (hasStyles) {
+                    cssLoaded = true;
+                    checkAllLoaded();
+                } else {
+                    setTimeout(checkCSSLoaded, 50);
+                }
+            }
+            
+            // Check if all resources are loaded
+            function checkAllLoaded() {
+                if (fontsLoaded && domReady && cssLoaded) {
+                    // Wait additional time for AOS and other animations to initialize
+                    setTimeout(removeFOUCOverlay, 500);
+                }
+            }
+            
+            // Remove FOUC overlay
+            function removeFOUCOverlay() {
+                const overlay = document.getElementById('fouc-overlay');
                 if (overlay) {
                     overlay.style.opacity = '0';
                     overlay.style.transition = 'opacity 0.3s ease';
                     
-                    // Remove from DOM after transition
-                    setTimeout(function() {
+                    setTimeout(() => {
                         if (overlay.parentNode) {
                             overlay.parentNode.removeChild(overlay);
                         }
                     }, 300);
                 }
-            }, 200);
-        });
+            }
+            
+            // DOM ready check
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    domReady = true;
+                    checkAllLoaded();
+                });
+            } else {
+                domReady = true;
+            }
+            
+            // Start checks
+            checkFontsLoaded();
+            checkCSSLoaded();
+            
+            // Fallback: remove overlay after maximum wait time
+            setTimeout(removeFOUCOverlay, 4000);
+        })();
     </script>
     
     <!-- Resume download button click handler with overlay -->
@@ -980,13 +1134,17 @@
                 // Add the overlay to the document
                 document.body.appendChild(overlay);
                 
-                // Reposition on DOM changes that might affect layout
-                const observer = new MutationObserver(positionOverlay);
+                // Reposition on DOM changes that might affect layout (throttled)
+                let repositionTimeout;
+                const observer = new MutationObserver(() => {
+                    clearTimeout(repositionTimeout);
+                    repositionTimeout = setTimeout(positionOverlay, 100);
+                });
                 observer.observe(document.body, { 
                     childList: true, 
-                    subtree: true,
+                    subtree: false,
                     attributes: true,
-                    attributeFilter: ['style', 'class']
+                    attributeFilter: ['style']
                 });
             }
         });

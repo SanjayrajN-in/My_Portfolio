@@ -324,13 +324,20 @@ class PortfolioApp {
     initializeAnimations() {
         if (typeof AOS === 'undefined') return;
         
-        AOS.init({
-            duration: 800,
-            easing: 'ease-out',
-            once: true,
-            mirror: false,
-            disable: window.innerWidth < 768 ? true : false
-        });
+        // Delay AOS initialization to prevent layout shifts
+        setTimeout(() => {
+            AOS.init({
+                duration: 800,
+                easing: 'ease-out',
+                once: true,
+                mirror: false,
+                disable: false,
+                startEvent: 'load',
+                offset: 20,
+                delay: 0,
+                anchorPlacement: 'top-bottom'
+            });
+        }, 100);
     }
     
     // Initialize form handling
