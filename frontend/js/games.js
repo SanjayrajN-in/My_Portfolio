@@ -196,7 +196,7 @@ function initMemoryGame() {
         window.gameScores.createRankingsUI('memoryMatch', 'memoryMatch-rankings-container');
         // Start periodic refresh for rankings
         setTimeout(() => {
-            if (window.gameScores.updateRankingsUI) {
+            if (window.gameScores && window.gameScores.updateRankingsUI) {
                 window.gameScores.updateRankingsUI('memoryMatch', 'memoryMatch-rankings-container', true);
             }
         }, 1000);
@@ -239,10 +239,11 @@ function initMemoryGame() {
         hasFlippedCard: false,
         scoreSubmitted: false, // Track if score has been submitted
         lockBoard: false,
-        cards: []
+        cards: [],
+        animationFrame: null // For requestAnimationFrame
     };
     
-    // Difficulty configurations
+    // Difficulty configurations - Reduced complexity for master level
     const difficulties = {
         easy: { 
             rows: 2, cols: 3, pairs: 3, 
@@ -260,18 +261,18 @@ function initMemoryGame() {
             cardTypes: ['colors', 'shapes', 'numbers', 'symbols']
         },
         expert: { 
-            rows: 4, cols: 6, pairs: 12, 
+            rows: 4, cols: 5, pairs: 10, // Reduced from 6 cols, 12 pairs
             timeBonus: 300, moveBonus: 150,
-            cardTypes: ['colors', 'shapes', 'numbers', 'symbols', 'letters']
+            cardTypes: ['colors', 'shapes', 'numbers', 'symbols']
         },
         master: { 
-            rows: 6, cols: 6, pairs: 18, 
+            rows: 5, cols: 6, pairs: 15, // Reduced from 6x6, 18 pairs
             timeBonus: 500, moveBonus: 250,
-            cardTypes: ['colors', 'shapes', 'numbers', 'symbols', 'letters', 'emojis']
+            cardTypes: ['colors', 'shapes', 'numbers', 'symbols', 'letters']
         }
     };
     
-    // Enhanced card content generators
+    // Optimized card content - Reduced number of items
     const cardContent = {
         colors: [
             { color: '#FF6B6B', name: 'CORAL' },
@@ -288,16 +289,12 @@ function initMemoryGame() {
             { color: '#82E0AA', name: 'GREEN' },
             { color: '#F8C471', name: 'ORANGE' },
             { color: '#AED6F1', name: 'CYAN' },
-            { color: '#D7BDE2', name: 'LAVENDER' },
-            { color: '#A3E4D7', name: 'SEAFOAM' },
-            { color: '#F9E79F', name: 'CREAM' },
-            { color: '#FADBD8', name: 'PEACH' }
+            { color: '#D7BDE2', name: 'LAVENDER' }
         ],
-        shapes: ['●', '■', '▲', '♦', '★', '♠', '♣', '♥', '◆', '▼', '◀', '▶', '▲', '▼', '◊', '○', '□', '△'],
-        numbers: ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⓪', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱'],
-        symbols: ['⚡', '⭐', '❤️', '🔥', '💎', '🌟', '⚽', '🎵', '🔔', '⚖️', '🎯', '🏆', '🎪', '🎨', '🎭', '🎸', '🎺', '🎻'],
-        letters: ['Ⓐ', 'Ⓑ', 'Ⓒ', 'Ⓓ', 'Ⓔ', 'Ⓕ', 'Ⓖ', 'Ⓗ', 'Ⓘ', 'Ⓙ', 'Ⓚ', 'Ⓛ', 'Ⓜ', 'Ⓝ', 'Ⓞ', 'Ⓟ', 'Ⓠ', 'Ⓡ'],
-        emojis: ['🎮', '🎯', '🎲', '🎪', '🎨', '🎭', '🎸', '🎺', '🎻', '🎹', '🎬', '🎤', '🎧', '🎼', '🎵', '🎶', '🎊', '🎉']
+        shapes: ['●', '■', '▲', '♦', '★', '♠', '♣', '♥', '◆', '▼', '◀', '▶', '○', '□', '△'],
+        numbers: ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⓪', '⑪', '⑫', '⑬', '⑭', '⑮'],
+        symbols: ['⚡', '⭐', '❤️', '🔥', '💎', '🌟', '⚽', '🎵', '🔔', '⚖️', '🎯', '🏆', '🎪', '🎨', '🎭'],
+        letters: ['Ⓐ', 'Ⓑ', 'Ⓒ', 'Ⓓ', 'Ⓔ', 'Ⓕ', 'Ⓖ', 'Ⓗ', 'Ⓘ', 'Ⓙ', 'Ⓚ', 'Ⓛ', 'Ⓜ', 'Ⓝ', 'Ⓞ']
     };
     
     // Initialize game
@@ -327,20 +324,23 @@ function initMemoryGame() {
         updateStatus('Game started! Find all matching pairs!');
         gameState.isGameActive = true;
         
-        // Scroll to game board to show the card reveal
+        // Scroll to game board to show the card reveal - using more efficient scrolling
         setTimeout(() => {
-            gameBoard.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center',
-                inline: 'center'
+            const rect = gameBoard.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const targetY = rect.top + scrollTop - 100; // 100px offset from top
+            
+            window.scrollTo({
+                top: targetY,
+                behavior: 'smooth'
             });
-        }, 200);
+        }, 100);
         
         // Brief preview of all cards
         showAllCards();
         setTimeout(() => {
             hideAllCards();
-        }, 2000);
+        }, 1500); // Reduced from 2000ms
     }
     
     function resetGameState() {
@@ -356,6 +356,12 @@ function initMemoryGame() {
         gameState.isGameActive = false;
         gameState.scoreSubmitted = false; // Reset score submission status
         
+        // Cancel any existing animation frame
+        if (gameState.animationFrame) {
+            cancelAnimationFrame(gameState.animationFrame);
+            gameState.animationFrame = null;
+        }
+        
         if (gameState.timerInterval) {
             clearInterval(gameState.timerInterval);
         }
@@ -365,7 +371,7 @@ function initMemoryGame() {
         
         updateDisplay();
         
-        // Ensure high score is properly displayed after reset - IMMEDIATE display
+        // Ensure high score is properly displayed after reset
         if (window.HighScoreCache) {
             window.HighScoreCache.resetDisplay('memoryMatch');
         } else {
@@ -392,13 +398,19 @@ function initMemoryGame() {
         const shuffledCards = shuffleArray([...cardData, ...cardData]);
         gameState.cards = [];
         
+        // Use document fragment for better performance
+        const fragment = document.createDocumentFragment();
+        
         shuffledCards.forEach((data, index) => {
             const card = createCard(data, index);
-            // Add staggered animation delay (reduced for performance)
-            card.style.animationDelay = `${index * 0.02}s`;
-            gameBoard.appendChild(card);
+            // Reduced animation delay for better performance
+            card.style.animationDelay = `${Math.min(index * 0.01, 0.2)}s`;
+            fragment.appendChild(card);
             gameState.cards.push(card);
         });
+        
+        // Append all cards at once
+        gameBoard.appendChild(fragment);
     }
     
     function generateCardData(config) {
@@ -458,10 +470,10 @@ function initMemoryGame() {
             cardFront.textContent = data.displayText;
         } else {
             cardFront.textContent = data.displayText;
-            // Apply type-specific styling
+            // Apply type-specific styling - using predefined colors instead of random
             switch(data.type) {
                 case 'shapes':
-                    cardFront.style.color = getRandomColor();
+                    cardFront.style.color = '#FF6B6B'; // Fixed color instead of random
                     break;
                 case 'numbers':
                     cardFront.style.color = '#2E86AB';
@@ -472,21 +484,27 @@ function initMemoryGame() {
                 case 'letters':
                     cardFront.style.color = '#F18F01';
                     break;
-                case 'emojis':
-                    // Emojis don't need color styling
-                    break;
                 default:
-                    cardFront.style.color = getRandomColor();
+                    cardFront.style.color = '#4ECDC4';
             }
         }
         
         card.appendChild(cardBack);
         card.appendChild(cardFront);
         
-        card.addEventListener('click', () => flipCard(card));
+        // Use event delegation instead of individual listeners
+        card.dataset.clickable = 'true';
         
         return card;
     }
+    
+    // Event delegation for card clicks - more efficient than individual listeners
+    gameBoard.addEventListener('click', (e) => {
+        const card = e.target.closest('.memory-card');
+        if (card && card.dataset.clickable === 'true') {
+            flipCard(card);
+        }
+    });
     
     function flipCard(card) {
         if (gameState.lockBoard || card.classList.contains('flipped') || card.classList.contains('matched')) {
@@ -497,9 +515,6 @@ function initMemoryGame() {
         card.classList.add('flipped');
         gameState.moves++;
         updateDisplay();
-        
-        // Play flip sound
-        playSound('flip');
         
         if (!gameState.hasFlippedCard) {
             // First card flipped
@@ -531,21 +546,12 @@ function initMemoryGame() {
     function handleMatch() {
         // Add match animation
         if (!gameState.firstCard || !gameState.secondCard) {
-            
+            resetBoard();
             return;
         }
         
-        gameState.firstCard.classList.add('matching');
-        gameState.secondCard.classList.add('matching');
-        
-        setTimeout(() => {
-            if (gameState.firstCard && gameState.secondCard) {
-                gameState.firstCard.classList.add('matched');
-                gameState.secondCard.classList.add('matched');
-                gameState.firstCard.classList.remove('matching');
-                gameState.secondCard.classList.remove('matching');
-            }
-        }, 400);
+        gameState.firstCard.classList.add('matched');
+        gameState.secondCard.classList.add('matched');
         
         gameState.matches++;
         
@@ -558,11 +564,8 @@ function initMemoryGame() {
         
         gameState.score += bonus;
         
-        // Show score bonus animation
-        showScoreBonus(bonus, gameState.firstCard);
-        
-        // Play match sound
-        playSound('match');
+        // Show score bonus animation - optimized
+        showScoreBonus(bonus);
         
         updateDisplay();
         updateProgress();
@@ -570,23 +573,20 @@ function initMemoryGame() {
         if (gameState.matches === gameState.totalPairs) {
             setTimeout(() => {
                 handleGameCompleteEnhanced(); // Use enhanced version
-            }, 800);
+            }, 600); // Reduced from 800ms
         } else {
             resetBoard();
         }
     }
     
     function handleMismatch() {
-        // Play mismatch sound
-        playSound('mismatch');
-        
         setTimeout(() => {
             if (gameState.firstCard && gameState.secondCard) {
                 gameState.firstCard.classList.remove('flipped');
                 gameState.secondCard.classList.remove('flipped');
             }
             resetBoard();
-        }, 1000);
+        }, 800); // Reduced from 1000ms
     }
     
     function resetBoard() {
@@ -624,7 +624,7 @@ function initMemoryGame() {
         // Auto-advance to next difficulty if available
         setTimeout(() => {
             advanceToNextLevel();
-        }, 3000);
+        }, 2000); // Reduced from 3000ms
     }
     
     function advanceToNextLevel() {
@@ -652,16 +652,15 @@ function initMemoryGame() {
         
         if (unmatched.length < 2) return;
         
-        // Find a matching pair
+        // Find a matching pair - optimized algorithm
         const pairs = {};
-        unmatched.forEach(card => {
+        for (let i = 0; i < unmatched.length; i++) {
+            const card = unmatched[i];
             const id = card.dataset.cardId;
             if (!pairs[id]) pairs[id] = [];
             pairs[id].push(card);
-        });
-        
-        // Find first available pair
-        for (let id in pairs) {
+            
+            // Break early if we find a pair
             if (pairs[id].length === 2) {
                 pairs[id].forEach(card => {
                     card.classList.add('hint');
@@ -676,22 +675,33 @@ function initMemoryGame() {
     }
     
     function showAllCards() {
-        gameState.cards.forEach(card => card.classList.add('flipped'));
+        // Use classList.add on each card instead of forEach for better performance
+        for (let i = 0; i < gameState.cards.length; i++) {
+            gameState.cards[i].classList.add('flipped');
+        }
     }
     
     function hideAllCards() {
-        gameState.cards.forEach(card => {
-            if (!card.classList.contains('matched')) {
-                card.classList.remove('flipped');
+        for (let i = 0; i < gameState.cards.length; i++) {
+            if (!gameState.cards[i].classList.contains('matched')) {
+                gameState.cards[i].classList.remove('flipped');
             }
-        });
+        }
     }
     
     function startTimer() {
-        gameState.timerInterval = setInterval(() => {
-            gameState.gameTime = Math.floor((Date.now() - gameState.startTime) / 1000);
-            updateDisplay();
-        }, 1000);
+        // Use requestAnimationFrame for smoother timer updates
+        const startTime = Date.now();
+        const updateTimer = () => {
+            if (!gameState.isGameActive) return;
+            
+            gameState.gameTime = Math.floor((Date.now() - startTime) / 1000);
+            if (timeSpan) timeSpan.textContent = formatTime(gameState.gameTime);
+            
+            gameState.animationFrame = requestAnimationFrame(updateTimer);
+        };
+        
+        gameState.animationFrame = requestAnimationFrame(updateTimer);
     }
     
     function updateDisplay() {
@@ -723,17 +733,27 @@ function initMemoryGame() {
     }
     
     function shuffleArray(array) {
+        // Fisher-Yates shuffle - more efficient implementation
         const shuffled = [...array];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        let currentIndex = shuffled.length;
+        let temporaryValue, randomIndex;
+        
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            
+            temporaryValue = shuffled[currentIndex];
+            shuffled[currentIndex] = shuffled[randomIndex];
+            shuffled[randomIndex] = temporaryValue;
         }
+        
         return shuffled;
     }
     
+    // Optimized - use predefined colors instead of random generation
+    const PREDEFINED_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
     function getRandomColor() {
-        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
-        return colors[Math.floor(Math.random() * colors.length)];
+        return PREDEFINED_COLORS[Math.floor(Math.random() * PREDEFINED_COLORS.length)];
     }
     
     // Dummy playSound function (does nothing)
@@ -742,28 +762,35 @@ function initMemoryGame() {
         return;
     }
     
-    // Show score bonus animation
-    function showScoreBonus(bonus, card) {
+    // Show score bonus animation - optimized
+    function showScoreBonus(bonus) {
+        // Only create and show bonus element if score is significant
+        if (bonus < 50) return;
+        
         const bonusElement = document.createElement('div');
         bonusElement.className = 'score-bonus';
         bonusElement.textContent = `+${bonus}`;
         
-        const rect = card.getBoundingClientRect();
-        bonusElement.style.position = 'fixed';
-        bonusElement.style.left = `${rect.left + rect.width / 2}px`;
-        bonusElement.style.top = `${rect.top}px`;
-        bonusElement.style.transform = 'translateX(-50%)';
+        // Position in center of game board instead of tracking individual cards
+        bonusElement.style.position = 'absolute';
+        bonusElement.style.left = '50%';
+        bonusElement.style.top = '50%';
+        bonusElement.style.transform = 'translate(-50%, -50%)';
         
-        document.body.appendChild(bonusElement);
+        gameBoard.appendChild(bonusElement);
         
-        setTimeout(() => {
+        // Use animation end event instead of setTimeout
+        bonusElement.addEventListener('animationend', () => {
             if (bonusElement.parentNode) {
                 bonusElement.parentNode.removeChild(bonusElement);
             }
-        }, 1000);
+        });
+        
+        // Add animation class
+        bonusElement.classList.add('score-bonus-animate');
     }
     
-    // Achievement system
+    // Achievement system - simplified
     function checkAchievements() {
         const achievements = [];
         
@@ -779,21 +806,14 @@ function initMemoryGame() {
             achievements.push('🧠 Pure Genius - No hints needed!');
         }
         
-        if (gameState.difficulty === 'master') {
-            achievements.push('👑 Master Mind - Conquered the ultimate challenge!');
-        }
-        
         return achievements;
     }
     
-    // Save/Load progress
+    // Save/Load progress - simplified
     function saveProgress() {
         const progress = {
             level: gameState.level,
-            totalScore: gameState.score,
-            completedDifficulties: getCompletedDifficulties(),
-            bestTimes: getBestTimes(),
-            achievements: getAllAchievements()
+            totalScore: gameState.score
         };
         localStorage.setItem('memoryGameProgress', JSON.stringify(progress));
     }
@@ -801,30 +821,30 @@ function initMemoryGame() {
     function loadProgress() {
         const saved = localStorage.getItem('memoryGameProgress');
         if (saved) {
-            const progress = JSON.parse(saved);
-            gameState.level = progress.level || 1;
-            // Don't restore score as it's per-session
-            return progress;
+            try {
+                const progress = JSON.parse(saved);
+                gameState.level = progress.level || 1;
+                return progress;
+            } catch (e) {
+                return null;
+            }
         }
         return null;
     }
     
     function getCompletedDifficulties() {
-        // This would track which difficulties have been completed
         return [];
     }
     
     function getBestTimes() {
-        // This would track best completion times for each difficulty
         return {};
     }
     
     function getAllAchievements() {
-        // This would track all earned achievements
         return [];
     }
     
-    // Enhanced game complete handler
+    // Enhanced game complete handler - optimized
     function handleGameCompleteEnhanced() {
         handleGameComplete();
         
@@ -833,7 +853,7 @@ function initMemoryGame() {
             setTimeout(() => {
                 const achievementText = achievements.join('<br>');
                 updateStatus(`🏆 ACHIEVEMENTS UNLOCKED! 🏆<br>${achievementText}`, 'success');
-            }, 4000);
+            }, 3000);
         }
         
         // Submit score to server if user is logged in and this is the first time we're submitting
@@ -841,7 +861,7 @@ function initMemoryGame() {
             gameState.scoreSubmitted = true;
             window.gameScores.submitScore('memoryMatch', gameState.score, gameState.level, gameState.gameTime)
                 .then(response => {
-                    // Update high score using instant cache - IMMEDIATE update
+                    // Update high score using instant cache
                     if (window.HighScoreCache) {
                         window.HighScoreCache.updateScore('memoryMatch', gameState.score);
                     } else {
@@ -861,11 +881,11 @@ function initMemoryGame() {
                         }
                     }
                     
-                    // Update rankings display - delay for all to ensure fresh data
-                    if (window.gameScores.updateRankingsUI) {
+                    // Update rankings display with a delay
+                    if (window.gameScores && window.gameScores.updateRankingsUI) {
                         setTimeout(() => {
                             window.gameScores.updateRankingsUI('memoryMatch', 'memoryMatch-rankings-container', false);
-                        }, 1500); // Slightly longer delay for rankings
+                        }, 1000);
                     }
                 })
                 .catch(error => {
@@ -875,8 +895,6 @@ function initMemoryGame() {
         
         saveProgress();
     }
-    
-
     
     // Initialize the game
     initGame();
