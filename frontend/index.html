@@ -11,6 +11,9 @@
     
     <!-- Cache control script - load this first -->
     <script src="js/cache-control.js?v=1.0.0"></script>
+    
+    <!-- Mobile navigation handler - load early to prevent overlap -->
+    <script src="js/mobile-nav-handler.js?v=1.0.0"></script>
     <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
     
     <!-- Preload critical fonts -->
@@ -142,17 +145,39 @@
     
     /* Critical mobile styles inline */
     @media (max-width: 768px) {
+        :root {
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --mobile-header-height: calc(var(--header-height) + var(--safe-area-top));
+        }
+        
+        header {
+            height: var(--mobile-header-height) !important;
+            padding-top: var(--safe-area-top) !important;
+        }
+        
         body {
-            padding-top: var(--header-height);
+            padding-top: var(--mobile-header-height) !important;
         }
         
         .hero {
-            min-height: calc(100vh - var(--header-height));
-            padding: 20px 0;
+            margin-top: 0 !important;
+            padding-top: 40px !important;
+            min-height: calc(100vh - var(--mobile-header-height)) !important;
+            height: auto !important;
         }
         
         .hero-content {
-            padding: 20px;
+            padding: 20px 15px !important;
+            min-height: calc(100vh - var(--mobile-header-height) - 80px) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+        }
+        
+        .nav-container {
+            padding: 0 15px !important;
+            height: calc(100% - var(--safe-area-top)) !important;
+            margin-top: var(--safe-area-top) !important;
         }
         
         .glitch-container {
@@ -163,11 +188,13 @@
             flex-direction: column;
             gap: 15px;
             align-items: center;
+            margin-bottom: 30px !important;
         }
         
         .btn {
             width: 100%;
             max-width: 280px;
+            min-height: 48px !important;
         }
         
         /* Hide AOS elements initially to prevent flash */
@@ -179,12 +206,39 @@
             visibility: visible;
         }
     }
+    
+    /* Landscape mode mobile fix */
+    @media (max-width: 768px) and (orientation: landscape) {
+        :root {
+            --mobile-header-height: 80px;
+        }
+        
+        header {
+            height: var(--mobile-header-height) !important;
+            padding-top: 0 !important;
+        }
+        
+        body {
+            padding-top: var(--mobile-header-height) !important;
+        }
+        
+        .hero {
+            min-height: calc(100vh - var(--mobile-header-height)) !important;
+            padding-top: 30px !important;
+        }
+        
+        .hero-content {
+            min-height: calc(100vh - var(--mobile-header-height) - 60px) !important;
+            padding: 15px !important;
+        }
+    }
     </style>
     
     <!-- Critical CSS loaded first -->
     <link rel="stylesheet" href="css/critical.css">
     <link rel="stylesheet" href="css/nav-fix.css?v=6.0">
     <link rel="stylesheet" href="css/mobile-optimizations.css?v=1.0">
+    <link rel="stylesheet" href="css/mobile-nav-fix.css?v=1.0">
     
     <!-- Non-critical CSS loaded after critical styles -->
     <link rel="stylesheet" href="css/styles.css?v=3.0">

@@ -1,0 +1,312 @@
+/* 
+ * Mobile Navigation Overlap Fix
+ * Addresses content overlap issues across different mobile devices
+ */
+
+/* Mobile-specific header height adjustments */
+@media (max-width: 768px) {
+    :root {
+        --header-height: 80px;
+        --safe-area-top: env(safe-area-inset-top, 0px);
+        --mobile-header-height: calc(var(--header-height) + var(--safe-area-top));
+    }
+    
+    /* Ensure fixed header accounts for safe area */
+    header {
+        height: var(--mobile-header-height) !important;
+        padding-top: var(--safe-area-top) !important;
+    }
+    
+    /* Body padding must account for dynamic header height */
+    body {
+        padding-top: var(--mobile-header-height) !important;
+    }
+    
+    /* Hero section adjustments for mobile */
+    .hero {
+        margin-top: 0 !important;
+        padding-top: 40px !important;
+        min-height: calc(100vh - var(--mobile-header-height)) !important;
+        height: auto !important;
+    }
+    
+    /* Ensure hero content has enough space */
+    .hero-content {
+        padding: 20px 15px !important;
+        min-height: calc(100vh - var(--mobile-header-height) - 80px) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+    }
+    
+    /* Adjust scroll padding for mobile */
+    html {
+        scroll-padding-top: calc(var(--mobile-header-height) + 20px) !important;
+    }
+    
+    /* Fix for navigation container spacing */
+    .nav-container {
+        padding: 0 15px !important;
+        height: calc(100% - var(--safe-area-top)) !important;
+        margin-top: var(--safe-area-top) !important;
+    }
+    
+    /* Ensure all sections have proper spacing */
+    section {
+        padding-top: 60px !important;
+        padding-bottom: 60px !important;
+    }
+    
+    /* Special handling for first section after hero */
+    .hero + section,
+    section:first-of-type:not(.hero) {
+        padding-top: 80px !important;
+    }
+}
+
+/* iPhone and similar devices with notch */
+@media (max-width: 768px) and (max-height: 900px) {
+    :root {
+        --safe-area-top: env(safe-area-inset-top, 0px);
+        --mobile-header-height: calc(80px + var(--safe-area-top));
+    }
+    
+    /* Additional space for devices with notch */
+    header {
+        background: rgba(12, 12, 20, 0.95) !important;
+        backdrop-filter: blur(30px) !important;
+    }
+    
+    /* Ensure hero section doesn't get cut off */
+    .hero {
+        padding-top: 60px !important;
+        min-height: calc(100vh - var(--mobile-header-height) - 20px) !important;
+    }
+}
+
+/* Android devices with different viewport behavior */
+@media (max-width: 768px) and (min-height: 600px) {
+    .hero {
+        /* Use viewport units that work better on Android */
+        min-height: calc(100dvh - var(--mobile-header-height)) !important;
+    }
+}
+
+/* Landscape mode mobile fix */
+@media (max-width: 768px) and (orientation: landscape) {
+    :root {
+        --mobile-header-height: 80px; /* Reset to standard on landscape */
+    }
+    
+    header {
+        height: var(--mobile-header-height) !important;
+        padding-top: 0 !important;
+    }
+    
+    body {
+        padding-top: var(--mobile-header-height) !important;
+    }
+    
+    .hero {
+        min-height: calc(100vh - var(--mobile-header-height)) !important;
+        padding-top: 30px !important;
+    }
+    
+    .hero-content {
+        min-height: calc(100vh - var(--mobile-header-height) - 60px) !important;
+        padding: 15px !important;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .hero {
+        padding-top: 50px !important;
+    }
+    
+    .hero-content {
+        padding: 15px 10px !important;
+    }
+    
+    /* Ensure CTA buttons don't get cut off */
+    .cta-buttons {
+        margin-bottom: 30px !important;
+        padding: 0 10px !important;
+    }
+    
+    /* Adjust button sizing for small screens */
+    .btn {
+        font-size: 0.9rem !important;
+        padding: 12px 16px !important;
+        min-height: 48px !important;
+    }
+}
+
+/* Very small mobile devices */
+@media (max-width: 360px) {
+    .hero {
+        padding-top: 40px !important;
+    }
+    
+    .hero-content {
+        padding: 10px 5px !important;
+    }
+    
+    /* Compact layout for very small screens */
+    .glitch {
+        font-size: 2rem !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .hero-description {
+        font-size: 1rem !important;
+        margin-bottom: 25px !important;
+    }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+    @media (max-width: 768px) {
+        /* Use dynamic viewport height for iOS */
+        .hero {
+            min-height: calc(100dvh - var(--mobile-header-height)) !important;
+        }
+        
+        .hero-content {
+            min-height: calc(100dvh - var(--mobile-header-height) - 80px) !important;
+        }
+    }
+}
+
+/* Android Chrome specific fixes */
+@media (max-width: 768px) and (min-resolution: 1.5dppx) {
+    /* Better handling for high DPI Android devices */
+    header {
+        backdrop-filter: blur(20px) !important;
+        border-bottom: 1px solid rgba(0, 168, 255, 0.2) !important;
+    }
+    
+    .hero {
+        /* Ensure proper spacing on Android */
+        padding-top: 50px !important;
+    }
+}
+
+/* Fix for devices with dynamic viewport changes */
+@media (max-width: 768px) {
+    /* Use container queries if supported */
+    @supports (container-type: inline-size) {
+        .hero {
+            container-type: inline-size;
+        }
+        
+        .hero-content {
+            /* Responsive content based on container */
+            padding: max(20px, 3vw) !important;
+        }
+    }
+}
+
+/* Fallback for older mobile browsers */
+@media (max-width: 768px) and (max-height: 600px) {
+    .hero {
+        /* Conservative height for older devices */
+        min-height: calc(100vh - 100px) !important;
+        padding-top: 60px !important;
+    }
+}
+
+/* Keyboard active state for iOS */
+@media (max-width: 768px) {
+    body.keyboard-active .hero {
+        min-height: auto !important;
+        padding-bottom: 20px !important;
+    }
+    
+    body.keyboard-active .hero-content {
+        min-height: auto !important;
+        padding-bottom: 20px !important;
+    }
+    
+    /* Hide fixed elements when keyboard is active */
+    body.keyboard-active .hero-scroll,
+    body.keyboard-active .hero-social,
+    body.keyboard-active .hero-email {
+        display: none !important;
+    }
+}
+
+/* CSS custom properties for dynamic values */
+:root {
+    --viewport-height: 100vh;
+    --mobile-header-height: 80px;
+    --safe-area-top: 0px;
+}
+
+/* Modern browsers support for dynamic viewport units */
+@supports (height: 100dvh) {
+    @media (max-width: 768px) {
+        .hero {
+            min-height: calc(100dvh - var(--mobile-header-height)) !important;
+        }
+        
+        .hero-content {
+            min-height: calc(100dvh - var(--mobile-header-height) - 80px) !important;
+        }
+    }
+}
+
+/* Support for browsers without dvh */
+@supports not (height: 100dvh) {
+    @media (max-width: 768px) {
+        .hero {
+            min-height: calc(var(--viewport-height) - var(--mobile-header-height)) !important;
+        }
+        
+        .hero-content {
+            min-height: calc(var(--viewport-height) - var(--mobile-header-height) - 80px) !important;
+        }
+    }
+}
+
+/* Fix for PWA/standalone mode */
+@media (display-mode: standalone) {
+    @media (max-width: 768px) {
+        :root {
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --mobile-header-height: calc(80px + var(--safe-area-top));
+        }
+        
+        header {
+            height: var(--mobile-header-height) !important;
+            padding-top: var(--safe-area-top) !important;
+        }
+        
+        body {
+            padding-top: var(--mobile-header-height) !important;
+        }
+    }
+}
+
+/* Debug helper for testing (remove in production) */
+/*
+@media (max-width: 768px) {
+    body::before {
+        content: "Header: " var(--mobile-header-height) " | Viewport: " var(--viewport-height);
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: rgba(255, 0, 0, 0.8);
+        color: white;
+        font-size: 12px;
+        padding: 5px;
+        z-index: 999999;
+        pointer-events: none;
+    }
+}
+*/
