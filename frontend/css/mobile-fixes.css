@@ -1,0 +1,226 @@
+/* 
+ * Mobile Alignment Fixes
+ * Addresses issues with content being covered by navbar on various mobile devices
+ * Ensures consistent layout across different screen sizes and text scaling settings
+ */
+
+/* Ensure consistent header height and content padding across all devices */
+:root {
+    --header-height: 80px;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --content-padding-top: 20px;
+}
+
+/* Ensure body has proper padding to account for fixed header */
+body {
+    padding-top: calc(var(--header-height) + var(--safe-area-top));
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100vw;
+}
+
+/* Ensure header respects safe area on notched devices */
+header {
+    height: var(--header-height) !important;
+    padding-top: var(--safe-area-top) !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    z-index: 999999 !important;
+    box-sizing: content-box !important;
+    /* Prevent text scaling from affecting header height */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+/* Ensure all sections have proper padding to avoid being covered by header */
+section {
+    scroll-margin-top: calc(var(--header-height) + 20px);
+}
+
+/* Adjust scroll padding to account for header */
+html {
+    scroll-padding-top: calc(var(--header-height) + 20px);
+}
+
+/* Mobile-specific fixes */
+@media (max-width: 768px) {
+    /* Ensure header is properly sized on mobile */
+    header {
+        height: var(--header-height) !important;
+        min-height: var(--header-height) !important;
+    }
+    
+    /* Ensure content doesn't get covered by header */
+    .container {
+        padding-top: var(--content-padding-top);
+        width: 92% !important; /* Slightly narrower on mobile for better readability */
+    }
+    
+    /* Ensure first section has enough padding */
+    section:first-of-type {
+        padding-top: calc(var(--content-padding-top) + 10px);
+        margin-top: 0 !important;
+    }
+    
+    /* Adjust hero section to avoid being covered */
+    .hero {
+        min-height: calc(100vh - var(--header-height));
+        padding-top: var(--content-padding-top);
+        margin-top: 0 !important;
+    }
+    
+    /* Ensure nav links are properly sized on mobile */
+    .nav-links li a {
+        height: 44px !important;
+        padding: 10px 15px !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: 14px !important; /* Prevent text scaling issues */
+    }
+    
+    /* Ensure hamburger menu is properly positioned */
+    .hamburger {
+        margin-right: 0 !important;
+        height: 44px !important;
+        width: 44px !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Ensure logo doesn't get too large */
+    .logo {
+        font-size: 1.3rem !important;
+    }
+    
+    /* Fix for section headings to ensure they're not covered by navbar */
+    h1, h2, h3, h4, h5, h6 {
+        margin-top: 0.5em !important;
+    }
+    
+    /* Ensure all elements with fixed positioning respect the header */
+    .fixed-element,
+    [class*="fixed"],
+    [style*="position: fixed"],
+    [style*="position:fixed"] {
+        top: calc(var(--header-height) + var(--safe-area-top)) !important;
+    }
+}
+
+/* Additional fixes for smaller mobile devices */
+@media (max-width: 480px) {
+    :root {
+        --header-height: 70px; /* Slightly smaller header on very small devices */
+        --content-padding-top: 25px; /* More padding on smaller screens */
+    }
+    
+    /* Ensure content has enough space */
+    .container {
+        padding-top: var(--content-padding-top);
+        width: 94% !important;
+    }
+    
+    /* Adjust hero section for smaller screens */
+    .hero-content {
+        padding-top: calc(var(--content-padding-top) + 10px);
+    }
+    
+    /* Further reduce text size for very small screens */
+    .nav-links li a {
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+    }
+    
+    /* Ensure hamburger is easily tappable */
+    .hamburger {
+        margin-right: 5px !important;
+    }
+}
+
+/* Fix for devices with dynamic font scaling */
+@media (max-width: 768px) and (min-resolution: 1.5dppx) {
+    /* Prevent text from getting too large */
+    body {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+    
+    /* Ensure nav links don't overflow */
+    .nav-links li a {
+        font-size: 14px !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Ensure header maintains proper height */
+    header {
+        min-height: var(--header-height) !important;
+        max-height: calc(var(--header-height) + var(--safe-area-top)) !important;
+    }
+    
+    /* Adjust content padding for high-res screens */
+    section:first-of-type {
+        padding-top: calc(var(--content-padding-top) + 15px);
+    }
+}
+
+/* Fix for notched devices (iPhone X and newer) */
+@supports (padding-top: env(safe-area-inset-top)) {
+    body {
+        padding-top: calc(var(--header-height) + env(safe-area-inset-top));
+    }
+    
+    header {
+        padding-top: env(safe-area-inset-top);
+    }
+    
+    /* Ensure content respects the safe area insets */
+    .container {
+        padding-left: max(15px, env(safe-area-inset-left));
+        padding-right: max(15px, env(safe-area-inset-right));
+    }
+}
+
+/* Fix for tall mobile devices (like iPhone 12/13/14 Pro Max) */
+@media (max-width: 428px) and (min-height: 800px) {
+    :root {
+        --content-padding-top: 30px;
+    }
+    
+    /* Ensure hero section fills the screen properly */
+    .hero {
+        min-height: calc(100vh - var(--header-height) - 50px);
+    }
+    
+    /* Add more space to first section */
+    section:first-of-type {
+        padding-top: calc(var(--content-padding-top) + 20px);
+    }
+}
+
+/* Fix for mobile landscape mode */
+@media (max-height: 500px) and (orientation: landscape) {
+    :root {
+        --header-height: 60px; /* Smaller header in landscape */
+    }
+    
+    /* Reduce padding in landscape to maximize content area */
+    .container {
+        padding-top: 10px;
+    }
+    
+    /* Ensure content is visible in landscape */
+    section {
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+    
+    /* Adjust hero for landscape */
+    .hero {
+        min-height: calc(100vh - var(--header-height));
+        padding: 10px 0 !important;
+    }
+}

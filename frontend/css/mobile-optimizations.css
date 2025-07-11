@@ -169,6 +169,11 @@
     /* Improve mobile menu appearance */
     .nav-links.active {
         padding-bottom: 20px !important;
+        padding-top: calc(var(--header-height) + 10px) !important; /* Ensure menu starts below header */
+        top: 0 !important; /* Start from the top of the screen */
+        height: 100% !important; /* Full height */
+        overflow-y: auto !important; /* Allow scrolling if menu is tall */
+        -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
     }
     
     /* Remove avatar button in nav bar */
@@ -222,6 +227,18 @@
         z-index: 2 !important;
         bottom: 20px !important;
     }
+    
+    /* Ensure content doesn't get covered by fixed header */
+    section {
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+    
+    /* Ensure first section has proper spacing */
+    section:first-of-type {
+        padding-top: 30px !important;
+    }
+}
     
     /* Mobile More Items Styling */
     .mobile-more-items {

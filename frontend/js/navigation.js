@@ -404,9 +404,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle viewport changes (like dev tools opening)
     window.addEventListener('resize', handleDropdownPositioning);
     
-    // Toggle mobile menu
+    // Toggle mobile menu with improved positioning
     function toggleMobileMenu() {
         const currentHamburger = document.querySelector('.hamburger');
+        
+        // Get computed header height from CSS variable for consistency
+        const computedStyle = getComputedStyle(document.documentElement);
+        const headerHeightVar = computedStyle.getPropertyValue('--header-height').trim();
+        const headerHeight = parseInt(headerHeightVar) || 80;
+        
+        // Get safe area inset for notched devices
+        const safeAreaTop = parseInt(computedStyle.getPropertyValue('--safe-area-top').trim()) || 0;
         
         navLinks.classList.toggle('active');
         if (currentHamburger) {
@@ -415,20 +423,33 @@ document.addEventListener('DOMContentLoaded', function() {
         navOverlay.classList.toggle('active');
         body.classList.toggle('menu-open');
         
-        // Ensure mobile auth items are properly displayed
-        const mobileAuthItems = document.querySelectorAll('.mobile-auth-item');
+        // Ensure mobile menu starts below the header
         if (navLinks.classList.contains('active')) {
+            // Set the top padding of the mobile menu to account for the header height
+            navLinks.style.paddingTop = `${headerHeight + safeAreaTop + 10}px`;
+            
+            // Prevent body scrolling when menu is open
+            body.style.overflow = 'hidden';
+            
+            // Ensure mobile auth items are properly displayed
+            const mobileAuthItems = document.querySelectorAll('.mobile-auth-item');
             mobileAuthItems.forEach(item => {
                 item.style.display = 'block';
             });
         } else {
+            // Reset styles when menu is closed
+            navLinks.style.paddingTop = '';
+            body.style.overflow = '';
+            
+            // Hide mobile auth items
+            const mobileAuthItems = document.querySelectorAll('.mobile-auth-item');
             mobileAuthItems.forEach(item => {
                 item.style.display = 'none';
             });
         }
     }
     
-    // Close mobile menu
+    // Close mobile menu with improved cleanup
     function closeMobileMenu() {
         const currentHamburger = document.querySelector('.hamburger');
         
@@ -438,6 +459,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         navOverlay.classList.remove('active');
         body.classList.remove('menu-open');
+        
+        // Reset styles
+        navLinks.style.paddingTop = '';
+        body.style.overflow = '';
         
         // Hide mobile auth items
         const mobileAuthItems = document.querySelectorAll('.mobile-auth-item');
@@ -531,21 +556,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Smooth scroll to element
+    // Smooth scroll to element with improved mobile compatibility
     function smoothScrollTo(target) {
         try {
             const element = document.querySelector(target);
             if (element) {
-                const headerHeight = header ? header.offsetHeight : 80;
-                const targetPosition = element.offsetTop - headerHeight - 20;
+                // Get computed header height from CSS variable for consistency
+                const computedStyle = getComputedStyle(document.documentElement);
+                const headerHeightVar = computedStyle.getPropertyValue('--header-height').trim();
                 
+                // Parse the header height (remove 'px' if present)
+                let headerHeight = parseInt(headerHeightVar) || 80;
+                
+                // Add safe area inset for notched devices
+                const safeAreaTop = parseInt(computedStyle.getPropertyValue('--safe-area-top').trim()) || 0;
+                headerHeight += safeAreaTop;
+                
+                // Add extra padding for better visibility
+                const extraPadding = 20;
+                
+                // Calculate target position
+                const targetPosition = element.getBoundingClientRect().top + window.pageYOffset - headerHeight - extraPadding;
+                
+                // Smooth scroll to target
                 window.scrollTo({
                     top: targetPosition,
                     behavior: 'smooth'
                 });
             }
         } catch (error) {
-
+            // Fallback if error occurs
+            const element = document.querySelector(target);
+            if (element) {
+                const headerHeight = header ? header.offsetHeight : 80;
+                window.scrollTo({
+                    top: element.offsetTop - headerHeight - 20,
+                    behavior: 'smooth'
+                });
+            }
         }
     }
     
