@@ -153,23 +153,6 @@
 
 /* Mobile layout optimizations */
 @media (max-width: 768px) {
-    /* Fix hero section positioning for different mobile devices */
-    .hero {
-        margin-top: calc(-1 * var(--header-height)) !important;
-        padding-top: calc(var(--header-height) + 30px) !important;
-        min-height: calc(100vh - var(--header-height)) !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        align-items: center !important;
-    }
-    
-    /* Ensure glitch container has proper spacing from header */
-    .glitch-container {
-        margin-top: 20px !important;
-        margin-bottom: 30px !important;
-    }
-    
     /* Improve touch targets - Exclude track action buttons */
     .nav-links a, .btn:not(.track-actions .btn), button:not(.track-actions button), .dropdown-menu a, .mobile-auth-item a {
         min-height: 44px !important;
@@ -358,53 +341,5 @@
     
     .scroll-indicator {
         font-size: 0.75rem !important;
-    }
-}
-
-/* Fix for tall/narrow mobile devices (like iPhone 12 Pro Max, etc.) */
-@media (max-width: 480px) and (min-height: 800px) and (orientation: portrait) {
-    .hero {
-        padding-top: calc(var(--header-height) + 40px) !important;
-        min-height: calc(100vh - var(--header-height) - 40px) !important;
-    }
-    
-    .glitch-container {
-        margin-top: 30px !important;
-        margin-bottom: 40px !important;
-    }
-    
-    .glitch {
-        font-size: clamp(2rem, 7vw, 4rem) !important;
-    }
-}
-
-/* Fix for very tall/narrow mobile devices (like iPhone 14 Pro Max, etc.) */
-@media (max-width: 430px) and (min-height: 900px) and (orientation: portrait) {
-    .hero {
-        padding-top: calc(var(--header-height) + 50px) !important;
-        min-height: calc(100vh - var(--header-height) - 50px) !important;
-    }
-    
-    .glitch-container {
-        margin-top: 40px !important;
-        margin-bottom: 50px !important;
-    }
-}
-
-/* Fix for extra narrow mobile devices */
-@media (max-width: 375px) and (orientation: portrait) {
-    .hero {
-        padding-top: calc(var(--header-height) + 35px) !important;
-        padding-left: 15px !important;
-        padding-right: 15px !important;
-    }
-    
-    .glitch-container {
-        margin-top: 25px !important;
-        margin-bottom: 35px !important;
-    }
-    
-    .glitch {
-        font-size: clamp(1.8rem, 8vw, 3.5rem) !important;
     }
 }
