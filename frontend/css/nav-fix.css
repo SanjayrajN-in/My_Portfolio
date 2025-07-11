@@ -906,44 +906,22 @@ body.menu-open {
         position: relative !important;
     }
     
-    /* Additional mobile viewport height fixes */
-    :root {
-        --mobile-vh: 100vh;
-        --mobile-safe-area: env(safe-area-inset-bottom, 0px);
-    }
-    
-    /* For devices with dynamic viewport height */
-    @supports (height: 100dvh) {
-        :root {
-            --mobile-vh: 100dvh;
-        }
-    }
-    
-    /* For devices with small viewport height */
-    @supports (height: 100svh) {
-        :root {
-            --mobile-vh: 100svh;
-        }
-    }
-    
     .nav-links {
         position: fixed !important;
         top: var(--header-height) !important;
         right: -100% !important;
         width: 300px !important;
         max-width: 80% !important;
-        height: calc(var(--mobile-vh) - var(--header-height)) !important;
-        max-height: calc(var(--mobile-vh) - var(--header-height)) !important;
+        height: calc(100vh - var(--header-height)) !important;
         background: rgba(12, 12, 20, 0.95) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
         z-index: 999999 !important;
         flex-direction: column !important;
         align-items: flex-start !important;
-        padding: 10px 20px 20px 20px !important; /* Small top padding for better spacing */
+        padding: 0px 20px 20px 20px !important; /* No top padding to eliminate extra space */
         transition: right 0.3s ease !important;
         overflow-y: auto !important; /* Auto scroll instead of forced */
-        overflow-x: hidden !important; /* Hide horizontal scroll */
         -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
         scroll-behavior: smooth !important;
         gap: 3px !important; /* Reduced gap for better spacing */
@@ -954,10 +932,6 @@ body.menu-open {
         top: var(--header-height) !important;
         scrollbar-width: thin !important; /* Firefox */
         scrollbar-color: rgba(0, 168, 255, 0.5) rgba(12, 12, 20, 0.3) !important; /* Firefox */
-        /* Ensure proper scrolling on all devices */
-        overscroll-behavior: contain !important;
-        /* Fix for iOS Safari viewport issues */
-        min-height: 0 !important;
     }
     
     /* Custom scrollbar for Webkit browsers */
@@ -1143,42 +1117,6 @@ body.menu-open {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: flex-start !important; /* Left justify the icon */
-    }
-    
-    /* Additional fixes for devices with viewport height issues */
-    @media (max-height: 600px) {
-        .nav-links {
-            height: calc(100vh - var(--header-height) - 20px) !important;
-            max-height: calc(100vh - var(--header-height) - 20px) !important;
-            padding-bottom: 10px !important;
-        }
-    }
-    
-    /* Fix for iOS Safari with bottom safe area */
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-        .nav-links {
-            height: calc(var(--mobile-vh) - var(--header-height) - env(safe-area-inset-bottom, 0px)) !important;
-            max-height: calc(var(--mobile-vh) - var(--header-height) - env(safe-area-inset-bottom, 0px)) !important;
-            padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
-        }
-    }
-    
-    /* Fix for Android Chrome with address bar */
-    @media (max-width: 992px) and (min-height: 500px) {
-        .nav-links {
-            height: calc(100vh - var(--header-height) - 10px) !important;
-            max-height: calc(100vh - var(--header-height) - 10px) !important;
-        }
-    }
-    
-    /* Fix for very small mobile screens */
-    @media (max-width: 480px) {
-        .nav-links {
-            width: 280px !important;
-            max-width: 85% !important;
-            height: calc(100vh - var(--header-height) - 5px) !important;
-            max-height: calc(100vh - var(--header-height) - 5px) !important;
-        }
     }
 }
 

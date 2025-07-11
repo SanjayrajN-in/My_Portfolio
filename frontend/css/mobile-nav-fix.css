@@ -8,23 +8,7 @@
     :root {
         --header-height: 80px;
         --safe-area-top: env(safe-area-inset-top, 0px);
-        --safe-area-bottom: env(safe-area-inset-bottom, 0px);
         --mobile-header-height: calc(var(--header-height) + var(--safe-area-top));
-        --mobile-vh: 100vh;
-    }
-    
-    /* For devices with dynamic viewport height */
-    @supports (height: 100dvh) {
-        :root {
-            --mobile-vh: 100dvh;
-        }
-    }
-    
-    /* For devices with small viewport height */
-    @supports (height: 100svh) {
-        :root {
-            --mobile-vh: 100svh;
-        }
     }
     
     /* Ensure fixed header accounts for safe area */

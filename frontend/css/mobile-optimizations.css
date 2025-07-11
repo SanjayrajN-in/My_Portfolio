@@ -171,24 +171,6 @@
         padding-bottom: 20px !important;
     }
     
-    /* Fix mobile navigation scrolling issues */
-    .nav-links {
-        /* Ensure proper height calculation */
-        height: calc(100vh - var(--header-height) - env(safe-area-inset-bottom, 0px)) !important;
-        max-height: calc(100vh - var(--header-height) - env(safe-area-inset-bottom, 0px)) !important;
-        /* Fix for iOS Safari address bar */
-        min-height: calc(100vh - var(--header-height) - 50px) !important;
-        /* Ensure scrolling works properly */
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch !important;
-        overscroll-behavior: contain !important;
-        /* Fix for Chrome on Android */
-        touch-action: pan-y !important;
-        /* Ensure content doesn't get cut off */
-        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
-    }
-    
     /* Remove avatar button in nav bar */
     .user-avatar, .avatar-btn, .user-dropdown {
         display: none !important;
