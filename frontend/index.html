@@ -149,6 +149,9 @@
         .hero {
             min-height: calc(100vh - var(--header-height));
             padding: 20px 0;
+            /* Ensure hero content starts below navbar */
+            margin-top: var(--header-height);
+            padding-top: 30px;
         }
         
         .hero-content {
@@ -157,6 +160,8 @@
         
         .glitch-container {
             margin-bottom: 30px;
+            /* Ensure name text is not overlapped by navbar */
+            margin-top: 20px;
         }
         
         .cta-buttons {
@@ -177,6 +182,23 @@
         
         .aos-init[data-aos] {
             visibility: visible;
+        }
+    }
+    
+    /* Additional fix for very small screens */
+    @media (max-width: 480px) {
+        .hero {
+            /* Extra padding for smaller screens */
+            padding-top: 40px;
+        }
+        
+        .glitch-container {
+            margin-top: 25px;
+        }
+        
+        .glitch {
+            /* Ensure text doesn't get cut off on small screens */
+            font-size: clamp(2rem, 7vw, 3.5rem);
         }
     }
     </style>
