@@ -46,6 +46,26 @@
         return 0;
     }
     
+    // Get safe area inset bottom for devices with home indicator
+    function getSafeAreaBottom() {
+        // Try to get from CSS env() function
+        const safeAreaValue = getCSSVariable('--safe-area-bottom');
+        if (safeAreaValue && safeAreaValue !== '0px') {
+            return parseInt(safeAreaValue);
+        }
+        
+        // Fallback detection for iOS devices
+        if (window.navigator.userAgent.includes('iPhone') || window.navigator.userAgent.includes('iPad')) {
+            // Check if it's a device with home indicator (iPhone X and later)
+            const isNotchDevice = window.screen.height >= 812 && window.screen.width >= 375;
+            if (isNotchDevice) {
+                return window.orientation === 0 ? 34 : 21; // 34px for portrait, 21px for landscape
+            }
+        }
+        
+        return 0;
+    }
+    
     // Calculate actual header height including safe area
     function calculateHeaderHeight() {
         if (!isMobile()) {
@@ -70,12 +90,29 @@
         setCSSVariable('--viewport-height', `${viewportHeight}px`);
         setCSSVariable('--mobile-header-height', `${mobileHeaderHeight}px`);
         setCSSVariable('--safe-area-top', `${safeAreaTop}px`);
+        setCSSVariable('--safe-area-bottom', `${getSafeAreaBottom()}px`);
+        setCSSVariable('--mobile-vh', `${viewportHeight}px`);
         
         // Update hero section height
         const heroElement = document.querySelector('.hero');
         if (heroElement) {
             const heroHeight = Math.max(viewportHeight - mobileHeaderHeight, 400);
             heroElement.style.minHeight = `${heroHeight}px`;
+        }
+        
+        // Fix mobile navigation height
+        const navLinks = document.querySelector('.nav-links');
+        if (navLinks) {
+            const safeAreaBottom = getSafeAreaBottom();
+            const navHeight = Math.max(viewportHeight - mobileHeaderHeight - safeAreaBottom - 10, 300);
+            navLinks.style.height = `${navHeight}px`;
+            navLinks.style.maxHeight = `${navHeight}px`;
+            
+            // Ensure scrolling works
+            navLinks.style.overflowY = 'auto';
+            navLinks.style.overflowX = 'hidden';
+            navLinks.style.webkitOverflowScrolling = 'touch';
+            navLinks.style.overscrollBehavior = 'contain';
         }
     }
     
