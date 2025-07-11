@@ -913,25 +913,30 @@ body.menu-open {
         width: 300px !important;
         max-width: 80% !important;
         height: calc(100vh - var(--header-height)) !important;
+        max-height: calc(100vh - var(--header-height)) !important; /* Ensure max height is respected */
         background: rgba(12, 12, 20, 0.95) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
         z-index: 999999 !important;
         flex-direction: column !important;
         align-items: flex-start !important;
-        padding: 0px 20px 20px 20px !important; /* No top padding to eliminate extra space */
+        padding: 10px 20px 30px 20px !important; /* Added bottom padding for safe scrolling area */
         transition: right 0.3s ease !important;
         overflow-y: auto !important; /* Auto scroll instead of forced */
+        overflow-x: hidden !important; /* Prevent horizontal scroll */
         -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
         scroll-behavior: smooth !important;
         gap: 3px !important; /* Reduced gap for better spacing */
         scroll-padding-top: 0 !important; /* Ensure scroll starts at top */
+        scroll-padding-bottom: 30px !important; /* Add bottom scroll padding */
         border-left: 1px solid rgba(0, 168, 255, 0.15) !important;
         /* Force override any music keyboard conflicts */
         position: fixed !important;
         top: var(--header-height) !important;
         scrollbar-width: thin !important; /* Firefox */
         scrollbar-color: rgba(0, 168, 255, 0.5) rgba(12, 12, 20, 0.3) !important; /* Firefox */
+        /* Ensure proper box sizing */
+        box-sizing: border-box !important;
     }
     
     /* Custom scrollbar for Webkit browsers */
@@ -1039,9 +1044,13 @@ body.menu-open {
     .mobile-more-items {
         display: block !important;
         width: 100% !important;
-        margin-top: 5px !important; /* Minimal margin */
+        margin-top: 10px !important; /* Increased margin for better separation */
+        margin-bottom: 20px !important; /* Add bottom margin to prevent cutoff */
         border-top: 1px solid rgba(0, 168, 255, 0.15) !important;
-        padding-top: 5px !important; /* Minimal padding */
+        padding-top: 10px !important; /* Increased padding for better spacing */
+        padding-bottom: 10px !important; /* Add bottom padding */
+        /* Ensure proper box sizing */
+        box-sizing: border-box !important;
     }
     
     /* No heading as requested */
@@ -1058,7 +1067,12 @@ body.menu-open {
     
     .mobile-more-list li {
         width: 100% !important;
-        margin: 2px 0 !important; /* Reduced margin */
+        margin: 3px 0 !important; /* Slightly increased margin for better spacing */
+    }
+    
+    /* Ensure the last item in mobile more list has extra bottom margin */
+    .mobile-more-list li:last-child {
+        margin-bottom: 10px !important;
     }
     
     .mobile-more-list li a {
@@ -1117,6 +1131,31 @@ body.menu-open {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: flex-start !important; /* Left justify the icon */
+    }
+    
+    /* Critical fix: Ensure mobile navigation has proper scrollable area */
+    .nav-links.active {
+        /* Force proper height calculation */
+        height: calc(100vh - var(--header-height)) !important;
+        max-height: calc(100vh - var(--header-height)) !important;
+        /* Ensure content can scroll to bottom */
+        padding-bottom: 50px !important;
+        /* Force scroll behavior */
+        overflow-y: scroll !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Ensure mobile more items are fully accessible */
+    .mobile-more-items {
+        /* Add extra bottom margin to prevent cutoff */
+        margin-bottom: 30px !important;
+        padding-bottom: 20px !important;
+    }
+    
+    /* Ensure last mobile more item is fully visible */
+    .mobile-more-list li:last-child {
+        margin-bottom: 20px !important;
+        padding-bottom: 5px !important;
     }
 }
 
@@ -1177,8 +1216,10 @@ body.menu-open {
         top: var(--header-height) !important;
         height: calc(100vh - var(--header-height)) !important;
         max-height: calc(100vh - var(--header-height)) !important;
-        padding: 15px !important;
+        padding: 10px 15px 40px 15px !important; /* Increased bottom padding for landscape */
         overflow-y: auto !important;
+        overflow-x: hidden !important;
+        scroll-padding-bottom: 40px !important; /* Extra scroll padding for landscape */
     }
     
     /* Reduce spacing between nav items in landscape */
@@ -1189,13 +1230,20 @@ body.menu-open {
     
     /* Adjust mobile more items for landscape */
     .mobile-more-items {
-        margin-top: 10px !important;
-        padding-top: 10px !important;
+        margin-top: 8px !important;
+        margin-bottom: 30px !important; /* Extra bottom margin for landscape */
+        padding-top: 8px !important;
+        padding-bottom: 15px !important; /* Extra bottom padding for landscape */
     }
     
     .mobile-more-list li a {
-        padding: 10px 15px !important;
+        padding: 8px 15px !important; /* Reduced padding for landscape */
         font-size: 0.85rem !important;
+    }
+    
+    /* Ensure last item in landscape has extra spacing */
+    .mobile-more-list li:last-child {
+        margin-bottom: 15px !important;
     }
     
     /* Ensure dropdown menus don't go off-screen in landscape */
