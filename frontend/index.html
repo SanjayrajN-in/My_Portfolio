@@ -47,8 +47,6 @@
     
     body {
         padding-top: var(--header-height);
-        /* Ensure body padding accounts for font scaling */
-        padding-top: max(var(--header-height), 4em);
     }
     
     /* Font Awesome icon preload */
@@ -80,8 +78,6 @@
         left: 0;
         width: 100%;
         height: var(--header-height);
-        /* Ensure header scales with font size on mobile */
-        min-height: max(var(--header-height), 4em);
         z-index: 999999 !important;
         background: rgba(12, 12, 20, 0.85);
         backdrop-filter: blur(20px);
@@ -153,8 +149,6 @@
         .hero {
             min-height: calc(100vh - var(--header-height));
             padding: 20px 0;
-            /* Flexible spacing that scales with font size */
-            padding-top: max(calc(var(--header-height) * 0.3), 2em);
         }
         
         .hero-content {
@@ -163,8 +157,6 @@
         
         .glitch-container {
             margin-bottom: 30px;
-            /* Ensure proper spacing from top that scales with font size */
-            margin-top: max(1.5em, 24px);
         }
         
         .cta-buttons {
