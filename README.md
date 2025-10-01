@@ -149,4 +149,4 @@ EMAIL_PASS=your_email_password
 
 **Sanjayraj N**  
 Electrical & Electronics Engineer  
-Portfolio: [Your Vercel URL]
+Portfolio: https/sanjayrajn.vecel.app
